@@ -1,0 +1,896 @@
+{
+  "id": "week-01-02",
+  "weeks": [
+    1,
+    2
+  ],
+  "title": "Voice AI basics and Programming Fundamentals",
+  "goal": "Know what the basic parts of any software system do and how they talk to each other, then how a voice agent works end to end.",
+  "due": "Sunday of week 2",
+  "pace": [
+    {
+      "week": 1,
+      "focus": "Programming fundamentals",
+      "items": [
+        "Frontend, backend, database and APIs",
+        "Postman, curl, GitHub and deploying",
+        "Build P1: a small call-log app"
+      ]
+    },
+    {
+      "week": 2,
+      "focus": "Voice AI basics",
+      "items": [
+        "How a voice agent works, and LiveKit",
+        "The RevRag agent settings, one tab at a time",
+        "Build P2: your own voice bot"
+      ]
+    }
+  ],
+  "concepts": [
+    {
+      "id": "restaurant",
+      "part": "Programming fundamentals",
+      "title": "An app works like a restaurant",
+      "summary": "Dining room = frontend, waiter = API, kitchen = backend, pantry = database.",
+      "body": [
+        "The dining room is the frontend: what you see and click.",
+        "The waiter is the API: it carries your request to the kitchen and brings the answer back, and it only accepts orders that are on the menu.",
+        "The kitchen is the backend: it does the work and applies the rules.",
+        "The pantry is the database: where everything is stored.",
+        "You never walk into the kitchen, and the browser never touches the database directly. Everything goes through the waiter."
+      ],
+      "illustration": "restaurant-analogy"
+    },
+    {
+      "id": "frontend",
+      "part": "Programming fundamentals",
+      "title": "Frontend: what people see and touch",
+      "summary": "Runs on the user's device, shows the data and takes input. Never holds keys, never keeps the data.",
+      "body": [
+        "On the web it runs in a browser and is built with HTML, CSS and JavaScript, usually React. On mobile it is built with React Native, Flutter or the platform's own tools.",
+        "It runs on the user's device, so anyone can look inside. A key in frontend code is a key you've given away.",
+        "It doesn't keep the data. It asks the backend for it, through an API.",
+        "RevRag's SDKs plug into a client's frontend: React and Angular on the web, React Native, Flutter and Android on mobile. You'll integrate one in P4."
+      ],
+      "illustration": "frontend-devices"
+    },
+    {
+      "id": "backend",
+      "part": "Programming fundamentals",
+      "title": "Backend: where the work happens",
+      "summary": "Every request goes through four steps: is it allowed, is it valid, do the work, reply.",
+      "body": [
+        "Code running on a server, a computer that's always on somewhere else. Requests come in through doors such as GET /calls.",
+        "Step 1, is it allowed: checks who's asking, usually with an API key. Step 2, is it valid: checks the request has everything it needs. Step 3, do the work: reads or writes the database, or calls another service like an LLM. Step 4, reply: a status code and data, usually JSON.",
+        "The backend keeps the secrets, in settings called environment variables.",
+        "A webhook receiver (P3) and a Lambda (P5) are both tiny backends."
+      ],
+      "illustration": "backend-four-steps"
+    },
+    {
+      "id": "database",
+      "part": "Programming fundamentals",
+      "title": "Database: where the data lives",
+      "summary": "Tables of rows and columns, spoken to in SQL. It remembers, and only the backend talks to it.",
+      "body": [
+        "Each row is one record (one call), each column is one detail, and id is the row's unique number.",
+        "GET /calls becomes a read: SELECT caller, summary FROM calls;",
+        "POST /calls becomes a write: INSERT INTO calls (caller, summary) VALUES ('Asha', 'Wants a loan');",
+        "The backend can restart and the data stays. Postgres keeps tables (P1); DynamoDB in week 5 keeps items you look up by a key."
+      ],
+      "illustration": "calls-table"
+    },
+    {
+      "id": "request-anatomy",
+      "part": "APIs",
+      "title": "Anatomy of a request and its reply",
+      "summary": "A request has a method, an address, headers and a body. A reply has a status code and usually a body.",
+      "body": [
+        "Method: what you want to do. GET reads, POST adds.",
+        "Address: where to send it, the server and then the door, such as https://my-call-log.onrender.com/calls.",
+        "Headers: extra details, like Content-Type: application/json and your API key.",
+        "Body: the data, written as JSON.",
+        "The reply has a status code, such as 201 Created, and usually a body with the saved record and its new id."
+      ],
+      "illustration": "request-anatomy"
+    },
+    {
+      "id": "status-codes",
+      "part": "APIs",
+      "title": "GET vs POST, and what replies mean",
+      "summary": "2xx it worked, 4xx fix your request, 5xx it's the server's problem.",
+      "body": [
+        "200 OK: it worked, here's your data. 201 Created: the new thing was saved.",
+        "400 Bad Request: the request is wrong or incomplete. 401 Unauthorized: the API key is missing or wrong. 404 Not Found: wrong address.",
+        "500 Server Error: something broke on the server.",
+        "When a client says the webhook isn't working, the status code is the first thing you look at."
+      ],
+      "illustration": "status-codes"
+    },
+    {
+      "id": "three-ways",
+      "part": "APIs",
+      "title": "Three ways to send the same request",
+      "summary": "Browser (GET only), Postman (a form) and curl (one shareable command).",
+      "body": [
+        "A browser can only send GET: paste the address and press Enter.",
+        "Postman: fill in the method, address, headers and body, then press Send. Start with the RevRag Postman collection.",
+        "curl: one command in the terminal. -X is the method, -H a header and -d the body. Easy to paste to an engineer so they can run exactly what you ran."
+      ],
+      "illustration": "three-ways"
+    },
+    {
+      "id": "round-trip",
+      "part": "Putting it together",
+      "title": "What happens when you open your P1 page",
+      "summary": "Browser loads React, React calls GET /calls, the backend runs SELECT, rows come back as JSON, the list appears.",
+      "body": [
+        "1. You open the page and the browser loads the React code from Vercel.",
+        "2. React asks the backend: GET /calls. The backend checks the request.",
+        "3. The backend asks the database: SELECT * FROM calls.",
+        "4. The database sends the rows back.",
+        "5. The backend replies 200 OK with the calls as JSON.",
+        "6. React draws one line per call.",
+        "When a client says something is broken, an FDE's job is to work out which of these steps failed."
+      ],
+      "illustration": "round-trip"
+    },
+    {
+      "id": "local-vs-deployed",
+      "part": "Going online",
+      "title": "Local vs deployed: where your code runs",
+      "summary": "localhost is only you. Deploying puts your code on always-on hosts: Vercel, Render and Neon.",
+      "body": [
+        "Local: http://localhost:8000. Only you can open it, and it stops when your laptop sleeps.",
+        "Deployed: your code goes to GitHub and a hosting service runs it. Vercel runs the React page, Render the Python API, Neon the Postgres database.",
+        "Keys travel separately: in .env on your laptop, pasted into the host's settings page online. Never in code.",
+        "Works locally but broken online? Check for a missing key or an address still pointing at localhost. Render's free plan sleeps, so the first request can take up to a minute."
+      ],
+      "illustration": "local-vs-deployed"
+    },
+    {
+      "id": "voice-loop",
+      "part": "Voice agents",
+      "title": "Every reply goes ears → brain → mouth",
+      "summary": "Speech-to-text, then the LLM, then text-to-speech, then the loop starts again.",
+      "body": [
+        "The ears: speech-to-text (STT) turns the caller's voice into written text.",
+        "The brain: the LLM reads the text, follows its prompt and writes a reply.",
+        "The mouth: text-to-speech (TTS) turns the reply into a natural-sounding voice.",
+        "The reply plays back to the caller and the loop starts again. Every step takes time, and the delays add up."
+      ],
+      "illustration": "voice-loop"
+    },
+    {
+      "id": "latency",
+      "part": "Voice agents",
+      "title": "Why speed matters: waiting vs streaming",
+      "summary": "One step at a time adds up to ~1.9 s of silence. Streaming overlaps the steps so the first word comes at ~0.6 s.",
+      "body": [
+        "One step at a time: STT 0.5 s + LLM 1.0 s + TTS 0.4 s, and the caller waits 1.9 s for the first word.",
+        "Streaming: the LLM writes word by word and TTS starts speaking before the reply is done, so the first word arrives at about 0.6 s.",
+        "About 0.4 to 0.8 s feels natural. Past 1 to 2 s, callers talk over the agent.",
+        "Timings are illustrative."
+      ],
+      "illustration": "latency-timeline"
+    },
+    {
+      "id": "turn-taking",
+      "part": "Voice agents",
+      "title": "Turn-taking: has the caller finished?",
+      "summary": "A silence timer decides when it's the agent's turn. Too short cuts people off; too long feels slow.",
+      "body": [
+        "People pause mid-sentence all the time, so the agent has to guess when they've finished.",
+        "Timer too short: the agent jumps in during a natural pause and cuts the caller off.",
+        "Timer too long: every reply starts late and the agent feels slow and robotic.",
+        "Smart turn detection also reads the words: \"for my…\" isn't finished yet. In RevRag this lives in the Speech tab: turn detection and response eagerness."
+      ],
+      "illustration": "turn-taking"
+    },
+    {
+      "id": "interruptions",
+      "part": "Voice agents",
+      "title": "Interruptions: when the caller cuts in",
+      "summary": "Barge-in means the agent stops the moment the caller talks. Noise and echo cause false alarms.",
+      "body": [
+        "Barge-in: the agent stops the moment the caller starts talking, then listens. In RevRag: the interruption settings.",
+        "False alarms: a cough, a TV or street noise can look like an interruption. In RevRag: background noise.",
+        "Echo: the agent's own voice leaking back into the mic can sound like the caller cutting in.",
+        "Many complaints about agents that keep stopping or won't stop talking come down to these settings."
+      ],
+      "illustration": "interruptions"
+    },
+    {
+      "id": "livekit",
+      "part": "Voice agents",
+      "title": "Where LiveKit fits",
+      "summary": "A LiveKit room is like a Zoom call. Your agent is a program that joins it and runs STT → LLM → TTS.",
+      "body": [
+        "You join the room from a browser (P2), or a phone call is connected into it through SIP (week 3).",
+        "Your agent program, Python from the quickstart, joins the same room as another participant.",
+        "It listens, sends the audio through STT, the LLM and TTS (AI services reached over the internet) and speaks back into the room."
+      ],
+      "illustration": "livekit-room"
+    },
+    {
+      "id": "agent-settings",
+      "part": "Voice agents",
+      "title": "The RevRag agent settings, placed on the call",
+      "summary": "For each setting, ask which step of the call it changes: before, hear, think, speak or after.",
+      "body": [
+        "Before the call: Pre-call processing gets things ready, like the lead's details.",
+        "Hear: the Speech tab, with the STT model, turn detection, interruption, response eagerness and background noise.",
+        "Think: the LLM model, the knowledge base and functions: which model thinks, what it knows and the actions it can take.",
+        "Speak: Voice and Pronunciation, how it sounds and how it says names and words.",
+        "After the call: Post-call processing, with summaries and outcomes sent on to the client's systems.",
+        "Across every step: Fallbacks, the backup plan for when something goes wrong."
+      ],
+      "illustration": "settings-on-the-call"
+    },
+    {
+      "id": "webhooks-preview",
+      "part": "What you'll build",
+      "title": "Why P1 and P2? In week 3 they join up",
+      "summary": "When a call with your bot ends, P2 sends a signed summary to P1. RevRag does the same for clients every day.",
+      "body": [
+        "Your practice in week 3 (P3): when a call with your bot ends, the bot sends a summary to your app by webhook, signed with a shared secret.",
+        "Real client work: when a campaign call ends, RevRag sends the result to the client's CRM by webhook, signed and checked the same way.",
+        "Learn the pattern on your own projects first, then do it for real clients."
+      ],
+      "illustration": "webhook-preview"
+    }
+  ],
+  "resources": [
+    {
+      "group": "Voice AI",
+      "items": [
+        {
+          "title": "Voice AI & Voice Agents: An Illustrated Primer",
+          "url": "https://voiceaiandvoiceagents.com/",
+          "note": "Read across both weeks. Discussed at the week 3 kickoff."
+        },
+        {
+          "title": "LiveKit: Voice agent architecture",
+          "url": null,
+          "note": ""
+        },
+        {
+          "title": "LiveKit: Turns overview",
+          "url": null,
+          "note": "How the agent decides you've stopped talking."
+        }
+      ]
+    },
+    {
+      "group": "Apps and APIs",
+      "items": [
+        {
+          "title": "Fireship: 100+ Web Development Things you Should Know",
+          "url": null,
+          "note": ""
+        },
+        {
+          "title": "IBM: What is a REST API?",
+          "url": null,
+          "note": ""
+        },
+        {
+          "title": "Fireship in 100 seconds: Python, React, PostgreSQL and SQL",
+          "url": null,
+          "note": "About 2 minutes each."
+        }
+      ]
+    },
+    {
+      "group": "Hands-on tools",
+      "items": [
+        {
+          "title": "Postman quick start",
+          "url": null,
+          "note": ""
+        },
+        {
+          "title": "RevRag Postman collection",
+          "url": null,
+          "note": "Internal: from the tech team."
+        },
+        {
+          "title": "curl tutorial",
+          "url": null,
+          "note": "Only the sections on GET, POST and headers."
+        },
+        {
+          "title": "GitHub Docs: Hello World",
+          "url": "https://docs.github.com/en/get-started/start-your-journey/hello-world",
+          "note": ""
+        }
+      ]
+    },
+    {
+      "group": "Agent settings",
+      "items": [
+        {
+          "title": "Client TTS, STT and interruption issues, and how each was fixed",
+          "url": null,
+          "note": "Internal: from the tech team."
+        }
+      ]
+    },
+    {
+      "group": "Optional extras",
+      "items": [
+        {
+          "title": "Picovoice: Voice UX, latency, turn-taking and barge-in",
+          "url": null,
+          "note": ""
+        },
+        {
+          "title": "Where voice agents fail in production",
+          "url": null,
+          "note": ""
+        }
+      ]
+    }
+  ],
+  "projects": [
+    {
+      "id": "P1",
+      "title": "A small call-log app",
+      "summary": "The restaurant from Part 1, built for real: Postgres on Neon, a Python API on Render, a React page on Vercel.",
+      "steps": [
+        "Database: a Postgres table called calls, on Neon.",
+        "Backend: a Python API with GET /calls and POST /calls, on Render.",
+        "Frontend: a React page that lists the calls, on Vercel.",
+        "Push all the code to a GitHub repo in your own account, with a short README on how to run it."
+      ],
+      "done_when": "The page and the API run on public URLs, and a curl POST adds a row that shows up on the React page.",
+      "submit": [
+        {
+          "id": "repo_url",
+          "label": "GitHub repo link",
+          "kind": "url"
+        },
+        {
+          "id": "page_url",
+          "label": "Live React page link",
+          "kind": "url"
+        },
+        {
+          "id": "api_url",
+          "label": "Live API link",
+          "kind": "url"
+        },
+        {
+          "id": "curl",
+          "label": "The curl command you used to add a call",
+          "kind": "text"
+        },
+        {
+          "id": "postman",
+          "label": "The Postman request you used to add a call",
+          "kind": "text"
+        }
+      ],
+      "warning": "Keep the database's connection string private. It contains the password."
+    },
+    {
+      "id": "P2",
+      "title": "Your own voice bot",
+      "summary": "The ears → brain → mouth loop, built with the LiveKit Voice AI quickstart and your own prompt.",
+      "steps": [
+        "Create a free LiveKit Cloud account, then follow the Voice AI quickstart with Claude Code.",
+        "Give the bot a short prompt for a real use case, such as qualifying a loan lead.",
+        "Talk to it in the browser. Change one setting at a time (voice, turn detection, interruption) and note what each change does.",
+        "Push the code and your prompt to a GitHub repo in your own account."
+      ],
+      "done_when": "You can hold a 2-minute conversation with the bot, and you have notes on 3 setting changes.",
+      "submit": [
+        {
+          "id": "repo_url",
+          "label": "GitHub repo link",
+          "kind": "url"
+        },
+        {
+          "id": "recording_url",
+          "label": "Link to a screen recording of a 2-minute conversation",
+          "kind": "url"
+        },
+        {
+          "id": "notes",
+          "label": "Notes on 3 setting changes: what you changed, what you expected, what happened",
+          "kind": "text"
+        }
+      ],
+      "warning": "Keep your LiveKit keys in .env and out of the repo."
+    }
+  ],
+  "quiz": [
+    {
+      "id": "q01",
+      "concept": "restaurant",
+      "question": "In the restaurant analogy, which part of an app is the waiter?",
+      "options": [
+        "The API",
+        "The frontend",
+        "The backend",
+        "The database"
+      ],
+      "answer": 0,
+      "explanation": "The waiter carries your order to the kitchen and brings the dish back. That's the API, and it only accepts orders on the menu."
+    },
+    {
+      "id": "q02",
+      "concept": "restaurant",
+      "question": "Why should the browser never talk to the database directly?",
+      "options": [
+        "Databases can't read JSON",
+        "The frontend runs on the user's device, so any credentials in it would be exposed",
+        "Browsers are too slow for SQL",
+        "Databases only accept requests from Vercel"
+      ],
+      "answer": 1,
+      "explanation": "Anyone can look inside frontend code. Everything goes through the backend, which keeps the secrets."
+    },
+    {
+      "id": "q03",
+      "concept": "frontend",
+      "question": "A developer put an API key in their React code. What's the problem?",
+      "options": [
+        "Nothing, React hides it",
+        "React can't read environment variables",
+        "The key is visible to anyone who opens the page's code",
+        "The key will expire faster"
+      ],
+      "answer": 2,
+      "explanation": "The frontend runs on the user's device. A key in frontend code is a key you've given away."
+    },
+    {
+      "id": "q04",
+      "concept": "frontend",
+      "question": "Where do RevRag's SDKs plug in?",
+      "options": [
+        "The client's database",
+        "The client's DNS settings",
+        "LiveKit Cloud",
+        "The client's frontend, web or mobile"
+      ],
+      "answer": 3,
+      "explanation": "A client's developer adds a few lines to their web or mobile app, and the voice agent appears inside it."
+    },
+    {
+      "id": "q05",
+      "concept": "backend",
+      "question": "What is the first thing a backend checks on most requests?",
+      "options": [
+        "Who's asking, usually with an API key",
+        "Whether the database is full",
+        "Which browser sent it",
+        "How long the body is"
+      ],
+      "answer": 0,
+      "explanation": "Step 1 is \"is it allowed?\". Then is it valid, do the work, and reply."
+    },
+    {
+      "id": "q06",
+      "concept": "backend",
+      "question": "Where should a backend keep its database password?",
+      "options": [
+        "In the code, as a constant",
+        "In environment variables, loaded from .env locally or the host's settings online",
+        "In the README",
+        "In the frontend, so it can pass it along"
+      ],
+      "answer": 1,
+      "explanation": "Secrets live in environment variables. Locally that's .env; on Render or Vercel you paste them into the settings page."
+    },
+    {
+      "id": "q07",
+      "concept": "database",
+      "question": "POST /calls usually becomes which SQL statement?",
+      "options": [
+        "SELECT",
+        "DELETE",
+        "INSERT",
+        "DROP"
+      ],
+      "answer": 2,
+      "explanation": "POST adds something new, which is an INSERT. GET /calls becomes a SELECT."
+    },
+    {
+      "id": "q08",
+      "concept": "database",
+      "question": "In the calls table, what does one row represent?",
+      "options": [
+        "One detail, like the caller's name",
+        "One API request",
+        "One user of the app",
+        "One call"
+      ],
+      "answer": 3,
+      "explanation": "Each row is one record, here one call. Each column is one detail about it."
+    },
+    {
+      "id": "q09",
+      "concept": "request-anatomy",
+      "question": "Which part of a request carries the API key?",
+      "options": [
+        "A header",
+        "The method",
+        "The address",
+        "The status code"
+      ],
+      "answer": 0,
+      "explanation": "Headers carry extra details, like the format (Content-Type) and your API key."
+    },
+    {
+      "id": "q10",
+      "concept": "request-anatomy",
+      "question": "What format is the request and reply body usually written in?",
+      "options": [
+        "CSV",
+        "JSON",
+        "SQL",
+        "HTML"
+      ],
+      "answer": 1,
+      "explanation": "JSON: labels and values in curly brackets, readable by humans and machines."
+    },
+    {
+      "id": "q11",
+      "concept": "status-codes",
+      "question": "A client's webhook call returns 401. Whose problem is it most likely?",
+      "options": [
+        "The server's: it crashed",
+        "The network's",
+        "The sender's: the API key is missing or wrong",
+        "Nobody's: 401 means success"
+      ],
+      "answer": 2,
+      "explanation": "4xx means fix your request. 401 specifically means the key is missing or wrong."
+    },
+    {
+      "id": "q12",
+      "concept": "status-codes",
+      "question": "You POST a new call and get back 201. What happened?",
+      "options": [
+        "The address was wrong",
+        "The server broke",
+        "The request was missing a field",
+        "The call was saved"
+      ],
+      "answer": 3,
+      "explanation": "201 Created: it worked and the new thing was saved."
+    },
+    {
+      "id": "q13",
+      "concept": "status-codes",
+      "question": "Which status code means something broke on the server itself?",
+      "options": [
+        "200",
+        "400",
+        "404",
+        "500"
+      ],
+      "answer": 3,
+      "explanation": "5xx is the server's problem. 4xx is yours."
+    },
+    {
+      "id": "q14",
+      "concept": "three-ways",
+      "question": "Why can't you add a call to P1 just by pasting the address into a browser?",
+      "options": [
+        "Browsers don't support HTTPS",
+        "A browser address bar only sends GET requests",
+        "Browsers block JSON",
+        "You need to be logged in to Render"
+      ],
+      "answer": 1,
+      "explanation": "A browser can only read with GET. Use Postman or curl to send a POST."
+    },
+    {
+      "id": "q15",
+      "concept": "three-ways",
+      "question": "In a curl command, what does -d set?",
+      "options": [
+        "The method",
+        "A header",
+        "The body (data)",
+        "The domain"
+      ],
+      "answer": 2,
+      "explanation": "-X is the method, -H a header, -d the body."
+    },
+    {
+      "id": "q16",
+      "concept": "round-trip",
+      "question": "In the P1 round trip, what happens right after React sends GET /calls?",
+      "options": [
+        "The database draws the list",
+        "Vercel runs the SQL",
+        "The browser reads Postgres directly",
+        "The backend checks the request, then asks the database"
+      ],
+      "answer": 3,
+      "explanation": "The backend checks the request, then runs SELECT on the database, then replies with JSON."
+    },
+    {
+      "id": "q17",
+      "concept": "local-vs-deployed",
+      "question": "Your P1 page works on your laptop but shows no calls on Vercel. What should you check first?",
+      "options": [
+        "Whether the frontend still points at localhost, or a key is missing from the host's settings",
+        "Reinstall React",
+        "Delete the database",
+        "Switch from Postgres to DynamoDB"
+      ],
+      "answer": 0,
+      "explanation": "The two most common causes are an address still pointing at localhost and a key missing from the host's settings."
+    },
+    {
+      "id": "q18",
+      "concept": "local-vs-deployed",
+      "question": "The first request to your Render API after a break takes almost a minute. What's going on?",
+      "options": [
+        "The API is broken",
+        "Render's free plan sleeps when idle and is waking up",
+        "Neon deleted your table",
+        "Your curl command is wrong"
+      ],
+      "answer": 1,
+      "explanation": "That's normal on the free plan, not broken."
+    },
+    {
+      "id": "q19",
+      "concept": "voice-loop",
+      "question": "What is the correct order of the voice agent loop?",
+      "options": [
+        "TTS → LLM → STT",
+        "LLM → STT → TTS",
+        "STT → LLM → TTS",
+        "STT → TTS → LLM"
+      ],
+      "answer": 2,
+      "explanation": "Ears (speech-to-text), then brain (LLM), then mouth (text-to-speech)."
+    },
+    {
+      "id": "q20",
+      "concept": "latency",
+      "question": "Why does streaming make a voice agent feel faster?",
+      "options": [
+        "It uses a smaller LLM",
+        "It skips speech-to-text",
+        "It compresses the audio",
+        "The steps overlap, so TTS starts speaking before the full reply is written"
+      ],
+      "answer": 3,
+      "explanation": "Each step works on partial results, so the first word arrives in well under a second instead of ~1.9 s."
+    },
+    {
+      "id": "q21",
+      "concept": "latency",
+      "question": "Roughly how quickly should the first word of a reply arrive to feel natural?",
+      "options": [
+        "0.4–0.8 s",
+        "2–3 s",
+        "5 s",
+        "It doesn't matter on a phone call"
+      ],
+      "answer": 0,
+      "explanation": "About 0.4 to 0.8 s feels natural. Past 1 to 2 s, callers start talking over the agent."
+    },
+    {
+      "id": "q22",
+      "concept": "turn-taking",
+      "question": "A client says their agent keeps cutting callers off mid-sentence. Which setting is the likeliest cause?",
+      "options": [
+        "The voice is too fast",
+        "The turn-detection silence timer is too short",
+        "The knowledge base is too big",
+        "Post-call processing is off"
+      ],
+      "answer": 1,
+      "explanation": "A timer that's too short makes the agent jump in during natural pauses. In RevRag it lives in the Speech tab."
+    },
+    {
+      "id": "q23",
+      "concept": "interruptions",
+      "question": "The agent keeps stopping mid-sentence even though the caller is silent. Which of these could cause it?",
+      "options": [
+        "The LLM prompt is too short",
+        "The webhook secret is wrong",
+        "Background noise or echo being mistaken for the caller",
+        "The caller's phone is on Wi-Fi"
+      ],
+      "answer": 2,
+      "explanation": "Noise and echo cause false barge-ins. Check the background noise and interruption settings."
+    },
+    {
+      "id": "q24",
+      "concept": "agent-settings",
+      "question": "Sending a call summary to the client's CRM belongs to which settings area?",
+      "options": [
+        "Speech",
+        "Pronunciation",
+        "Pre-call processing",
+        "Post-call processing"
+      ],
+      "answer": 3,
+      "explanation": "After the call: post-call processing sends summaries and outcomes on to the client's systems."
+    }
+  ],
+  "voice_quiz": [
+    {
+      "id": "v1",
+      "concept": "restaurant",
+      "prompt": "Explain the four parts of an app using the restaurant analogy, as if to a client who has never coded.",
+      "look_for": [
+        "frontend is the dining room",
+        "API is the waiter",
+        "backend is the kitchen",
+        "database is the pantry",
+        "the browser never touches the database directly"
+      ]
+    },
+    {
+      "id": "v2",
+      "concept": "round-trip",
+      "prompt": "Walk me through what happens, step by step, when someone opens the P1 page.",
+      "look_for": [
+        "browser loads React from Vercel",
+        "GET /calls to the backend",
+        "backend runs SELECT on the database",
+        "200 OK with JSON",
+        "React draws one line per call"
+      ]
+    },
+    {
+      "id": "v3",
+      "concept": "status-codes",
+      "prompt": "A client says their webhook isn't working and they're seeing 401 errors. What does that tell you, and what would you check?",
+      "look_for": [
+        "4xx means the request is wrong",
+        "401 means the key is missing or wrong",
+        "check the header and the key value",
+        "not a server crash"
+      ]
+    },
+    {
+      "id": "v4",
+      "concept": "voice-loop",
+      "prompt": "Describe the ears, brain and mouth of a voice agent, and what each one does.",
+      "look_for": [
+        "speech-to-text turns audio into text",
+        "the LLM follows the prompt and writes a reply",
+        "text-to-speech turns the reply into a voice",
+        "the loop repeats"
+      ]
+    },
+    {
+      "id": "v5",
+      "concept": "latency",
+      "prompt": "Why does latency matter so much for voice agents, and how does streaming help?",
+      "look_for": [
+        "delays add up across STT, LLM and TTS",
+        "first word around 0.4 to 0.8 seconds feels natural",
+        "callers talk over a slow agent",
+        "streaming overlaps the steps"
+      ]
+    },
+    {
+      "id": "v6",
+      "concept": "turn-taking",
+      "prompt": "A client says the agent feels slow and robotic, but also sometimes cuts people off. Talk me through turn detection and what you'd change.",
+      "look_for": [
+        "silence timer",
+        "too short cuts people off",
+        "too long feels slow",
+        "smart turn detection reads the words",
+        "Speech tab: turn detection and response eagerness"
+      ]
+    },
+    {
+      "id": "v7",
+      "concept": "local-vs-deployed",
+      "prompt": "Where should API keys and passwords live, locally and once deployed? Why never in the frontend or in GitHub?",
+      "look_for": [
+        ".env on the laptop",
+        "host's settings page online",
+        "frontend code is visible to anyone",
+        "never in code, GitHub, chats or screenshots"
+      ]
+    }
+  ],
+  "illustrations": [
+    {
+      "id": "restaurant-analogy",
+      "title": "An app is a restaurant",
+      "brief": "Four panels left to right: dining room (frontend), waiter (API), kitchen (backend), pantry (database), with an arrow for the order going in and the dish coming back."
+    },
+    {
+      "id": "frontend-devices",
+      "title": "Frontend on web and mobile",
+      "brief": "A browser window and a phone side by side, both showing the same list of calls, with a lock icon crossed out over a key to show keys don't belong here."
+    },
+    {
+      "id": "backend-four-steps",
+      "title": "The backend's four steps",
+      "brief": "A request passing through four gates: is it allowed, is it valid, do the work, reply."
+    },
+    {
+      "id": "calls-table",
+      "title": "The calls table",
+      "brief": "A four-row table (id, caller, summary, created_at) with labels for row, column and id, and SELECT and INSERT arrows."
+    },
+    {
+      "id": "request-anatomy",
+      "title": "Anatomy of a request",
+      "brief": "A request card (method, address, headers, body) and a reply card (status, body) side by side."
+    },
+    {
+      "id": "status-codes",
+      "title": "Status code families",
+      "brief": "Three colour bands: 2xx it worked, 4xx fix your request, 5xx the server's problem."
+    },
+    {
+      "id": "three-ways",
+      "title": "Three ways to send a request",
+      "brief": "Browser, Postman and terminal icons each sending the same request to one server."
+    },
+    {
+      "id": "round-trip",
+      "title": "The P1 round trip",
+      "brief": "A sequence diagram across frontend, backend and database with the six numbered steps."
+    },
+    {
+      "id": "local-vs-deployed",
+      "title": "Local vs deployed",
+      "brief": "Laptop on the left with localhost, an arrow through GitHub to Vercel, Render and Neon on the right."
+    },
+    {
+      "id": "voice-loop",
+      "title": "Ears → brain → mouth",
+      "brief": "A circular loop: caller → STT → LLM → TTS → caller, with sample text at each stage."
+    },
+    {
+      "id": "latency-timeline",
+      "title": "Waiting vs streaming",
+      "brief": "Two timelines from 0 to 2 s: sequential bars adding to 1.9 s, and overlapping bars with the first word at 0.6 s."
+    },
+    {
+      "id": "turn-taking",
+      "title": "Turn-taking timer",
+      "brief": "Caller speech blocks with a short pause (agent keeps listening) and a longer silence (timer runs out, agent replies)."
+    },
+    {
+      "id": "interruptions",
+      "title": "Barge-in and false alarms",
+      "brief": "Agent speech cut short when the caller starts talking, plus icons for noise and echo."
+    },
+    {
+      "id": "livekit-room",
+      "title": "A LiveKit room",
+      "brief": "A room in the middle with a browser, a phone (SIP) and an agent program joining it, and AI services off to the side."
+    },
+    {
+      "id": "settings-on-the-call",
+      "title": "Settings placed on the call",
+      "brief": "A horizontal call timeline (before, hear, think, speak, after) with each RevRag settings tab pinned to its step, and Fallbacks spanning all of them."
+    },
+    {
+      "id": "webhook-preview",
+      "title": "P2 → P1 webhook",
+      "brief": "Two rows: practice (P2 bot → signed webhook → P1 app) and real work (RevRag agent → signed webhook → client CRM)."
+    },
+    {
+      "id": "p1-architecture",
+      "title": "P1 architecture",
+      "brief": "curl/Postman POST into the Python API on Render, which writes Postgres on Neon; the React page on Vercel reads with GET."
+    },
+    {
+      "id": "p2-architecture",
+      "title": "P2 architecture",
+      "brief": "You in the browser, a LiveKit Cloud room, and your Python agent running STT → LLM → TTS with your prompt."
+    }
+  ]
+}
