@@ -62,7 +62,8 @@ through your LiveKit project and needs no separate speech or LLM keys.
 ## Deploy
 
 - **Neon:** create a project and copy the connection string.
-- **Render:** New → Blueprint, pick this repo. `render.yaml` sets up the API; add the secret values in its Environment tab.
+- **Render:** the API deploys from the `Dockerfile` at the repo root. Either use New → Blueprint (reads `render.yaml`), or New → Web Service with Language **Docker**, Root Directory blank, Dockerfile Path `./Dockerfile`, Health Check Path `/health`. Add the secret values in its Environment tab.
+- To test the image locally: `docker build -t fde-learning-api . && docker run -p 8000:8000 --env-file backend/.env fde-learning-api`
 - **Vercel:** import the repo with root directory `frontend` and set `VITE_API_URL`.
 - **LiveKit:** run the worker with `python agent.py start` on any always-on host, or deploy it to LiveKit Cloud.
 
