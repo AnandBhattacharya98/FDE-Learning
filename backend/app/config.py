@@ -10,9 +10,27 @@ load_dotenv()
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
+def normalize_database_url(raw: str | None) -> str:
+    """Tidy a pasted connection string so small copy-paste slips don't break start-up.
+
+    Accepts the string exactly as Neon shows it (postgresql://...), with or without
+    surrounding quotes, spaces, line breaks or a leading "psql".
+    """
+    url = "".join((raw or "").split())  # drop all whitespace, including line breaks
+    if url.startswith("psql"):
+        url = url[4:]
+    url = url.strip("'\"")
+    if not url:
+        return "sqlite:///./fde.db"
+    for prefix in ("postgres://", "postgresql://"):
+        if url.startswith(prefix):
+            url = "postgresql+psycopg://" + url[len(prefix):]
+    return url
+
+
 class Settings:
     def __init__(self) -> None:
-        self.database_url = os.getenv("DATABASE_URL") or "sqlite:///./fde.db"
+        self.database_url = normalize_database_url(os.getenv("DATABASE_URL"))
         self.jwt_secret = os.getenv("JWT_SECRET") or ""
         self.jwt_ttl_hours = int(os.getenv("JWT_TTL_HOURS") or 24 * 7)
         self.cors_origins = [
