@@ -34,7 +34,10 @@ class Settings:
         self.jwt_secret = os.getenv("JWT_SECRET") or ""
         self.jwt_ttl_hours = int(os.getenv("JWT_TTL_HOURS") or 24 * 7)
         self.cors_origins = [
-            o.strip() for o in (os.getenv("CORS_ORIGINS") or "http://localhost:5173").split(",") if o.strip()
+            # Browsers send the origin without a trailing slash, so drop any that were pasted.
+            o.strip().strip("'\"").rstrip("/")
+            for o in (os.getenv("CORS_ORIGINS") or "http://localhost:5173").split(",")
+            if o.strip()
         ]
         self.content_dir = Path(os.getenv("CONTENT_DIR") or REPO_ROOT / "content")
         self.livekit_url = os.getenv("LIVEKIT_URL") or ""

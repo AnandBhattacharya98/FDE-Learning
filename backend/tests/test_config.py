@@ -35,3 +35,10 @@ def test_truncated_url_gives_clear_error_without_password():
 
 def test_full_url_builds_engine():
     _make_engine(EXPECTED)
+
+
+def test_cors_origins_ignore_trailing_slashes_and_spaces(monkeypatch):
+    from app.config import Settings
+
+    monkeypatch.setenv("CORS_ORIGINS", "http://localhost:5173/, https://fde-learning.vercel.app/ ,")
+    assert Settings().cors_origins == ["http://localhost:5173", "https://fde-learning.vercel.app"]
