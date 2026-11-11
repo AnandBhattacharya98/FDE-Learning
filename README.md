@@ -48,7 +48,7 @@ Keys never go in code, GitHub, chat or screenshots. Locally they go in each fold
 
 | Variable | Where you get it | Goes in |
 |---|---|---|
-| `DATABASE_URL` | Neon → your project → **Connect**. Change `postgresql://` to `postgresql+psycopg://`. | `backend/.env`, Render |
+| `DATABASE_URL` | Neon → your project → **Connect**. Click Show password, then copy the whole string on one line. | `backend/.env`, Render |
 | `JWT_SECRET` | Make one: `python -c "import secrets; print(secrets.token_urlsafe(48))"` | `backend/.env`, Render |
 | `VOICE_WORKER_KEY` | Make one the same way. Must match in both places. | `backend/.env`, `voice_agent/.env`, Render, wherever the worker runs |
 | `LIVEKIT_URL`, `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET` | LiveKit Cloud → your project → **Settings → API keys** | `backend/.env`, `voice_agent/.env`, Render |
