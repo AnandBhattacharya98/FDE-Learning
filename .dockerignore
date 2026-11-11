@@ -1,0 +1,13 @@
+**/.env
+**/.env.*
+!**/.env.example
+**/__pycache__
+**/*.pyc
+**/.venv
+**/venv
+**/*.db
+**/.pytest_cache
+.git
+frontend
+voice_agent
+docs
