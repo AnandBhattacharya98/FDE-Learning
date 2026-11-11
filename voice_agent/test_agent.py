@@ -3,7 +3,7 @@ from agent import build_instructions, load_week
 
 
 def test_instructions_include_every_prompt():
-    week = load_week("week-01-02")
+    week = load_week("week-01")
     text = build_instructions(week, week["voice_quiz"][:3])
     for p in week["voice_quiz"][:3]:
         assert p["prompt"] in text

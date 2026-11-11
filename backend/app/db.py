@@ -35,6 +35,6 @@ def get_db():
 
 
 def init_db() -> None:
-    from . import models  # noqa: F401  (registers tables)
+    from . import models, models_course  # noqa: F401  (registers tables)
 
     Base.metadata.create_all(engine)

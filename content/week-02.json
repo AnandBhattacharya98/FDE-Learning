@@ -1,0 +1,623 @@
+{
+  "id": "week-02",
+  "number": 2,
+  "title": "Voice AI basics",
+  "goal": "Know how a voice agent works end to end, and what each RevRag setting changes.",
+  "due": "Sunday of week 2",
+  "kickoff": "1-hour kickoff at the start of week 2",
+  "learn": [
+    "Draw the speech-to-text → LLM → text-to-speech loop and explain each step",
+    "Explain why latency matters and how streaming helps",
+    "Explain turn-taking and interruptions, and which settings control them",
+    "Place each RevRag settings tab on the call"
+  ],
+  "concepts": [
+    {
+      "id": "voice-loop",
+      "part": "Voice agents",
+      "title": "Every reply goes ears → brain → mouth",
+      "summary": "Speech-to-text, then the LLM, then text-to-speech, then the loop starts again.",
+      "body": [
+        "The ears: speech-to-text (STT) turns the caller's voice into written text.",
+        "The brain: the LLM reads the text, follows its prompt and writes a reply.",
+        "The mouth: text-to-speech (TTS) turns the reply into a natural-sounding voice.",
+        "The reply plays back to the caller and the loop starts again. Every step takes time, and the delays add up."
+      ],
+      "illustration": "voice-loop"
+    },
+    {
+      "id": "latency",
+      "part": "Voice agents",
+      "title": "Why speed matters: waiting vs streaming",
+      "summary": "One step at a time adds up to ~1.9 s of silence. Streaming overlaps the steps so the first word comes at ~0.6 s.",
+      "body": [
+        "One step at a time: STT 0.5 s + LLM 1.0 s + TTS 0.4 s, and the caller waits 1.9 s for the first word.",
+        "Streaming: the LLM writes word by word and TTS starts speaking before the reply is done, so the first word arrives at about 0.6 s.",
+        "About 0.4 to 0.8 s feels natural. Past 1 to 2 s, callers talk over the agent.",
+        "Timings are illustrative."
+      ],
+      "illustration": "latency-timeline"
+    },
+    {
+      "id": "turn-taking",
+      "part": "Voice agents",
+      "title": "Turn-taking: has the caller finished?",
+      "summary": "A silence timer decides when it's the agent's turn. Too short cuts people off; too long feels slow.",
+      "body": [
+        "People pause mid-sentence all the time, so the agent has to guess when they've finished.",
+        "Timer too short: the agent jumps in during a natural pause and cuts the caller off.",
+        "Timer too long: every reply starts late and the agent feels slow and robotic.",
+        "Smart turn detection also reads the words: \"for my…\" isn't finished yet. In RevRag this lives in the Speech tab: turn detection and response eagerness."
+      ],
+      "illustration": "turn-taking"
+    },
+    {
+      "id": "interruptions",
+      "part": "Voice agents",
+      "title": "Interruptions: when the caller cuts in",
+      "summary": "Barge-in means the agent stops the moment the caller talks. Noise and echo cause false alarms.",
+      "body": [
+        "Barge-in: the agent stops the moment the caller starts talking, then listens. In RevRag: the interruption settings.",
+        "False alarms: a cough, a TV or street noise can look like an interruption. In RevRag: background noise.",
+        "Echo: the agent's own voice leaking back into the mic can sound like the caller cutting in.",
+        "Many complaints about agents that keep stopping or won't stop talking come down to these settings."
+      ],
+      "illustration": "interruptions"
+    },
+    {
+      "id": "livekit",
+      "part": "Voice agents",
+      "title": "Where LiveKit fits",
+      "summary": "A LiveKit room is like a Zoom call. Your agent is a program that joins it and runs STT → LLM → TTS.",
+      "body": [
+        "You join the room from a browser (P2), or a phone call is connected into it through SIP (week 3).",
+        "Your agent program, Python from the quickstart, joins the same room as another participant.",
+        "It listens, sends the audio through STT, the LLM and TTS (AI services reached over the internet) and speaks back into the room."
+      ],
+      "illustration": "livekit-room"
+    },
+    {
+      "id": "agent-settings",
+      "part": "Voice agents",
+      "title": "The RevRag agent settings, placed on the call",
+      "summary": "For each setting, ask which step of the call it changes: before, hear, think, speak or after.",
+      "body": [
+        "Before the call: Pre-call processing gets things ready, like the lead's details.",
+        "Hear: the Speech tab, with the STT model, turn detection, interruption, response eagerness and background noise.",
+        "Think: the LLM model, the knowledge base and functions: which model thinks, what it knows and the actions it can take.",
+        "Speak: Voice and Pronunciation, how it sounds and how it says names and words.",
+        "After the call: Post-call processing, with summaries and outcomes sent on to the client's systems.",
+        "Across every step: Fallbacks, the backup plan for when something goes wrong."
+      ],
+      "illustration": "settings-on-the-call"
+    },
+    {
+      "id": "webhooks-preview",
+      "part": "What you'll build",
+      "title": "Why P1 and P2? In week 3 they join up",
+      "summary": "When a call with your bot ends, P2 sends a signed summary to P1. RevRag does the same for clients every day.",
+      "body": [
+        "Your practice in week 3 (P3): when a call with your bot ends, the bot sends a summary to your app by webhook, signed with a shared secret.",
+        "Real client work: when a campaign call ends, RevRag sends the result to the client's CRM by webhook, signed and checked the same way.",
+        "Learn the pattern on your own projects first, then do it for real clients."
+      ],
+      "illustration": "webhook-preview"
+    }
+  ],
+  "resources": [
+    {
+      "group": "Agent settings",
+      "items": [
+        {
+          "title": "Client TTS, STT and interruption issues, and how each was fixed",
+          "url": null,
+          "note": "Internal: from the tech team."
+        }
+      ]
+    },
+    {
+      "group": "Optional extras",
+      "items": [
+        {
+          "title": "Picovoice: Voice UX, latency, turn-taking and barge-in",
+          "url": null,
+          "note": ""
+        },
+        {
+          "title": "Where voice agents fail in production",
+          "url": null,
+          "note": ""
+        }
+      ]
+    },
+    {
+      "group": "Voice AI",
+      "items": [
+        {
+          "title": "Voice AI & Voice Agents: An Illustrated Primer",
+          "url": "https://voiceaiandvoiceagents.com/",
+          "note": "Read across both weeks. Discussed at the week 3 kickoff."
+        },
+        {
+          "title": "LiveKit: Voice agent architecture",
+          "url": null,
+          "note": ""
+        },
+        {
+          "title": "LiveKit: Turns overview",
+          "url": null,
+          "note": "How the agent decides you've stopped talking."
+        }
+      ]
+    }
+  ],
+  "projects": [
+    {
+      "id": "P2",
+      "title": "Your own voice bot",
+      "summary": "The ears → brain → mouth loop, built with the LiveKit Voice AI quickstart and your own prompt.",
+      "steps": [
+        "Create a free LiveKit Cloud account, then follow the Voice AI quickstart with Claude Code.",
+        "Give the bot a short prompt for a real use case, such as qualifying a loan lead.",
+        "Talk to it in the browser. Change one setting at a time (voice, turn detection, interruption) and note what each change does.",
+        "Push the code and your prompt to a GitHub repo in your own account."
+      ],
+      "done_when": "You can hold a 2-minute conversation with the bot, and you have notes on 3 setting changes.",
+      "submit": [
+        {
+          "id": "repo_url",
+          "label": "GitHub repo link",
+          "kind": "url"
+        },
+        {
+          "id": "recording_url",
+          "label": "Link to a screen recording of a 2-minute conversation",
+          "kind": "url"
+        },
+        {
+          "id": "notes",
+          "label": "Notes on 3 setting changes: what you changed, what you expected, what happened",
+          "kind": "text"
+        }
+      ],
+      "warning": "Keep your LiveKit keys in .env and out of the repo."
+    }
+  ],
+  "quiz": [
+    {
+      "id": "q19",
+      "concept": "voice-loop",
+      "question": "What is the correct order of the voice agent loop?",
+      "options": [
+        "TTS → LLM → STT",
+        "LLM → STT → TTS",
+        "STT → LLM → TTS",
+        "STT → TTS → LLM"
+      ],
+      "answer": 2,
+      "explanation": "Ears (speech-to-text), then brain (LLM), then mouth (text-to-speech)."
+    },
+    {
+      "id": "q20",
+      "concept": "latency",
+      "question": "Why does streaming make a voice agent feel faster?",
+      "options": [
+        "It uses a smaller LLM",
+        "It skips speech-to-text",
+        "It compresses the audio",
+        "The steps overlap, so TTS starts speaking before the full reply is written"
+      ],
+      "answer": 3,
+      "explanation": "Each step works on partial results, so the first word arrives in well under a second instead of ~1.9 s."
+    },
+    {
+      "id": "q21",
+      "concept": "latency",
+      "question": "Roughly how quickly should the first word of a reply arrive to feel natural?",
+      "options": [
+        "0.4–0.8 s",
+        "2–3 s",
+        "5 s",
+        "It doesn't matter on a phone call"
+      ],
+      "answer": 0,
+      "explanation": "About 0.4 to 0.8 s feels natural. Past 1 to 2 s, callers start talking over the agent."
+    },
+    {
+      "id": "q22",
+      "concept": "turn-taking",
+      "question": "A client says their agent keeps cutting callers off mid-sentence. Which setting is the likeliest cause?",
+      "options": [
+        "The voice is too fast",
+        "The turn-detection silence timer is too short",
+        "The knowledge base is too big",
+        "Post-call processing is off"
+      ],
+      "answer": 1,
+      "explanation": "A timer that's too short makes the agent jump in during natural pauses. In RevRag it lives in the Speech tab."
+    },
+    {
+      "id": "q23",
+      "concept": "interruptions",
+      "question": "The agent keeps stopping mid-sentence even though the caller is silent. Which of these could cause it?",
+      "options": [
+        "The LLM prompt is too short",
+        "The webhook secret is wrong",
+        "Background noise or echo being mistaken for the caller",
+        "The caller's phone is on Wi-Fi"
+      ],
+      "answer": 2,
+      "explanation": "Noise and echo cause false barge-ins. Check the background noise and interruption settings."
+    },
+    {
+      "id": "q24",
+      "concept": "agent-settings",
+      "question": "Sending a call summary to the client's CRM belongs to which settings area?",
+      "options": [
+        "Speech",
+        "Pronunciation",
+        "Pre-call processing",
+        "Post-call processing"
+      ],
+      "answer": 3,
+      "explanation": "After the call: post-call processing sends summaries and outcomes on to the client's systems."
+    },
+    {
+      "id": "q25",
+      "concept": "livekit",
+      "question": "In LiveKit, how does your agent take part in a call?",
+      "options": [
+        "It replaces the caller's browser",
+        "It joins the room as another participant",
+        "It records the call and replies later",
+        "It runs inside the caller's browser tab"
+      ],
+      "answer": 1,
+      "explanation": "The agent is just another participant in the room, like a person joining a Zoom call."
+    },
+    {
+      "id": "q26",
+      "concept": "latency",
+      "question": "STT takes 0.5 s, the LLM 1.0 s and TTS 0.4 s, one after another. How long until the caller hears the first word?",
+      "options": [
+        "0.4 s",
+        "0.6 s",
+        "1.9 s",
+        "1.0 s"
+      ],
+      "answer": 2,
+      "explanation": "Without streaming the delays add up: 0.5 + 1.0 + 0.4 = 1.9 s of silence."
+    },
+    {
+      "id": "q27",
+      "concept": "turn-taking",
+      "question": "What does smart turn detection add on top of a silence timer?",
+      "options": [
+        "It makes the agent's voice louder",
+        "It skips speech-to-text",
+        "It shortens the prompt",
+        "It also reads the words to judge whether the sentence is finished"
+      ],
+      "answer": 3,
+      "explanation": "\"For my…\" isn't a finished sentence, so the agent keeps listening even if there's a pause."
+    },
+    {
+      "id": "q28",
+      "concept": "interruptions",
+      "question": "What is barge-in?",
+      "options": [
+        "The agent stops talking the moment the caller starts",
+        "The agent transfers the call to a person",
+        "The caller is put on hold",
+        "The agent talks over the caller"
+      ],
+      "answer": 0,
+      "explanation": "A good agent notices the caller's voice, stops almost at once, and listens."
+    },
+    {
+      "id": "q29",
+      "concept": "agent-settings",
+      "question": "Which settings tab controls how the agent says names and unusual words?",
+      "options": [
+        "Fallbacks",
+        "Pronunciation",
+        "Pre-call processing",
+        "Knowledge base"
+      ],
+      "answer": 1,
+      "explanation": "Speak: Voice and Pronunciation decide how it sounds and how it says names and words."
+    },
+    {
+      "id": "q30",
+      "concept": "webhooks-preview",
+      "question": "In week 3, how will your P1 app know a webhook really came from your P2 bot?",
+      "options": [
+        "It comes from a Vercel address",
+        "It returns 200 OK",
+        "The request is signed with a shared secret",
+        "It uses GET instead of POST"
+      ],
+      "answer": 2,
+      "explanation": "A signature made with a shared secret (HMAC) proves the sender, the same way RevRag signs client webhooks."
+    },
+    {
+      "id": "q31",
+      "concept": "agent-settings",
+      "question": "What are Fallbacks for?",
+      "options": [
+        "Choosing the agent's voice",
+        "Uploading leads before the call",
+        "Writing the call summary",
+        "The backup plan for when something goes wrong during a call"
+      ],
+      "answer": 3,
+      "explanation": "Fallbacks span every step of the call: they decide what happens when something fails."
+    },
+    {
+      "id": "q32",
+      "concept": "voice-loop",
+      "question": "Which part of a voice agent follows the prompt and decides what to say?",
+      "options": [
+        "The LLM",
+        "Speech-to-text",
+        "Text-to-speech",
+        "The LiveKit room"
+      ],
+      "answer": 0,
+      "explanation": "The brain is the LLM: it reads the transcribed text, follows its prompt and writes the reply."
+    }
+  ],
+  "voice_quiz": [
+    {
+      "id": "v4",
+      "concept": "voice-loop",
+      "prompt": "Describe the ears, brain and mouth of a voice agent, and what each one does.",
+      "look_for": [
+        "speech-to-text turns audio into text",
+        "the LLM follows the prompt and writes a reply",
+        "text-to-speech turns the reply into a voice",
+        "the loop repeats"
+      ]
+    },
+    {
+      "id": "v5",
+      "concept": "latency",
+      "prompt": "Why does latency matter so much for voice agents, and how does streaming help?",
+      "look_for": [
+        "delays add up across STT, LLM and TTS",
+        "first word around 0.4 to 0.8 seconds feels natural",
+        "callers talk over a slow agent",
+        "streaming overlaps the steps"
+      ]
+    },
+    {
+      "id": "v6",
+      "concept": "turn-taking",
+      "prompt": "A client says the agent feels slow and robotic, but also sometimes cuts people off. Talk me through turn detection and what you'd change.",
+      "look_for": [
+        "silence timer",
+        "too short cuts people off",
+        "too long feels slow",
+        "smart turn detection reads the words",
+        "Speech tab: turn detection and response eagerness"
+      ]
+    }
+  ],
+  "illustrations": [
+    {
+      "id": "voice-loop",
+      "title": "Ears → brain → mouth",
+      "brief": "A circular loop: caller → STT → LLM → TTS → caller, with sample text at each stage."
+    },
+    {
+      "id": "latency-timeline",
+      "title": "Waiting vs streaming",
+      "brief": "Two timelines from 0 to 2 s: sequential bars adding to 1.9 s, and overlapping bars with the first word at 0.6 s."
+    },
+    {
+      "id": "turn-taking",
+      "title": "Turn-taking timer",
+      "brief": "Caller speech blocks with a short pause (agent keeps listening) and a longer silence (timer runs out, agent replies)."
+    },
+    {
+      "id": "interruptions",
+      "title": "Barge-in and false alarms",
+      "brief": "Agent speech cut short when the caller starts talking, plus icons for noise and echo."
+    },
+    {
+      "id": "livekit-room",
+      "title": "A LiveKit room",
+      "brief": "A room in the middle with a browser, a phone (SIP) and an agent program joining it, and AI services off to the side."
+    },
+    {
+      "id": "settings-on-the-call",
+      "title": "Settings placed on the call",
+      "brief": "A horizontal call timeline (before, hear, think, speak, after) with each RevRag settings tab pinned to its step, and Fallbacks spanning all of them."
+    },
+    {
+      "id": "webhook-preview",
+      "title": "P2 → P1 webhook",
+      "brief": "Two rows: practice (P2 bot → signed webhook → P1 app) and real work (RevRag agent → signed webhook → client CRM)."
+    },
+    {
+      "id": "p2-architecture",
+      "title": "P2 architecture",
+      "brief": "You in the browser, a LiveKit Cloud room, and your Python agent running STT → LLM → TTS with your prompt."
+    }
+  ],
+  "pass_percent": 80,
+  "modules": [
+    {
+      "id": "start",
+      "title": "Start here",
+      "summary": "What this week covers and how it's assessed.",
+      "items": [
+        {
+          "id": "overview",
+          "type": "overview",
+          "title": "Week overview"
+        }
+      ]
+    },
+    {
+      "id": "m1",
+      "title": "The voice loop",
+      "summary": "Ears, brain and mouth, why speed matters, and where LiveKit fits.",
+      "items": [
+        {
+          "id": "lesson-voice-loop",
+          "type": "lesson",
+          "title": "Every reply goes ears → brain → mouth",
+          "ref": "voice-loop"
+        },
+        {
+          "id": "lesson-latency",
+          "type": "lesson",
+          "title": "Why speed matters: waiting vs streaming",
+          "ref": "latency"
+        },
+        {
+          "id": "lesson-livekit",
+          "type": "lesson",
+          "title": "Where LiveKit fits",
+          "ref": "livekit"
+        },
+        {
+          "id": "reading-m1-1",
+          "type": "reading",
+          "title": "Read and watch: Voice AI",
+          "ref": "Voice AI"
+        },
+        {
+          "id": "practice-m1",
+          "type": "practice",
+          "title": "Practice quiz",
+          "refs": [
+            "q19",
+            "q20",
+            "q21",
+            "q25",
+            "q26",
+            "q32"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "m2",
+      "title": "Turn-taking and interruptions",
+      "summary": "How the agent knows it's its turn, and what happens when the caller cuts in.",
+      "items": [
+        {
+          "id": "lesson-turn-taking",
+          "type": "lesson",
+          "title": "Turn-taking: has the caller finished?",
+          "ref": "turn-taking"
+        },
+        {
+          "id": "lesson-interruptions",
+          "type": "lesson",
+          "title": "Interruptions: when the caller cuts in",
+          "ref": "interruptions"
+        },
+        {
+          "id": "reading-m2-1",
+          "type": "reading",
+          "title": "Read and watch: Optional extras",
+          "ref": "Optional extras"
+        },
+        {
+          "id": "practice-m2",
+          "type": "practice",
+          "title": "Practice quiz",
+          "refs": [
+            "q22",
+            "q23",
+            "q27",
+            "q28"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "m3",
+      "title": "RevRag agent settings",
+      "summary": "Every settings tab, placed on the call, and how P1 and P2 join up in week 3.",
+      "items": [
+        {
+          "id": "lesson-agent-settings",
+          "type": "lesson",
+          "title": "The RevRag agent settings, placed on the call",
+          "ref": "agent-settings"
+        },
+        {
+          "id": "lesson-webhooks-preview",
+          "type": "lesson",
+          "title": "Why P1 and P2? In week 3 they join up",
+          "ref": "webhooks-preview"
+        },
+        {
+          "id": "reading-m3-1",
+          "type": "reading",
+          "title": "Read and watch: Agent settings",
+          "ref": "Agent settings"
+        },
+        {
+          "id": "practice-m3",
+          "type": "practice",
+          "title": "Practice quiz",
+          "refs": [
+            "q24",
+            "q29",
+            "q30",
+            "q31"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "assessment",
+      "title": "Assessment",
+      "summary": "Show what you learned. These count towards your week.",
+      "items": [
+        {
+          "id": "graded-quiz",
+          "type": "quiz",
+          "title": "Graded quiz",
+          "refs": [
+            "q19",
+            "q20",
+            "q21",
+            "q22",
+            "q23",
+            "q24",
+            "q25",
+            "q26",
+            "q27",
+            "q28",
+            "q29",
+            "q30",
+            "q31",
+            "q32"
+          ]
+        },
+        {
+          "id": "project-p2",
+          "type": "project",
+          "title": "Assignment: P2, your own voice bot",
+          "ref": "P2"
+        },
+        {
+          "id": "voice-quiz",
+          "type": "voice",
+          "title": "Voice quiz: explain it out loud",
+          "refs": [
+            "v4",
+            "v5",
+            "v6"
+          ]
+        }
+      ]
+    }
+  ]
+}

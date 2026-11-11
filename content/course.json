@@ -1,0 +1,48 @@
+{
+  "title": "FDE Training",
+  "subtitle": "Six weeks from how apps work to scoping a client's solution. Each week opens with a 1-hour kickoff; deliverables are due by Sunday of that week (weeks 1–2 are one block, due Sunday of week 2).",
+  "weeks": [
+    {
+      "number": 1,
+      "id": "week-01",
+      "title": "Programming fundamentals",
+      "focus": "Frontend, backend, database and APIs; Postman, curl, GitHub and deploying",
+      "build": "P1: a small call-log app"
+    },
+    {
+      "number": 2,
+      "id": "week-02",
+      "title": "Voice AI basics",
+      "focus": "How a voice agent works, LiveKit, and the RevRag agent settings",
+      "build": "P2: your own voice bot"
+    },
+    {
+      "number": 3,
+      "id": null,
+      "title": "Telephony agent",
+      "focus": "How LLMs work, using Claude Code well, MCP, tools and RAG, the campaign call lifecycle, SIP and telephony",
+      "build": "P3: a post-call webhook from P2 to P1"
+    },
+    {
+      "number": 4,
+      "id": null,
+      "title": "In-app agent",
+      "focus": "The RevRag SDK docs, common client issues, debugging with the RevRag MCP, A/B experiments",
+      "build": "P4: a dummy app with the RevRag SDK"
+    },
+    {
+      "number": 5,
+      "id": null,
+      "title": "AWS, cloud and infosec",
+      "focus": "Lambda, DynamoDB, S3 and CloudWatch, hooks.revrag.ai routing, infosec basics and client questions",
+      "build": "P5: a Lambda that stores calls"
+    },
+    {
+      "number": 6,
+      "id": null,
+      "title": "Docs, infosec and scoping",
+      "focus": "Platform docs and infosec with the product team; scoping and solution design with customer success",
+      "build": "No build: two 2-hour sessions"
+    }
+  ]
+}
