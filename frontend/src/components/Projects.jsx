@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { api } from "../api.js";
+import Illustration from "./Illustration.jsx";
 
 function SubmitField({ weekId, projectId, field, saved }) {
   const [value, setValue] = useState(saved || "");
@@ -58,6 +59,10 @@ export default function Projects({ week, only, progress, onChange }) {
             <span className="pill">{p.id}</span>
             <h2 id={`proj-${p.id}`} style={{ marginTop: 8 }}>{p.title}</h2>
             <p className="muted">{p.summary}</p>
+            {(() => {
+              const fig = week.illustrations.find((i) => i.id === `${p.id.toLowerCase()}-architecture`);
+              return fig ? <Illustration id={fig.id} brief={fig} /> : null;
+            })()}
             <h3>Steps</h3>
             {p.steps.map((s, i) => {
               const id = `${p.id}-step-${i}`;
