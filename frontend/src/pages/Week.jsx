@@ -1,73 +1,111 @@
-import { useCallback, useEffect, useState } from "react";
-import { NavLink, Navigate, Route, Routes, useParams } from "react-router-dom";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
 import { api } from "../api.js";
-import Concepts from "../components/Concepts.jsx";
-import Projects from "../components/Projects.jsx";
-import Quiz from "../components/Quiz.jsx";
-import VoiceQuiz from "../components/VoiceQuiz.jsx";
-import Resources from "../components/Resources.jsx";
-
-const TABS = [
-  ["learn", "Learn"],
-  ["build", "Build"],
-  ["quiz", "Quiz"],
-  ["voice", "Voice quiz"],
-  ["resources", "Read and watch"],
-];
+import { MANUAL, TYPE_LABEL, flatItems } from "../components/courseItems.js";
+import CourseNav from "../components/CourseNav.jsx";
+import ItemView from "../components/ItemView.jsx";
+import "../course.css";
 
 export default function Week() {
-  const { weekId } = useParams();
+  const { weekId, itemId } = useParams();
+  const navigate = useNavigate();
   const [week, setWeek] = useState(null);
   const [progress, setProgress] = useState(null);
   const [error, setError] = useState("");
+  const [navOpen, setNavOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
 
-  const refresh = useCallback(() => api(`/weeks/${weekId}/progress`).then(setProgress).catch(() => {}), [weekId]);
+  const refresh = useCallback(
+    () => api(`/weeks/${weekId}/items/progress`).then(setProgress).catch(() => {}),
+    [weekId]
+  );
 
   useEffect(() => {
+    setWeek(null);
+    setError("");
     api(`/weeks/${weekId}`).then(setWeek).catch((e) => setError(e.message));
     refresh();
   }, [weekId, refresh]);
 
+  useEffect(() => { setNavOpen(false); window.scrollTo({ top: 0 }); }, [itemId]);
+
+  const items = useMemo(() => (week ? flatItems(week) : []), [week]);
+  const done = useMemo(() => new Set(progress?.items_done || []), [progress]);
+
   if (error) return <p className="notice error" role="alert">{error}</p>;
   if (!week) return <p className="muted">Loading…</p>;
 
-  const totalSteps = week.projects.reduce((n, p) => n + p.steps.length, 0);
-  const doneSteps = progress ? Object.values(progress.projects).reduce((n, p) => n + p.steps_done.length, 0) : 0;
-  const best = progress?.quiz?.best;
+  if (!itemId) {
+    if (!progress) return <p className="muted">Loading…</p>;
+    const next = items.find((i) => !done.has(i.id)) || items[0];
+    return <Navigate to={`/weeks/${weekId}/${next.id}`} replace />;
+  }
+
+  const index = items.findIndex((i) => i.id === itemId);
+  if (index === -1) return <Navigate to={`/weeks/${weekId}`} replace />;
+  const item = items[index];
+  const prev = items[index - 1];
+  const next = items[index + 1];
+  const isDone = done.has(item.id);
+
+  async function toggleDone() {
+    setSaving(true);
+    try {
+      await api(`/weeks/${weekId}/items/${item.id}/complete`, { method: "PUT", body: { done: !isDone } });
+      await refresh();
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function completeAndNext() {
+    if (MANUAL.has(item.type) && !isDone) await toggleDone();
+    navigate(next ? `/weeks/${weekId}/${next.id}` : "/");
+  }
 
   return (
     <div>
-      <div className="hero">
-        <div>
-          <span className="pill">Weeks {week.weeks.join("–")} · due {week.due}</span>
-          <h1 style={{ marginTop: 10 }}>{week.title}</h1>
-          <p className="muted">{week.goal}</p>
-        </div>
-        <div className="card small" aria-label="Your progress">
-          <p style={{ marginBottom: 6 }}><strong>Project steps:</strong> {doneSteps} of {totalSteps}</p>
-          <div className="progress-bar" role="progressbar" aria-valuemin={0} aria-valuemax={totalSteps} aria-valuenow={doneSteps}>
-            <div style={{ width: `${totalSteps ? (100 * doneSteps) / totalSteps : 0}%` }} />
-          </div>
-          <p style={{ margin: "12px 0 0" }}>
-            <strong>Quiz best:</strong> {best ? `${best.score} / ${best.total}` : "not taken yet"}
-          </p>
-        </div>
-      </div>
-
-      <nav className="tabs" aria-label="Week sections">
-        {TABS.map(([path, label]) => (
-          <NavLink key={path} to={path} className={({ isActive }) => (isActive ? "active" : "")}>{label}</NavLink>
-        ))}
+      <nav className="breadcrumb" aria-label="Breadcrumb">
+        <Link to="/">Course</Link> › Week {week.number}: {week.title}
       </nav>
+      <div className="course-layout">
+        <div>
+          <button className="btn course-nav-toggle" aria-expanded={navOpen} aria-controls="course-nav" onClick={() => setNavOpen(!navOpen)}>
+            <span>Week {week.number} outline</span>
+            <span className="muted small">{done.size} of {items.length} done {navOpen ? "▴" : "▾"}</span>
+          </button>
+          <CourseNav id="course-nav" open={navOpen} week={week} done={done} current={item.id} />
+        </div>
 
-      <Routes>
-        <Route index element={<Navigate to="learn" replace />} />
-        <Route path="learn" element={<Concepts week={week} />} />
-        <Route path="build" element={<Projects week={week} progress={progress} onChange={refresh} />} />
-        <Route path="quiz" element={<Quiz week={week} onDone={refresh} />} />
-        <Route path="voice" element={<VoiceQuiz week={week} progress={progress} />} />
-        <Route path="resources" element={<Resources week={week} />} />
-      </Routes>
+        <article className="card" aria-labelledby="item-title">
+          <header className="item-head">
+            <div className="item-type-label">{item.module.title} · {TYPE_LABEL[item.type]}</div>
+            <h1 id="item-title" style={{ fontSize: "1.6rem", marginTop: 4 }}>{item.title}</h1>
+          </header>
+
+          <ItemView week={week} item={item} progress={progress} onChange={refresh} />
+
+          <footer className="item-footer">
+            {MANUAL.has(item.type) ? (
+              <button className="btn" onClick={toggleDone} disabled={saving} aria-pressed={isDone}>
+                {isDone ? "✓ Completed" : "Mark as completed"}
+              </button>
+            ) : (
+              <span className="small muted">
+                {isDone ? "✓ Completed" : item.type === "quiz" ? `Pass with ${week.pass_percent}% or more to complete this item.`
+                  : item.type === "project" ? "Completes when you tick every step." : item.type === "voice" ? "Completes after one scored call."
+                  : "Completes when you submit your answers."}
+              </span>
+            )}
+            <div className="nav-buttons">
+              {prev && <Link className="btn" to={`/weeks/${weekId}/${prev.id}`}>Previous</Link>}
+              <button className="btn primary" onClick={completeAndNext}>
+                {next ? (MANUAL.has(item.type) && !isDone ? "Complete and continue" : "Next") : "Back to course"}
+              </button>
+            </div>
+          </footer>
+        </article>
+      </div>
     </div>
   );
 }

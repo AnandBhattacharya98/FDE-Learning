@@ -31,7 +31,7 @@ function SubmitField({ weekId, projectId, field, saved }) {
   );
 }
 
-export default function Projects({ week, progress, onChange }) {
+export default function Projects({ week, only, progress, onChange }) {
   const [error, setError] = useState("");
   // Ticks show at once; the server copy replaces them when progress reloads.
   const [pending, setPending] = useState({});
@@ -51,7 +51,7 @@ export default function Projects({ week, progress, onChange }) {
   return (
     <div className="stack">
       {error && <p className="notice error" role="alert">{error}</p>}
-      {week.projects.map((p) => {
+      {week.projects.filter((p) => !only || p.id === only).map((p) => {
         const mine = progress?.projects?.[p.id] || { steps_done: [], submission: {} };
         return (
           <section key={p.id} className="card" aria-labelledby={`proj-${p.id}`}>
