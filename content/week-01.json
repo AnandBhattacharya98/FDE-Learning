@@ -140,18 +140,18 @@
       "items": [
         {
           "title": "Fireship: 100+ Web Development Things you Should Know",
-          "url": null,
+          "url": "https://www.youtube.com/watch?v=erEgovG9WBs",
           "note": ""
         },
         {
           "title": "IBM: What is a REST API?",
-          "url": null,
+          "url": "https://www.ibm.com/think/topics/rest-apis",
           "note": ""
         },
         {
           "title": "Fireship in 100 seconds: Python, React, PostgreSQL and SQL",
-          "url": null,
-          "note": "About 2 minutes each."
+          "url": "https://www.youtube.com/@Fireship/search?query=in%20100%20seconds",
+          "note": "About 2 minutes each. Search the Fireship channel for each topic."
         }
       ]
     },
@@ -160,7 +160,7 @@
       "items": [
         {
           "title": "Postman quick start",
-          "url": null,
+          "url": "https://learning.postman.com/docs/getting-started/quick-start/",
           "note": ""
         },
         {
@@ -170,7 +170,7 @@
         },
         {
           "title": "curl tutorial",
-          "url": null,
+          "url": "https://curl.se/docs/tutorial.html",
           "note": "Only the sections on GET, POST and headers."
         },
         {

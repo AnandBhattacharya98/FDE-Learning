@@ -120,12 +120,12 @@
       "items": [
         {
           "title": "Picovoice: Voice UX, latency, turn-taking and barge-in",
-          "url": null,
+          "url": "https://picovoice.ai/guide/voice-agents/voice-ux-latency-turn-taking/",
           "note": ""
         },
         {
           "title": "Where voice agents fail in production",
-          "url": null,
+          "url": "https://aaif.io/blog/where-voice-agents-fail-in-production-part-1-latency-turns-and-interruptions",
           "note": ""
         }
       ]
@@ -140,12 +140,12 @@
         },
         {
           "title": "LiveKit: Voice agent architecture",
-          "url": null,
+          "url": "https://livekit.com/blog/voice-agent-architecture-stt-llm-tts-pipelines-explained",
           "note": ""
         },
         {
           "title": "LiveKit: Turns overview",
-          "url": null,
+          "url": "https://docs.livekit.io/agents/logic/turns/",
           "note": "How the agent decides you've stopped talking."
         }
       ]
