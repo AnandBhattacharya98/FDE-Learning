@@ -230,7 +230,7 @@
       "id": "auto-status",
       "date": "2026-11-12",
       "title": "Assignment statuses update when work ships",
-      "pr": null,
+      "pr": 11,
       "assignments": [],
       "where": [
         "content/build-log.json (status_updates)",
