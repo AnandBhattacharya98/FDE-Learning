@@ -216,15 +216,25 @@ function AssignmentCard({ a, onSave, features }) {
       <div className="gm-controls">
         <div className="gm-seg" role="group" aria-label={`Status for ${a.title}`}>
           {["todo", "doing", "done"].map((s) => (
-            <button key={s} type="button" disabled={busy} aria-pressed={a.status === s && a.status_source === "manual"}
+            <button key={s} type="button" disabled={busy} aria-pressed={a.manual_status === s}
               className={a.status === s ? "active" : ""} onClick={() => save(s)}>{STATUS_LABEL[s]}</button>
           ))}
         </div>
-        {a.status_source === "manual" && a.project && (
-          <button type="button" className="btn link small" disabled={busy} onClick={() => save(null)}>Follow course progress again</button>
+        {a.status_source === "manual" && (
+          <button type="button" className="btn link small" disabled={busy} onClick={() => save(null)}>Back to automatic</button>
         )}
         {a.status_source === "course" && <span className="gm-meta">Auto from your course checklist</span>}
       </div>
+      {a.status_source === "build-log" && a.status_by && (
+        <div className="gm-shipped">
+          <p className="gm-meta">
+            Updated by shipped work · {a.status_by.title}
+            {a.status_by.pr ? <> · <a href={`${REPO}/pull/${a.status_by.pr}`} target="_blank" rel="noreferrer">PR #{a.status_by.pr}</a></> : null}
+            {a.updated_at ? <> · {ago(a.updated_at)}</> : null}
+          </p>
+          {a.status_by.note && <p>{a.status_by.note}</p>}
+        </div>
+      )}
       {features.length > 0 && (
         <details className="gm-built">
           <summary>Built on this site · {features.length}</summary>
@@ -235,7 +245,7 @@ function AssignmentCard({ a, onSave, features }) {
         <span className="gm-meta">Note</span>
         <textarea rows={2} value={note} maxLength={2000} placeholder="Links, blockers, what's left…"
           onChange={(e) => setNote(e.target.value)}
-          onBlur={() => note !== a.note && save(a.status)} />
+          onBlur={() => note !== a.note && save(a.manual_status)} />
       </label>
     </article>
   );

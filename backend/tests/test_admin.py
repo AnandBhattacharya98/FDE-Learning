@@ -72,7 +72,7 @@ def test_course_progress_drives_status_until_set_by_hand(client, admin):
     assert (p1["status"], p1["status_source"], p1["note"]) == ("done", "manual", "shipped")
     assert any(e["kind"] == "step" for e in client.get(OVERVIEW, headers=google).json()["machine"]["events"])
 
-    client.put("/api/fde/admin/assignments/w12-p1", json={"status": None}, headers=google)
+    client.put("/api/fde/admin/assignments/w12-p1", json={"status": None, "note": ""}, headers=google)
     assert client.get(OVERVIEW, headers=google).json()["assignments"][0]["status"] == "doing"
 
 
@@ -129,3 +129,37 @@ def test_build_log_rejects_unknown_assignment(tmp_path, monkeypatch):
         monkeypatch.undo()
         admin.load_build_log.cache_clear()
         admin.load_assignments.cache_clear()
+
+
+def test_build_log_status_updates_and_newest_wins(client, admin):
+    google, _ = admin
+    body = client.get(OVERVIEW, headers=google).json()
+    p3 = next(a for a in body["assignments"] if a["id"] == "w3-p3")
+    assert p3["status"] == "doing" and p3["status_source"] == "build-log"
+    assert p3["status_by"]["entry"] == "auto-status" and p3["status_by"]["note"]
+
+    # A click now is newer than the build-log update, so it wins and keeps the note.
+    client.put("/api/fde/admin/assignments/w3-p3", json={"status": "done", "note": "submitted"}, headers=google)
+    p3 = next(a for a in client.get(OVERVIEW, headers=google).json()["assignments"] if a["id"] == "w3-p3")
+    assert (p3["status"], p3["status_source"], p3["manual_status"]) == ("done", "manual", "done")
+
+    # Back to automatic keeps the note, and the build log drives the status again.
+    client.put("/api/fde/admin/assignments/w3-p3", json={"status": None, "note": "submitted"}, headers=google)
+    p3 = next(a for a in client.get(OVERVIEW, headers=google).json()["assignments"] if a["id"] == "w3-p3")
+    assert (p3["status"], p3["status_source"], p3["note"], p3["manual_status"]) == ("doing", "build-log", "submitted", None)
+
+
+def test_newer_build_log_update_beats_an_older_click(client, admin, monkeypatch):
+    from datetime import datetime, timedelta, timezone
+
+    from app import admin as admin_mod
+
+    google, _ = admin
+    client.put("/api/fde/admin/assignments/w4-p4", json={"status": "todo"}, headers=google)
+    log = admin_mod.load_build_log()
+    entry = next(e for e in log if e.id == "auto-status")
+    later = entry.model_copy(update={"status_updates": [admin_mod.StatusUpdate(
+        assignment="w4-p4", status="done", note="shipped", at=datetime.now(timezone.utc) + timedelta(minutes=5))]})
+    monkeypatch.setattr(admin_mod, "load_build_log", lambda: [*log, later.model_copy(update={"id": "later"})])
+    p4 = next(a for a in client.get(OVERVIEW, headers=google).json()["assignments"] if a["id"] == "w4-p4")
+    assert (p4["status"], p4["status_source"]) == ("done", "build-log")

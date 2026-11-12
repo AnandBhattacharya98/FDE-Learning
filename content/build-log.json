@@ -1,5 +1,5 @@
 {
-  "_how_to_add": "Every thread that ships a feature appends one entry to the END of `entries`, in the same PR. Fields: id (unique, kebab-case), date (YYYY-MM-DD), title, pr (number or null), assignments (ids from assignments.json that this feature practises, may be []), where (repo paths), how (2-4 short plain-English bullets), demo (title + lines; each line has kind cmd|out|note and text). Never put emails, keys or connection strings in it.",
+  "_how_to_add": "Every thread that ships a feature appends one entry to the END of `entries`, in the same PR. Fields: id (unique, kebab-case), date (YYYY-MM-DD), title, pr (number or null), assignments (ids from assignments.json that this feature practises, may be []), where (repo paths), how (2-4 short plain-English bullets), demo (title + lines; each line has kind cmd|out|note and text). Never put emails, keys or connection strings in it. Optional: status_updates, a list of {assignment, status (todo|doing|done), note, at (ISO time with timezone, e.g. 2026-11-12T16:40:00Z)} to move the admin's assignments on the God mode board. Only claim what is true: site work that practises an assignment is 'doing', never 'done'; 'done' is only for when the admin's own deliverable is submitted. Whichever is newest wins, this update or the admin's own click.",
   "entries": [
     {
       "id": "site-stack",
@@ -301,6 +301,66 @@
           }
         ]
       }
+    },
+    {
+      "id": "auto-status",
+      "date": "2026-11-12",
+      "title": "Assignment statuses update when work ships",
+      "pr": 11,
+      "assignments": [],
+      "where": [
+        "content/build-log.json (status_updates)",
+        "backend/app/admin.py (overview)",
+        "frontend/src/pages/GodMode.jsx"
+      ],
+      "how": [
+        "A build-log entry can carry status_updates: which assignment moved, to what, why and when.",
+        "God mode shows whichever is newest, your own click or the latest update from shipped work, and says where it came from.",
+        "P1 and P2 still follow your course checklist until either of those sets them."
+      ],
+      "demo": {
+        "title": "Moving P3 forward from a PR",
+        "lines": [
+          {
+            "kind": "cmd",
+            "text": "\"status_updates\": [{\"assignment\": \"w3-p3\", \"status\": \"doing\", \"note\": \"…\", \"at\": \"2026-11-12T16:40:00Z\"}]"
+          },
+          {
+            "kind": "out",
+            "text": "P3 card → IN PROGRESS · from the build log"
+          },
+          {
+            "kind": "note",
+            "text": "Click a status yourself and your click wins until something newer ships."
+          }
+        ]
+      },
+      "status_updates": [
+        {
+          "assignment": "w3-p3",
+          "status": "doing",
+          "note": "The signed-callback pattern is built and tested on this site (voice worker → API with a shared key; a wrong key gets 401). Still to do: your own P3 webhook from P2 to P1, plus the recording.",
+          "at": "2026-11-12T16:30:00Z"
+        },
+        {
+          "assignment": "w4-p4",
+          "status": "doing",
+          "note": "The site's agent-style UI (call pill, waveform) mirrors the in-app agent. Still to do: the dummy app with the real RevRag SDK and a staging key.",
+          "at": "2026-11-12T16:30:00Z"
+        },
+        {
+          "assignment": "w5-p5",
+          "status": "doing",
+          "note": "Rejecting requests without the right key header is built here (X-Worker-Key, constant-time compare). Still to do: the Lambda, DynamoDB and CloudWatch parts.",
+          "at": "2026-11-12T16:30:00Z"
+        },
+        {
+          "assignment": "w5-infosec",
+          "status": "doing",
+          "note": "Google-only admin access, an email-domain allowlist and keys kept in env vars are all live on this site. Still to do: answer the 5 questionnaire questions.",
+          "at": "2026-11-12T16:30:00Z"
+        }
+      ]
     }
   ]
 }
