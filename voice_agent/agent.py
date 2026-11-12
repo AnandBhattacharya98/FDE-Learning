@@ -9,6 +9,7 @@ scorecard (per-question result, missed points and the transcript) to the API.
 The backend's token endpoint dispatches this agent (agent_name "fde-voice-quiz") into the
 learner's room and puts {"week_id", "user_id"} in the room metadata.
 """
+import asyncio
 import json
 import logging
 import os
@@ -33,11 +34,19 @@ TTS_MODEL = os.getenv("TTS_MODEL") or "cartesia/sonic-2"
 
 
 def load_week(week_id: str) -> dict:
-    for path in CONTENT_DIR.glob("week-*.json"):
-        data = json.loads(path.read_text(encoding="utf-8"))
-        if data["id"] == week_id:
-            return data
-    raise ValueError(f"No content for {week_id}")
+    """The week's content: from the content/ folder when it's next to the worker (local runs),
+    otherwise from the API, so the worker can be deployed on its own (LiveKit Cloud)."""
+    if CONTENT_DIR.is_dir():
+        for path in CONTENT_DIR.glob("week-*.json"):
+            data = json.loads(path.read_text(encoding="utf-8"))
+            if data["id"] == week_id:
+                return data
+    api_url = (os.getenv("API_URL") or "").rstrip("/")
+    if not api_url:
+        raise ValueError(f"No content for {week_id}: no content/ folder and API_URL isn't set")
+    r = httpx.get(f"{api_url}/api/fde/weeks/{week_id}", timeout=20)
+    r.raise_for_status()
+    return r.json()
 
 
 def build_instructions(week: dict, prompts: list[dict]) -> str:
@@ -199,7 +208,7 @@ async def entrypoint(ctx: JobContext):
         session = AgentSession(stt=STT_MODEL, llm=LLM_MODEL, tts=TTS_MODEL, vad=silero.VAD.load())
         await session.start(agent=CourseCoach(meta.get("week_id"), int(meta["user_id"])), room=ctx.room)
         return
-    week = load_week(meta["week_id"])
+    week = await asyncio.to_thread(load_week, meta["week_id"])
     prompts = random.sample(week["voice_quiz"], k=min(QUESTIONS_PER_CALL, len(week["voice_quiz"])))
 
     session = AgentSession(

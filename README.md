@@ -66,12 +66,10 @@ through your LiveKit project and needs no separate speech or LLM keys.
 - **Render:** the API deploys from the `Dockerfile` at the repo root. Either use New → Blueprint (reads `render.yaml`), or New → Web Service with Language **Docker**, Root Directory blank, Dockerfile Path `./Dockerfile`, Health Check Path `/health`. Add the secret values in its Environment tab.
 - To test the image locally: `docker build -t fde-learning-api . && docker run -p 8000:8000 --env-file backend/.env fde-learning-api`
 - **Vercel:** import the repo with root directory `frontend` and set `VITE_API_URL`.
-- **Voice-quiz worker:** it holds a live connection to LiveKit, so it needs an always-on host. Vercel
-  can't run it, and Render's free web services sleep. Build the image from the repo root:
-  `docker build -f voice_agent/Dockerfile -t fde-voice-quiz .` and run it on any always-on Docker
-  host (for example a Render background worker) with `LIVEKIT_URL`, `LIVEKIT_API_KEY`,
-  `LIVEKIT_API_SECRET`, `VOICE_WORKER_KEY` and `API_URL` set. LiveKit Cloud's own agent hosting
-  (`lk agent create`) is the other option.
+- **Voice worker** (voice quiz and voice coach): it holds a live connection to LiveKit, so it needs an
+  always-on host. Vercel can't run it, and Render's free web services sleep. The free route is
+  LiveKit Cloud's own agent hosting: see `docs/voice-worker.md`. The `voice_agent/` folder is
+  self-contained (`docker build -t fde-voice-agent voice_agent`), so any always-on Docker host works too.
 
 ## Adding a new week
 
