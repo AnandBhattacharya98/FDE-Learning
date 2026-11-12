@@ -41,6 +41,23 @@ The fields are described at the top of the file. `assignments` uses ids from
 fail on a bad entry, so a mistake can't take the live site down. Never put emails, keys or
 connection strings in it.
 
+## Cohort view
+
+The **Cohort** panel lists every learner (names only, never emails) with overall progress,
+best graded-quiz score per week, best voice score, last activity and why they look stuck.
+Stuck learners sort first. Click a row for every item, project links and all quiz attempts.
+
+A learner is flagged **stuck** when any of these is true (constants at the top of `backend/app/cohort.py`):
+
+- no activity for 3 days while the course isn't finished,
+- signed up 2+ days ago and has done nothing,
+- 2+ graded-quiz attempts on a week without passing,
+- practice quizzes average under 50% over 2+ attempts.
+
+API: `GET /api/fde/admin/learners` and `GET /api/fde/admin/learners/{id}`, both behind `require_admin`.
+Other features add per-learner data with `LEARNER_EXTRAS["key"] = fn(db, user_ids) -> {user_id: {...}}`;
+the value appears on each row under that key (voice scorecards use `voice`, project grades use `grades`).
+
 ## Statuses that keep themselves up to date
 
 A build-log entry can also move your assignments forward with `status_updates`:
