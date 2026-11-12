@@ -230,7 +230,7 @@
       "id": "god-mode-cohort",
       "date": "2026-11-12",
       "title": "Cohort view: every learner's progress, scores and who is stuck",
-      "pr": null,
+      "pr": 9,
       "assignments": [],
       "where": [
         "backend/app/cohort.py",
