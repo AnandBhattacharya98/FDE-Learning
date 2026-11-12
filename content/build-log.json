@@ -446,6 +446,42 @@
           }
         ]
       }
+    },
+    {
+      "id": "voice-worker-livekit-cloud",
+      "date": "2026-11-12",
+      "title": "Voice worker ready for free hosting on LiveKit Cloud",
+      "pr": 14,
+      "assignments": [
+        "w12-p2"
+      ],
+      "where": [
+        "voice_agent/Dockerfile",
+        "voice_agent/agent.py (load_week)",
+        "docs/voice-worker.md"
+      ],
+      "how": [
+        "The voice_agent/ folder now builds on its own, which is what LiveKit Cloud's agent hosting needs.",
+        "The worker reads each week's questions from the API (API_URL) instead of a copy of content/ baked into the image.",
+        "LiveKit Cloud supplies the LiveKit keys; the worker only needs API_URL and VOICE_WORKER_KEY as secrets."
+      ],
+      "demo": {
+        "title": "Deploy it once from your laptop",
+        "lines": [
+          {
+            "kind": "cmd",
+            "text": "cd voice_agent && lk cloud auth && lk agent create --secrets-file .env.cloud"
+          },
+          {
+            "kind": "cmd",
+            "text": "lk agent logs"
+          },
+          {
+            "kind": "note",
+            "text": "Look for the worker registering as fde-voice-quiz, then try the mic in Ask the coach."
+          }
+        ]
+      }
     }
   ]
 }

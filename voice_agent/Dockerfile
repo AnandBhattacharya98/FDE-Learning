@@ -1,16 +1,16 @@
-# Image for the voice-quiz worker. LiveKit Cloud agents (`lk agent create`) and
-# any always-on Docker host (for example a Render background worker) can run it.
+# Image for the voice worker (voice quiz + voice coach). Self-contained: build it from this
+# folder, which is what LiveKit Cloud does (`lk agent create` / `lk agent deploy` in voice_agent/):
+#   docker build -t fde-voice-agent voice_agent
+# Week content comes from the API (API_URL), so content/ doesn't need to be in the image.
 FROM python:3.12-slim
 
 ENV PYTHONUNBUFFERED=1
 WORKDIR /app
 
-COPY voice_agent/requirements.txt ./requirements.txt
+COPY requirements.txt ./requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY voice_agent/agent.py ./agent.py
-COPY content /app/content
-ENV CONTENT_DIR=/app/content
+COPY agent.py ./agent.py
 
 RUN useradd --create-home appuser
 USER appuser

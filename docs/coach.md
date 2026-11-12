@@ -30,7 +30,7 @@ The mic button in the chat starts a LiveKit call (`POST /api/fde/coach/voice/tok
 worker as the voice quiz (`voice_agent/agent.py`): when the room metadata has `"mode": "coach"`, the
 worker runs `CourseCoach`, which looks things up through `POST /api/fde/coach/internal/search`
 (protected by `VOICE_WORKER_KEY`). So voice needs the LiveKit keys and the worker running, the same as
-the voice quiz.
+the voice quiz. Hosting steps: `voice-worker.md`.
 
 ## God mode
 
