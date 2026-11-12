@@ -43,8 +43,19 @@ class Settings:
         self.livekit_url = os.getenv("LIVEKIT_URL") or ""
         self.livekit_api_key = os.getenv("LIVEKIT_API_KEY") or ""
         self.livekit_api_secret = os.getenv("LIVEKIT_API_SECRET") or ""
+        # "Sign in with Google" (OAuth web client from Google Cloud Console). Blank = button hidden.
+        self.google_client_id = (os.getenv("GOOGLE_CLIENT_ID") or "").strip()
+        self.google_client_secret = (os.getenv("GOOGLE_CLIENT_SECRET") or "").strip()
+        # Where the site lives, so the API can send people back after Google sign-in.
+        # Defaults to the first CORS origin.
+        self.frontend_url = ((os.getenv("FRONTEND_URL") or "").strip().rstrip("/")
+                             or (self.cors_origins[0] if self.cors_origins else "http://localhost:5173"))
         # Shared secret the voice-quiz worker sends when it reports a score.
         self.voice_worker_key = os.getenv("VOICE_WORKER_KEY") or ""
+
+    @property
+    def google_configured(self) -> bool:
+        return bool(self.google_client_id and self.google_client_secret)
 
     @property
     def livekit_configured(self) -> bool:
