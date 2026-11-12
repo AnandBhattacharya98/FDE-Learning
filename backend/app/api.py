@@ -13,7 +13,7 @@ from .config import get_settings
 from .content import Week, load_weeks
 from .db import get_db
 from .models import QuizAttempt, StepProgress, Submission, User
-from .security import create_token, current_user, hash_password, verify_password
+from .security import create_token, current_user, token_claims, hash_password, verify_password
 
 router = APIRouter()
 
@@ -56,8 +56,13 @@ def login(body: LogIn, db: Session = Depends(get_db)):
 
 
 @router.get("/me")
-def me(user: User = Depends(current_user)):
-    return _user_out(user)
+def me(user: User = Depends(current_user), claims: dict = Depends(token_claims)):
+    from .admin import is_admin
+
+    out = _user_out(user)
+    if is_admin(user, claims):
+        out["admin"] = True  # only ever sent to the admin, so others can't tell God mode exists
+    return out
 
 
 # ---------- weeks ----------

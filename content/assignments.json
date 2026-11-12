@@ -1,0 +1,146 @@
+{
+  "source": "FDE Training Plan and the Weeks 1–2 Kickoff",
+  "assignments": [
+    {
+      "id": "w12-p1",
+      "week": "1–2",
+      "kind": "build",
+      "title": "P1: a small call-log app",
+      "due": "Sunday of week 2",
+      "project": {"week_id": "week-01", "project_id": "P1"},
+      "deliver": [
+        "GitHub repo link (your own account, short README)",
+        "Public links to the React page (Vercel) and the API (Render)",
+        "The curl command and Postman request you used to add a call"
+      ],
+      "done_when": "The page and the API run on public URLs, and a curl POST adds a row that shows up on the React page."
+    },
+    {
+      "id": "w12-p2",
+      "week": "1–2",
+      "kind": "build",
+      "title": "P2: a LiveKit voice bot",
+      "due": "Sunday of week 2",
+      "project": {"week_id": "week-02", "project_id": "P2"},
+      "deliver": [
+        "GitHub repo link with the code and your prompt",
+        "Screen recording of a 2-minute conversation with your bot",
+        "Notes on 3 setting changes: what you changed, expected and saw"
+      ],
+      "done_when": "You can hold a 2-minute conversation with the bot, and you have notes on 3 setting changes."
+    },
+    {
+      "id": "w3-p3",
+      "week": "3",
+      "kind": "build",
+      "title": "P3: a signed post-call webhook from P2 to P1",
+      "due": "Sunday of week 3",
+      "deliver": [
+        "Screen recording: a call adds a row, and a bad signature is rejected",
+        "Links to your updated P1 and P2 repos"
+      ],
+      "done_when": "You end a call with your bot and it appears on your P1 page, and a request with a bad signature is rejected."
+    },
+    {
+      "id": "w3-lifecycle",
+      "week": "3",
+      "kind": "explain",
+      "title": "Campaign call lifecycle diagram, from memory",
+      "due": "Sunday of week 3",
+      "deliver": ["A diagram from pre-call to the webhook"]
+    },
+    {
+      "id": "w3-explainer",
+      "week": "3",
+      "kind": "explain",
+      "title": "5-minute client explainer: SIP vs no-SIP, and LLM wrong answers",
+      "due": "Sunday of week 3",
+      "deliver": ["A 5-minute recording: when each setup fits, why an LLM gives wrong answers and two ways to reduce them"]
+    },
+    {
+      "id": "w4-p4",
+      "week": "4",
+      "kind": "build",
+      "title": "P4: a dummy app with the RevRag SDK",
+      "due": "Sunday of week 4",
+      "deliver": ["Screen recording of P4 working", "GitHub repo link"],
+      "done_when": "The agent appears on your chosen screens, and you can hold a conversation with it inside the app."
+    },
+    {
+      "id": "w4-walkthrough",
+      "week": "4",
+      "kind": "explain",
+      "title": "10-minute SDK walkthrough for a client developer",
+      "due": "Sunday of week 4",
+      "deliver": ["A 10-minute recording using P4 as the example"]
+    },
+    {
+      "id": "w4-mcp-debug",
+      "week": "4",
+      "kind": "explain",
+      "title": "Debug one real past issue with the RevRag MCP",
+      "due": "Sunday of week 4",
+      "deliver": ["A short note: was it the prompt, the config, the code or the client's side?"]
+    },
+    {
+      "id": "w4-ab-tests",
+      "week": "4",
+      "kind": "explain",
+      "title": "Two A/B test designs: one campaign, one in-app",
+      "due": "Sunday of week 4",
+      "deliver": ["What you split, what you measure, and how many users you need"]
+    },
+    {
+      "id": "w5-p5",
+      "week": "5",
+      "kind": "build",
+      "title": "P5: a Lambda that stores calls in DynamoDB",
+      "due": "Sunday of week 5",
+      "deliver": [
+        "GitHub repo link with the Lambda code",
+        "Screen recording: a bot call is saved in DynamoDB, and a request without the key is rejected"
+      ],
+      "done_when": "A curl request with the key saves a record in DynamoDB, a request without the key is rejected, and you can find both in the logs."
+    },
+    {
+      "id": "w5-aws-choices",
+      "week": "5",
+      "kind": "explain",
+      "title": "Lambda, DynamoDB or S3 for three client requests",
+      "due": "Sunday of week 5",
+      "deliver": ["A short note per request on which service and why"]
+    },
+    {
+      "id": "w5-hooks-trace",
+      "week": "5",
+      "kind": "explain",
+      "title": "Trace one partner request through hooks.revrag.ai",
+      "due": "Sunday of week 5",
+      "deliver": ["The trace"]
+    },
+    {
+      "id": "w5-infosec",
+      "week": "5",
+      "kind": "explain",
+      "title": "Answer 5 questions from a past security questionnaire",
+      "due": "Sunday of week 5",
+      "deliver": ["Your answers"]
+    },
+    {
+      "id": "w6-product",
+      "week": "6",
+      "kind": "session",
+      "title": "Session 1: platform docs and infosec (product team)",
+      "due": "Week 6",
+      "deliver": ["Read the docs introduction and skim every docs page first", "Deliverables set by the product team"]
+    },
+    {
+      "id": "w6-scoping",
+      "week": "6",
+      "kind": "session",
+      "title": "Session 2: scoping and solution design (customer success)",
+      "due": "Week 6",
+      "deliver": ["Read 'What are Forward Deployed Engineers?' first", "Deliverables set by the customer success team"]
+    }
+  ]
+}

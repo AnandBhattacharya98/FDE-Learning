@@ -52,6 +52,13 @@ class Settings:
                              or (self.cors_origins[0] if self.cors_origins else "http://localhost:5173"))
         # Shared secret the voice-quiz worker sends when it reports a score.
         self.voice_worker_key = os.getenv("VOICE_WORKER_KEY") or ""
+        # God mode: comma-separated emails allowed into the admin dashboard. They must also
+        # have signed in with Google, so a password sign-up can't claim an admin's address.
+        self.admin_emails = {
+            e.strip().strip("'\"").lower()
+            for e in (os.getenv("ADMIN_EMAILS") or "").split(",")
+            if e.strip().strip("'\"")
+        }
 
     @property
     def google_configured(self) -> bool:

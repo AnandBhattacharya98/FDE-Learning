@@ -141,4 +141,4 @@ def google_callback(request: Request, code: str | None = None, state: str | None
         db.add(user)
         db.commit()
 
-    return _to_site("/auth/callback", token=create_token(user.id), next=claims.get("next") or "/")
+    return _to_site("/auth/callback", token=create_token(user.id, via="google"), next=claims.get("next") or "/")
