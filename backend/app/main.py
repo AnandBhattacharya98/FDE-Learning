@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .admin import load_assignments, load_build_log, router as admin_router
 from .api import router
+from .coach import get_index, router as coach_router
 from .cohort import router as cohort_router
 from .course import router as course_router
 from .google_auth import router as google_router
@@ -21,6 +22,7 @@ async def lifespan(_: FastAPI):
     load_course()
     load_assignments()
     load_build_log()
+    get_index()
     init_db()
     yield
 
@@ -37,6 +39,7 @@ def create_app() -> FastAPI:
     app.include_router(course_router, prefix=API_PREFIX)
     app.include_router(google_router, prefix=API_PREFIX)
     app.include_router(admin_router, prefix=API_PREFIX)
+    app.include_router(coach_router, prefix=API_PREFIX)
     app.include_router(cohort_router, prefix=API_PREFIX)
 
     @app.get("/health")

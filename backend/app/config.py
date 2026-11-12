@@ -52,6 +52,11 @@ class Settings:
                              or (self.cors_origins[0] if self.cors_origins else "http://localhost:5173"))
         # Shared secret the voice-quiz worker sends when it reports a score.
         self.voice_worker_key = os.getenv("VOICE_WORKER_KEY") or ""
+        # Ask the coach: with an Anthropic key the coach writes answers with Claude; without one it
+        # still answers by quoting the best-matching course passages.
+        self.anthropic_api_key = (os.getenv("ANTHROPIC_API_KEY") or "").strip()
+        self.coach_model = (os.getenv("COACH_MODEL") or "claude-haiku-5-5").strip()
+        self.coach_hourly_limit = int(os.getenv("COACH_HOURLY_LIMIT") or 40)
         # God mode: comma-separated emails allowed into the admin dashboard. They must also
         # have signed in with Google, so a password sign-up can't claim an admin's address.
         self.admin_emails = {
@@ -83,6 +88,10 @@ class Settings:
     @property
     def google_configured(self) -> bool:
         return bool(self.google_client_id and self.google_client_secret)
+
+    @property
+    def coach_ai_configured(self) -> bool:
+        return bool(self.anthropic_api_key)
 
     @property
     def livekit_configured(self) -> bool:
