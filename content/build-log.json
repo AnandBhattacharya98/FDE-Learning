@@ -230,7 +230,7 @@
       "id": "ask-the-coach",
       "date": "2026-11-12",
       "title": "Ask the coach: chat and voice agent that answers from the course",
-      "pr": null,
+      "pr": 10,
       "assignments": [
         "w12-p2",
         "w3-explainer"
