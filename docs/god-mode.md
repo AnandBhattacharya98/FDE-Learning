@@ -57,3 +57,18 @@ A learner is flagged **stuck** when any of these is true (constants at the top o
 API: `GET /api/fde/admin/learners` and `GET /api/fde/admin/learners/{id}`, both behind `require_admin`.
 Other features add per-learner data with `LEARNER_EXTRAS["key"] = fn(db, user_ids) -> {user_id: {...}}`;
 the value appears on each row under that key (voice scorecards use `voice`, project grades use `grades`).
+
+## Statuses that keep themselves up to date
+
+A build-log entry can also move your assignments forward with `status_updates`:
+
+```json
+"status_updates": [
+  {"assignment": "w3-p3", "status": "doing", "note": "what was built and what's left", "at": "2026-11-12T16:30:00Z"}
+]
+```
+
+God mode shows whichever is newest: your own click, or the latest update from shipped work.
+The card says which one it is. "Back to automatic" drops your click and keeps your note.
+P1 and P2 follow your course checklist when neither has set them. Only claim what's true:
+site work that practises an assignment is `doing`; `done` means your own deliverable is submitted.

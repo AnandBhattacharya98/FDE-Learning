@@ -148,12 +148,13 @@ function Schematic({ machine }) {
     { id: "db", x: 528, y: 110, label: machine.database === "postgres" ? "Postgres" : "SQLite", sub: `${c.quiz_attempts + c.steps_done + c.items_done} writes`, on: s.database },
     { id: "google", x: 300, y: 30, label: "Google", sub: s.google_sign_in ? "OAuth live" : "not set up", on: s.google_sign_in },
     { id: "lk", x: 300, y: 195, label: "LiveKit", sub: s.livekit_voice ? `${c.voice_calls} calls` : "keys missing", on: s.livekit_voice },
+    { id: "claude", x: 528, y: 195, label: "Coach AI", sub: s.coach_ai ? `${c.coach_questions} questions` : "search only", on: s.coach_ai },
   ];
   const at = Object.fromEntries(nodes.map((n) => [n.id, n]));
-  const links = [["web", "api"], ["api", "db"], ["api", "google"], ["api", "lk"]];
+  const links = [["web", "api"], ["api", "db"], ["api", "google"], ["api", "lk"], ["api", "claude"]];
   return (
     <svg viewBox="0 0 600 230" className="gm-schematic" role="img"
-      aria-label={`System: API online, database ${machine.database}, Google sign-in ${s.google_sign_in ? "on" : "off"}, LiveKit ${s.livekit_voice ? "on" : "off"}`}>
+      aria-label={`System: API online, database ${machine.database}, Google sign-in ${s.google_sign_in ? "on" : "off"}, LiveKit ${s.livekit_voice ? "on" : "off"}, coach AI ${s.coach_ai ? "on" : "off"}`}>
       {links.map(([a, b], i) => {
         const on = at[a].on && at[b].on;
         const d = `M ${at[a].x} ${at[a].y} L ${at[b].x} ${at[b].y}`;
@@ -216,15 +217,25 @@ function AssignmentCard({ a, onSave, features }) {
       <div className="gm-controls">
         <div className="gm-seg" role="group" aria-label={`Status for ${a.title}`}>
           {["todo", "doing", "done"].map((s) => (
-            <button key={s} type="button" disabled={busy} aria-pressed={a.status === s && a.status_source === "manual"}
+            <button key={s} type="button" disabled={busy} aria-pressed={a.manual_status === s}
               className={a.status === s ? "active" : ""} onClick={() => save(s)}>{STATUS_LABEL[s]}</button>
           ))}
         </div>
-        {a.status_source === "manual" && a.project && (
-          <button type="button" className="btn link small" disabled={busy} onClick={() => save(null)}>Follow course progress again</button>
+        {a.status_source === "manual" && (
+          <button type="button" className="btn link small" disabled={busy} onClick={() => save(null)}>Back to automatic</button>
         )}
         {a.status_source === "course" && <span className="gm-meta">Auto from your course checklist</span>}
       </div>
+      {a.status_source === "build-log" && a.status_by && (
+        <div className="gm-shipped">
+          <p className="gm-meta">
+            Updated by shipped work · {a.status_by.title}
+            {a.status_by.pr ? <> · <a href={`${REPO}/pull/${a.status_by.pr}`} target="_blank" rel="noreferrer">PR #{a.status_by.pr}</a></> : null}
+            {a.updated_at ? <> · {ago(a.updated_at)}</> : null}
+          </p>
+          {a.status_by.note && <p>{a.status_by.note}</p>}
+        </div>
+      )}
       {features.length > 0 && (
         <details className="gm-built">
           <summary>Built on this site · {features.length}</summary>
@@ -235,7 +246,7 @@ function AssignmentCard({ a, onSave, features }) {
         <span className="gm-meta">Note</span>
         <textarea rows={2} value={note} maxLength={2000} placeholder="Links, blockers, what's left…"
           onChange={(e) => setNote(e.target.value)}
-          onBlur={() => note !== a.note && save(a.status)} />
+          onBlur={() => note !== a.note && save(a.manual_status)} />
       </label>
     </article>
   );
@@ -421,7 +432,7 @@ export default function GodMode() {
               </div>
               <div className="gm-tiles">
                 {[
-                  ["Learners", c.users, `+${c.users_24h} today`],
+                  ["Learners", c.users, `+${c.users_24h} today · ${c.coach_questions} coach Qs`],
                   ["Quiz attempts", c.quiz_attempts, `${c.voice_calls} by voice`],
                   ["Items finished", c.items_done, `${c.steps_done} project steps`],
                   ["Submissions", c.submissions, `${data.machine.content.weeks_open}/${data.machine.content.weeks_planned} weeks open`],

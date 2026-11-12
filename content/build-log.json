@@ -1,5 +1,5 @@
 {
-  "_how_to_add": "Every thread that ships a feature appends one entry to the END of `entries`, in the same PR. Fields: id (unique, kebab-case), date (YYYY-MM-DD), title, pr (number or null), assignments (ids from assignments.json that this feature practises, may be []), where (repo paths), how (2-4 short plain-English bullets), demo (title + lines; each line has kind cmd|out|note and text). Never put emails, keys or connection strings in it.",
+  "_how_to_add": "Every thread that ships a feature appends one entry to the END of `entries`, in the same PR. Fields: id (unique, kebab-case), date (YYYY-MM-DD), title, pr (number or null), assignments (ids from assignments.json that this feature practises, may be []), where (repo paths), how (2-4 short plain-English bullets), demo (title + lines; each line has kind cmd|out|note and text). Never put emails, keys or connection strings in it. Optional: status_updates, a list of {assignment, status (todo|doing|done), note, at (ISO time with timezone, e.g. 2026-11-12T16:40:00Z)} to move the admin's assignments on the God mode board. Only claim what is true: site work that practises an assignment is 'doing', never 'done'; 'done' is only for when the admin's own deliverable is submitted. Whichever is newest wins, this update or the admin's own click.",
   "entries": [
     {
       "id": "site-stack",
@@ -258,6 +258,148 @@
           {
             "kind": "note",
             "text": "In God mode the Cohort panel shows the same data, stuck learners first."
+          }
+        ]
+      }
+    },
+    {
+      "id": "ask-the-coach",
+      "date": "2026-11-12",
+      "title": "Ask the coach: chat and voice agent that answers from the course",
+      "pr": 10,
+      "assignments": [
+        "w12-p2",
+        "w3-explainer"
+      ],
+      "where": [
+        "backend/app/coach.py",
+        "backend/app/models_coach.py",
+        "frontend/src/components/Coach.jsx",
+        "frontend/src/coach.css",
+        "voice_agent/agent.py (CourseCoach)"
+      ],
+      "how": [
+        "Every lesson, reading, project and voice prompt is cut into passages tagged with its course page; the graded quiz is left out so the coach can't leak answers.",
+        "A small BM25 keyword ranker picks the top 5 passages, boosted for the week you're on. With ANTHROPIC_API_KEY set, Claude answers from those passages only and cites them as [1], [2]; without it the coach quotes the passages.",
+        "The floating 'Ask the coach' pill opens a Revrag-style chat panel with source chips that link to the lesson. The mic button starts a LiveKit call: the voice-quiz worker runs in 'coach' mode and looks things up through /coach/internal/search.",
+        "Each question is saved (fde_coach_questions) for a 40-per-hour limit and shows up in God mode's terminal and the Coach AI chip."
+      ],
+      "demo": {
+        "title": "Ask a question from the command line",
+        "lines": [
+          {
+            "kind": "cmd",
+            "text": "curl -X POST https://fde-learnings.onrender.com/api/fde/coach/ask -H \"Authorization: Bearer $TOKEN\" -H 'Content-Type: application/json' -d '{\"question\":\"What does the waiter stand for?\",\"week_id\":\"week-01\"}'"
+          },
+          {
+            "kind": "out",
+            "text": "{\"answer\":\"The waiter is the API: it carries your request to the kitchen... [1]\",\"mode\":\"ai\",\"sources\":[{\"week_id\":\"week-01\",\"item_id\":\"lesson-restaurant\",...}]}"
+          },
+          {
+            "kind": "note",
+            "text": "mode is \"search\" until ANTHROPIC_API_KEY is set on Render. Voice needs the LiveKit keys and the worker running."
+          }
+        ]
+      }
+    },
+    {
+      "id": "auto-status",
+      "date": "2026-11-12",
+      "title": "Assignment statuses update when work ships",
+      "pr": 11,
+      "assignments": [],
+      "where": [
+        "content/build-log.json (status_updates)",
+        "backend/app/admin.py (overview)",
+        "frontend/src/pages/GodMode.jsx"
+      ],
+      "how": [
+        "A build-log entry can carry status_updates: which assignment moved, to what, why and when.",
+        "God mode shows whichever is newest, your own click or the latest update from shipped work, and says where it came from.",
+        "P1 and P2 still follow your course checklist until either of those sets them."
+      ],
+      "demo": {
+        "title": "Moving P3 forward from a PR",
+        "lines": [
+          {
+            "kind": "cmd",
+            "text": "\"status_updates\": [{\"assignment\": \"w3-p3\", \"status\": \"doing\", \"note\": \"…\", \"at\": \"2026-11-12T16:40:00Z\"}]"
+          },
+          {
+            "kind": "out",
+            "text": "P3 card → IN PROGRESS · from the build log"
+          },
+          {
+            "kind": "note",
+            "text": "Click a status yourself and your click wins until something newer ships."
+          }
+        ]
+      },
+      "status_updates": [
+        {
+          "assignment": "w3-p3",
+          "status": "doing",
+          "note": "The signed-callback pattern is built and tested on this site (voice worker → API with a shared key; a wrong key gets 401). Still to do: your own P3 webhook from P2 to P1, plus the recording.",
+          "at": "2026-11-12T16:30:00Z"
+        },
+        {
+          "assignment": "w4-p4",
+          "status": "doing",
+          "note": "The site's agent-style UI (call pill, waveform) mirrors the in-app agent. Still to do: the dummy app with the real RevRag SDK and a staging key.",
+          "at": "2026-11-12T16:30:00Z"
+        },
+        {
+          "assignment": "w5-p5",
+          "status": "doing",
+          "note": "Rejecting requests without the right key header is built here (X-Worker-Key, constant-time compare). Still to do: the Lambda, DynamoDB and CloudWatch parts.",
+          "at": "2026-11-12T16:30:00Z"
+        },
+        {
+          "assignment": "w5-infosec",
+          "status": "doing",
+          "note": "Google-only admin access, an email-domain allowlist and keys kept in env vars are all live on this site. Still to do: answer the 5 questionnaire questions.",
+          "at": "2026-11-12T16:30:00Z"
+        }
+      ]
+    },
+    {
+      "id": "project-auto-grading",
+      "date": "2026-11-12",
+      "title": "Auto-grading of P1 and P2 submissions",
+      "pr": null,
+      "assignments": [
+        "w12-p1",
+        "w12-p2"
+      ],
+      "where": [
+        "content/grading.json",
+        "grader/run_checks.py",
+        ".github/workflows/grade-submission.yml",
+        "backend/app/grading.py",
+        "frontend/src/components/GraderPanel.jsx",
+        "frontend/src/components/GradeCard.jsx",
+        "docs/project-grading.md"
+      ],
+      "how": [
+        "Saving a GitHub repo link on P1 or P2 starts a GitHub Actions run that clones the repo and installs, compiles, tests and builds it inside Docker, then calls the live links.",
+        "Learner code never runs in the API or next to a secret: a second job posts result.json back with a shared key.",
+        "Claude scores the rubric in content/grading.json from the repo, the checks and the learner's notes: 60 points of checks plus 40 of review, pass mark 70.",
+        "Learners see the score and feedback under their submission; God mode's Project grader lists every learner with a live pipeline, details and Regrade."
+      ],
+      "demo": {
+        "title": "Grade a P1 repo by hand",
+        "lines": [
+          {
+            "kind": "cmd",
+            "text": "python grader/run_checks.py --project P1 --repo https://github.com/<learner>/call-log --links '{\"api_url\": \"https://...\"}'"
+          },
+          {
+            "kind": "out",
+            "text": "P1: 11/12 checks passed in 142s"
+          },
+          {
+            "kind": "note",
+            "text": "Switch on: GRADER_GITHUB_TOKEN + GRADER_CALLBACK_KEY on Render, the same key as an Actions secret (docs/project-grading.md)."
           }
         ]
       }

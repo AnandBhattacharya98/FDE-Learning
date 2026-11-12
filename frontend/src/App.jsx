@@ -6,6 +6,7 @@ import AuthCallback from "./pages/AuthCallback.jsx";
 import Home from "./pages/Home.jsx";
 import Week from "./pages/Week.jsx";
 import GodMode from "./pages/GodMode.jsx";
+import Coach from "./components/Coach.jsx";
 
 function RequireAuth({ children }) {
   const { user, ready } = useAuth();
@@ -59,6 +60,7 @@ export default function App() {
           </Routes>
         </main>
       </div>
+      {user && <Coach />}
     </>
   );
 }
