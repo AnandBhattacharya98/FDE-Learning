@@ -192,3 +192,10 @@ def test_runner_rejects_non_github_links(tmp_path):
     res = json.loads(out.read_text())
     assert res["checks"][0] == {"id": "clone", "status": "fail", "detail": res["checks"][0]["detail"]}
     assert all(c["status"] in ("fail", "skip") for c in res["checks"])
+
+
+def test_cohort_view_shows_grades(client, admin_headers):
+    from app.cohort import LEARNER_EXTRAS
+    assert LEARNER_EXTRAS["grades"] is grading.grades_for
+    r = client.get("/api/fde/admin/learners", headers=admin_headers)
+    assert r.status_code == 200

@@ -35,6 +35,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from .admin import require_admin
+from .cohort import LEARNER_EXTRAS
 from .config import get_settings
 from .db import SessionLocal, get_db
 from .models import Submission, User
@@ -508,9 +509,5 @@ def grades_for(db: Session, user_ids: list[int]) -> dict[int, dict]:
     return out
 
 
-try:  # The cohort view (backend/app/cohort.py) shows these as a column when it's present.
-    from .cohort import LEARNER_EXTRAS  # type: ignore
-
-    LEARNER_EXTRAS["grades"] = grades_for
-except ImportError:
-    pass
+# The cohort view (backend/app/cohort.py) shows these as a grade column per project.
+LEARNER_EXTRAS["grades"] = grades_for
