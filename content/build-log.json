@@ -403,6 +403,49 @@
           }
         ]
       }
+    },
+    {
+      "id": "voice-quiz-scorecards",
+      "date": "2026-11-12",
+      "title": "Voice quiz scorecards and leaderboard",
+      "pr": 13,
+      "assignments": [
+        "w12-p2"
+      ],
+      "where": [
+        "voice_agent/agent.py",
+        "backend/app/voice.py",
+        "backend/app/models_voice.py",
+        "frontend/src/components/VoiceScorecard.jsx",
+        "frontend/src/components/VoiceQuiz.jsx"
+      ],
+      "how": [
+        "The voice coach's record_score tool now returns one result per question: correct or not, a note and the listed points the learner missed.",
+        "The worker keeps the call transcript from LiveKit's conversation events and posts it with the results; a second post when the room closes adds the goodbye lines, or saves an unscored card if they hung up early.",
+        "The API stores each call in the Neon table fde_voice_scorecards and works out the score and weak topics from the week's content, so the coach can't invent topics.",
+        "After the call the page waits for the card, then shows the score, topics to review (linked to their lessons), each answer and the transcript, plus a week or whole-course leaderboard of everyone's best call."
+      ],
+      "demo": {
+        "title": "Post a scorecard as the worker would",
+        "lines": [
+          {
+            "kind": "cmd",
+            "text": "curl -X POST $API/api/fde/internal/voice-quiz/calls -H \"x-worker-key: $VOICE_WORKER_KEY\" -d '{\"call_id\": \"job-1\", \"user_id\": 1, \"week_id\": \"week-01\", \"complete\": true, \"questions\": [{\"id\": \"v1\", \"correct\": true}, {\"id\": \"v2\", \"correct\": false, \"missed\": [\"200 OK with JSON\"]}], \"transcript\": [{\"role\": \"coach\", \"text\": \"Hi!\"}]}'"
+          },
+          {
+            "kind": "out",
+            "text": "{\"id\": 1, \"complete\": true, \"score\": 1, \"total\": 2}"
+          },
+          {
+            "kind": "cmd",
+            "text": "curl $API/api/fde/voice-quiz/leaderboard?week_id=week-01 -H \"Authorization: Bearer $TOKEN\""
+          },
+          {
+            "kind": "note",
+            "text": "No new env vars: it uses the existing VOICE_WORKER_KEY and API_URL on the voice worker."
+          }
+        ]
+      }
     }
   ]
 }
