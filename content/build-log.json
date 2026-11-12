@@ -225,6 +225,42 @@
           {"kind": "note", "text": "The API validates the file at start-up; a bad entry fails the tests, not the live site."}
         ]
       }
+    },
+    {
+      "id": "god-mode-cohort",
+      "date": "2026-11-12",
+      "title": "Cohort view: every learner's progress, scores and who is stuck",
+      "pr": null,
+      "assignments": [],
+      "where": [
+        "backend/app/cohort.py",
+        "frontend/src/components/Cohort.jsx",
+        "frontend/src/cohort.css",
+        "backend/tests/test_cohort.py"
+      ],
+      "how": [
+        "GET /admin/learners reads every learner's items, project steps, submissions and quiz attempts in four queries and groups them in Python, behind the same require_admin gate as God mode.",
+        "A learner is flagged stuck when idle 3+ days, signed up 2+ days ago with nothing done, failed a week's graded quiz twice, or averages under 50% on practice.",
+        "Click a row for a drawer with every item, project links and quiz attempts (GET /admin/learners/{id}). Emails are never sent.",
+        "Other features add columns through LEARNER_EXTRAS[key] = fn(db, user_ids), which is how voice scorecards and project grades plug in."
+      ],
+      "demo": {
+        "title": "See who is stuck",
+        "lines": [
+          {
+            "kind": "cmd",
+            "text": "curl -H \"Authorization: Bearer $GOOGLE_ADMIN_TOKEN\" $API/api/fde/admin/learners"
+          },
+          {
+            "kind": "out",
+            "text": "{\"summary\": {\"learners\": 5, \"stuck\": 2, ...}, \"learners\": [{\"name\": \"Rohan\", \"state\": \"stuck\", \"flags\": [{\"label\": \"Failed the week 1 quiz 2 times\"}]}]}"
+          },
+          {
+            "kind": "note",
+            "text": "In God mode the Cohort panel shows the same data, stuck learners first."
+          }
+        ]
+      }
     }
   ]
 }
