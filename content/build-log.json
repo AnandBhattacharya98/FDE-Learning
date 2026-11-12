@@ -451,7 +451,7 @@
       "id": "god-mode-cohort-voice",
       "date": "2026-11-12",
       "title": "Cohort view shows voice scorecards and project grades",
-      "pr": null,
+      "pr": 15,
       "assignments": [],
       "where": [
         "backend/app/cohort.py",
