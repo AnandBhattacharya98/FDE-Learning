@@ -366,7 +366,7 @@
       "id": "project-auto-grading",
       "date": "2026-11-12",
       "title": "Auto-grading of P1 and P2 submissions",
-      "pr": null,
+      "pr": 12,
       "assignments": [
         "w12-p1",
         "w12-p2"
