@@ -30,3 +30,11 @@ services:
         sync: false
       - key: ALLOWED_EMAIL_DOMAINS
         sync: false
+      - key: GRADER_GITHUB_TOKEN
+        sync: false
+      - key: GRADER_REPO
+        sync: false
+      - key: GRADER_CALLBACK_KEY
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false

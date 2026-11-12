@@ -4,6 +4,7 @@ import { api } from "../api.js";
 import { useAuth } from "../auth.jsx";
 import "../godmode.css";
 import Cohort from "../components/Cohort.jsx";
+import GraderPanel from "../components/GraderPanel.jsx";
 
 // God mode. The API decides who gets in (ADMIN_EMAILS + Google sign-in); this page only
 // hides itself from everyone else.
@@ -432,6 +433,8 @@ export default function GodMode() {
           </section>
 
           <Cohort />
+
+          <GraderPanel />
 
           <section className="gm-panel">
             <div className="gm-board-head">

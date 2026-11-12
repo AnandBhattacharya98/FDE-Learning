@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { api } from "../api.js";
+import GradeCard from "./GradeCard.jsx";
 import Illustration from "./Illustration.jsx";
 
-function SubmitField({ weekId, projectId, field, saved }) {
+function SubmitField({ weekId, projectId, field, saved, onSaved }) {
   const [value, setValue] = useState(saved || "");
   const [state, setState] = useState({ kind: "", msg: "" });
   useEffect(() => setValue(saved || ""), [saved]);
@@ -11,7 +12,8 @@ function SubmitField({ weekId, projectId, field, saved }) {
     setState({ kind: "", msg: "Saving…" });
     try {
       await api(`/weeks/${weekId}/projects/${projectId}/submission/${field.id}`, { method: "PUT", body: { value } });
-      setState({ kind: "ok", msg: "Saved" });
+      setState({ kind: "ok", msg: field.id === "repo_url" && value ? "Saved. Grading has started below." : "Saved" });
+      onSaved?.();
     } catch (e) {
       setState({ kind: "error", msg: e.message });
     }
@@ -36,6 +38,7 @@ export default function Projects({ week, only, progress, onChange }) {
   const [error, setError] = useState("");
   // Ticks show at once; the server copy replaces them when progress reloads.
   const [pending, setPending] = useState({});
+  const [graded, setGraded] = useState(0); // bumps when a repo link is saved, to refresh the grade card
   useEffect(() => setPending({}), [progress]);
 
   async function toggle(projectId, index, done) {
@@ -79,8 +82,10 @@ export default function Projects({ week, only, progress, onChange }) {
             <h4 style={{ marginTop: 20 }}>What you submit</h4>
             <p className="small muted">Saved to your account when you leave each box. Never paste keys or passwords here.</p>
             {p.submit.map((f) => (
-              <SubmitField key={f.id} weekId={week.id} projectId={p.id} field={f} saved={mine.submission[f.id]} />
+              <SubmitField key={f.id} weekId={week.id} projectId={p.id} field={f} saved={mine.submission[f.id]}
+                           onSaved={f.id === "repo_url" ? () => setGraded((n) => n + 1) : undefined} />
             ))}
+            <GradeCard weekId={week.id} projectId={p.id} refreshKey={graded} />
           </section>
         );
       })}
