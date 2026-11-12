@@ -263,6 +263,46 @@
       }
     },
     {
+      "id": "ask-the-coach",
+      "date": "2026-11-12",
+      "title": "Ask the coach: chat and voice agent that answers from the course",
+      "pr": 10,
+      "assignments": [
+        "w12-p2",
+        "w3-explainer"
+      ],
+      "where": [
+        "backend/app/coach.py",
+        "backend/app/models_coach.py",
+        "frontend/src/components/Coach.jsx",
+        "frontend/src/coach.css",
+        "voice_agent/agent.py (CourseCoach)"
+      ],
+      "how": [
+        "Every lesson, reading, project and voice prompt is cut into passages tagged with its course page; the graded quiz is left out so the coach can't leak answers.",
+        "A small BM25 keyword ranker picks the top 5 passages, boosted for the week you're on. With ANTHROPIC_API_KEY set, Claude answers from those passages only and cites them as [1], [2]; without it the coach quotes the passages.",
+        "The floating 'Ask the coach' pill opens a Revrag-style chat panel with source chips that link to the lesson. The mic button starts a LiveKit call: the voice-quiz worker runs in 'coach' mode and looks things up through /coach/internal/search.",
+        "Each question is saved (fde_coach_questions) for a 40-per-hour limit and shows up in God mode's terminal and the Coach AI chip."
+      ],
+      "demo": {
+        "title": "Ask a question from the command line",
+        "lines": [
+          {
+            "kind": "cmd",
+            "text": "curl -X POST https://fde-learnings.onrender.com/api/fde/coach/ask -H \"Authorization: Bearer $TOKEN\" -H 'Content-Type: application/json' -d '{\"question\":\"What does the waiter stand for?\",\"week_id\":\"week-01\"}'"
+          },
+          {
+            "kind": "out",
+            "text": "{\"answer\":\"The waiter is the API: it carries your request to the kitchen... [1]\",\"mode\":\"ai\",\"sources\":[{\"week_id\":\"week-01\",\"item_id\":\"lesson-restaurant\",...}]}"
+          },
+          {
+            "kind": "note",
+            "text": "mode is \"search\" until ANTHROPIC_API_KEY is set on Render. Voice needs the LiveKit keys and the worker running."
+          }
+        ]
+      }
+    },
+    {
       "id": "auto-status",
       "date": "2026-11-12",
       "title": "Assignment statuses update when work ships",
