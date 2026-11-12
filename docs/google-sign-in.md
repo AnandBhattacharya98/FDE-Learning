@@ -34,6 +34,18 @@ The button only appears once both Google keys are set on the API.
 
 Save; Render redeploys. Nothing changes on Vercel. For local work put the same names in `backend/.env`.
 
+## Only let Revrag people in
+
+Set `ALLOWED_EMAIL_DOMAINS=revrag.ai` on Render (comma-separate several domains). Then:
+
+- Google sign-in only accepts verified `@revrag.ai` addresses, and Google's account picker only offers them.
+- New accounts can only be made with Google. A password sign-up can't prove someone owns the address,
+  so "Create an account" disappears. Existing `@revrag.ai` password accounts can still log in.
+- Anyone outside the domain, including old accounts and tokens already handed out, is refused.
+- Addresses in `ADMIN_EMAILS` are always let in, so the admin can't lock themselves out.
+
+Leave it blank to let anyone in.
+
 ## How it works
 
 1. The Login page asks `GET /api/fde/auth/providers` whether Google is on.
