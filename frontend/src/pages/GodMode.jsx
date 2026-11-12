@@ -3,6 +3,7 @@ import { Navigate } from "react-router-dom";
 import { api } from "../api.js";
 import { useAuth } from "../auth.jsx";
 import "../godmode.css";
+import Cohort from "../components/Cohort.jsx";
 
 // God mode. The API decides who gets in (ADMIN_EMAILS + Google sign-in); this page only
 // hides itself from everyone else.
@@ -430,6 +431,8 @@ export default function GodMode() {
               </div>
             </div>
           </section>
+
+          <Cohort />
 
           <section className="gm-panel">
             <div className="gm-board-head">
