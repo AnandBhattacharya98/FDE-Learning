@@ -25,7 +25,7 @@ function Score({ s, passed }) {
   if (!s) return <span className="gm-meta">–</span>;
   const p = pct(s);
   return (
-    <span className={`co-score ${passed === undefined ? "" : passed ? "ok" : "bad"}`} title={`${s.attempts} attempt${s.attempts === 1 ? "" : "s"}`}>
+    <span className={`co-score ${passed === undefined ? "" : passed ? "ok" : "bad"}`} title={s.attempts ? `${s.attempts} attempt${s.attempts === 1 ? "" : "s"}` : undefined}>
       {s.score}/{s.total} <small>{p}%</small>
     </span>
   );
@@ -52,9 +52,12 @@ function Grades({ grades }) {
 function Detail({ id, onClose }) {
   const [d, setD] = useState(null);
   const [err, setErr] = useState("");
+  const [calls, setCalls] = useState([]);
   useEffect(() => {
     setD(null);
+    setCalls([]);
     api(`/admin/learners/${id}`).then(setD).catch((e) => setErr(e.message));
+    api(`/admin/voice-scorecards?user_id=${id}&limit=10`).then((r) => setCalls(r.scorecards || [])).catch(() => setCalls([]));
   }, [id]);
   useEffect(() => {
     const onKey = (e) => e.key === "Escape" && onClose();
@@ -113,6 +116,24 @@ function Detail({ id, onClose }) {
                 ))}
               </section>
             ))}
+
+            {calls.length > 0 && (
+              <section className="co-week">
+                <h4>Voice quiz calls</h4>
+                {calls.map((c) => (
+                  <details key={c.id} className="co-call">
+                    <summary>
+                      <span className="gm-meta">{ago(c.created_at)} · {c.week_id}</span>{" "}
+                      {c.complete ? <strong>{c.score}/{c.total}</strong> : <em className="gm-meta">ended early</em>}
+                      {c.weak_topics.map((t) => <span key={t} className="co-chip bad">{t}</span>)}
+                    </summary>
+                    <ul className="co-transcript">
+                      {c.transcript.map((t, i) => <li key={i} className={t.role}><span className="gm-meta">{t.role}:</span> {t.text}</li>)}
+                    </ul>
+                  </details>
+                ))}
+              </section>
+            )}
 
             <section className="co-week">
               <h4>Quiz attempts</h4>
