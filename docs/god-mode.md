@@ -40,3 +40,18 @@ The fields are described at the top of the file. `assignments` uses ids from
 `content/assignments.json` (it can be empty). The API checks the file at start-up and the tests
 fail on a bad entry, so a mistake can't take the live site down. Never put emails, keys or
 connection strings in it.
+
+## Statuses that keep themselves up to date
+
+A build-log entry can also move your assignments forward with `status_updates`:
+
+```json
+"status_updates": [
+  {"assignment": "w3-p3", "status": "doing", "note": "what was built and what's left", "at": "2026-11-12T16:30:00Z"}
+]
+```
+
+God mode shows whichever is newest: your own click, or the latest update from shipped work.
+The card says which one it is. "Back to automatic" drops your click and keeps your note.
+P1 and P2 follow your course checklist when neither has set them. Only claim what's true:
+site work that practises an assignment is `doing`; `done` means your own deliverable is submitted.

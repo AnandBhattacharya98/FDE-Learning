@@ -61,6 +61,14 @@ class Demo(BaseModel):
     lines: list[DemoLine] = Field(min_length=1)
 
 
+class StatusUpdate(BaseModel):
+    """A thread moving one of the admin's assignments forward when it ships work."""
+    assignment: str
+    status: Literal["todo", "doing", "done"]
+    note: str = ""
+    at: datetime  # ISO time, with timezone, when the update was made
+
+
 class BuildEntry(BaseModel):
     id: str = Field(pattern=r"^[a-z0-9][a-z0-9-]*$")
     date: str = Field(pattern=r"^\d{4}-\d{2}-\d{2}$")
@@ -70,6 +78,7 @@ class BuildEntry(BaseModel):
     where: list[str] = Field(min_length=1)
     how: list[str] = Field(min_length=1)
     demo: Demo
+    status_updates: list[StatusUpdate] = []
 
 
 @lru_cache
@@ -83,7 +92,10 @@ def load_build_log() -> list[BuildEntry]:
         if e.id in seen:
             raise ValueError(f"build-log.json: duplicate id {e.id!r}")
         seen.add(e.id)
-        unknown = set(e.assignments) - known
+        for u in e.status_updates:
+            if u.at.tzinfo is None:
+                raise ValueError(f"build-log.json: {e.id!r} status update needs a timezone in 'at'")
+        unknown = (set(e.assignments) | {u.assignment for u in e.status_updates}) - known
         if unknown:
             raise ValueError(f"build-log.json: {e.id!r} names unknown assignments {sorted(unknown)}")
     return entries
@@ -128,18 +140,37 @@ def overview(admin: User = Depends(require_admin), db: Session = Depends(get_db)
     saved = {r.assignment_id: r for r in db.scalars(
         select(AssignmentStatus).where(AssignmentStatus.user_id == admin.id)).all()}
     log = load_build_log()
+    # The newest build-log status update for each assignment.
+    shipped: dict[str, tuple[StatusUpdate, BuildEntry]] = {}
+    for e in log:
+        for u in e.status_updates:
+            if u.assignment not in shipped or u.at >= shipped[u.assignment][0].at:
+                shipped[u.assignment] = (u, e)
     assignments = []
     for a in load_assignments():
         progress = _project_progress(db, admin.id, a.project) if a.project else None
-        row = saved.get(a.id)
+        note_row = saved.get(a.id)
+        row = note_row if note_row and note_row.status else None  # status "" = note only, status automatic
+        row_at = (row.updated_at if row.updated_at.tzinfo else row.updated_at.replace(tzinfo=timezone.utc)) if row else None
+        upd = shipped.get(a.id)
+        # Newest wins between your own click in God mode and a thread's build-log update;
+        # with neither, build projects follow the course checklist.
+        if row and (not upd or row_at >= upd[0].at):
+            status, source, at, by = row.status, "manual", row_at, None
+        elif upd:
+            status, source, at, by = upd[0].status, "build-log", upd[0].at, {
+                "entry": upd[1].id, "title": upd[1].title, "pr": upd[1].pr, "note": upd[0].note}
+        else:
+            status, source, at, by = _auto_status(progress), ("course" if progress else "default"), None, None
         assignments.append({
             **a.model_dump(),
             "progress": progress,
-            # A status set in God mode wins; otherwise build projects follow the course checklist.
-            "status": row.status if row else _auto_status(progress),
-            "status_source": "manual" if row else ("course" if progress else "default"),
-            "note": row.note if row else "",
-            "updated_at": row.updated_at.isoformat() if row else None,
+            "status": status,
+            "status_source": source,
+            "status_by": by,
+            "manual_status": row.status if row else None,
+            "note": note_row.note if note_row else "",
+            "updated_at": at.isoformat() if at else None,
             "features": [e.id for e in log if a.id in e.assignments],
         })
 
@@ -197,19 +228,21 @@ class StatusIn(BaseModel):
 @router.put("/assignments/{assignment_id}")
 def set_status(assignment_id: str, body: StatusIn, admin: User = Depends(require_admin),
                db: Session = Depends(get_db)):
-    """Set an assignment's status and note. status=null clears it back to automatic."""
+    """Set an assignment's status and note. status=null hands the status back to automatic."""
     if assignment_id not in {a.id for a in load_assignments()}:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Unknown assignment.")
     row = db.scalar(select(AssignmentStatus).where(
         AssignmentStatus.user_id == admin.id, AssignmentStatus.assignment_id == assignment_id))
-    if body.status is None:
+    note = body.note.strip()
+    if body.status is None and not note:
         if row:
             db.delete(row)
             db.commit()
-        return {"status": None}
+        return {"status": None, "note": ""}
     if row is None:
-        row = AssignmentStatus(user_id=admin.id, assignment_id=assignment_id, status=body.status)
+        row = AssignmentStatus(user_id=admin.id, assignment_id=assignment_id, status="")
         db.add(row)
-    row.status, row.note = body.status, body.note.strip()
+    # status None keeps the note but hands the status back to automatic ("").
+    row.status, row.note = body.status or "", note
     db.commit()
-    return {"status": row.status, "note": row.note}
+    return {"status": body.status, "note": row.note}
