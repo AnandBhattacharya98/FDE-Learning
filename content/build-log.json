@@ -408,7 +408,7 @@
       "id": "voice-quiz-scorecards",
       "date": "2026-11-12",
       "title": "Voice quiz scorecards and leaderboard",
-      "pr": null,
+      "pr": 13,
       "assignments": [
         "w12-p2"
       ],
