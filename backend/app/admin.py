@@ -22,6 +22,7 @@ from .content import load_course, load_weeks
 from .db import get_db
 from .models import QuizAttempt, StepProgress, Submission, User
 from .models_admin import AssignmentStatus
+from .models_coach import CoachQuestion
 from .models_course import ItemProgress
 from .security import current_user, token_claims
 
@@ -150,6 +151,8 @@ def overview(admin: User = Depends(require_admin), db: Session = Depends(get_db)
         ("quiz", QuizAttempt, QuizAttempt.created_at, lambda r: f"{r.kind} quiz {r.week_id}: {r.score}/{r.total}"),
         ("step", StepProgress, StepProgress.done_at, lambda r: f"ticked {r.week_id} {r.project_id} step {r.step_index + 1}"),
         ("item", ItemProgress, ItemProgress.done_at, lambda r: f"finished {r.week_id} · {r.item_id}"),
+        ("coach", CoachQuestion, CoachQuestion.created_at,
+         lambda r: "asked the coach: " + (r.question if len(r.question) <= 90 else r.question[:87] + "…")),
     ):
         for r, name in db.execute(select(model, User.name).join(User, User.id == model.user_id)
                                   .order_by(ts.desc()).limit(12)).all():
@@ -172,6 +175,7 @@ def overview(admin: User = Depends(require_admin), db: Session = Depends(get_db)
                 "google_sign_in": s.google_configured,
                 "livekit_voice": s.livekit_configured,
                 "voice_worker_key": bool(s.voice_worker_key),
+                "coach_ai": s.coach_ai_configured,
             },
             "content": {"weeks_open": len(weeks), "weeks_planned": len(load_course().weeks),
                         "quiz_questions": sum(len(w.quiz) for w in weeks.values())},
@@ -183,6 +187,7 @@ def overview(admin: User = Depends(require_admin), db: Session = Depends(get_db)
                 "items_done": count(ItemProgress),
                 "steps_done": count(StepProgress),
                 "submissions": count(Submission),
+                "coach_questions": count(CoachQuestion),
             },
             "events": events[:20],
         },

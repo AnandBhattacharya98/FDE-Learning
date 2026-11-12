@@ -30,3 +30,7 @@ services:
         sync: false
       - key: ALLOWED_EMAIL_DOMAINS
         sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: COACH_MODEL
+        sync: false

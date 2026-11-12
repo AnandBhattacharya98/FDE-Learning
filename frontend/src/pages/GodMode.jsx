@@ -146,12 +146,13 @@ function Schematic({ machine }) {
     { id: "db", x: 528, y: 110, label: machine.database === "postgres" ? "Postgres" : "SQLite", sub: `${c.quiz_attempts + c.steps_done + c.items_done} writes`, on: s.database },
     { id: "google", x: 300, y: 30, label: "Google", sub: s.google_sign_in ? "OAuth live" : "not set up", on: s.google_sign_in },
     { id: "lk", x: 300, y: 195, label: "LiveKit", sub: s.livekit_voice ? `${c.voice_calls} calls` : "keys missing", on: s.livekit_voice },
+    { id: "claude", x: 528, y: 195, label: "Coach AI", sub: s.coach_ai ? `${c.coach_questions} questions` : "search only", on: s.coach_ai },
   ];
   const at = Object.fromEntries(nodes.map((n) => [n.id, n]));
-  const links = [["web", "api"], ["api", "db"], ["api", "google"], ["api", "lk"]];
+  const links = [["web", "api"], ["api", "db"], ["api", "google"], ["api", "lk"], ["api", "claude"]];
   return (
     <svg viewBox="0 0 600 230" className="gm-schematic" role="img"
-      aria-label={`System: API online, database ${machine.database}, Google sign-in ${s.google_sign_in ? "on" : "off"}, LiveKit ${s.livekit_voice ? "on" : "off"}`}>
+      aria-label={`System: API online, database ${machine.database}, Google sign-in ${s.google_sign_in ? "on" : "off"}, LiveKit ${s.livekit_voice ? "on" : "off"}, coach AI ${s.coach_ai ? "on" : "off"}`}>
       {links.map(([a, b], i) => {
         const on = at[a].on && at[b].on;
         const d = `M ${at[a].x} ${at[a].y} L ${at[b].x} ${at[b].y}`;
@@ -419,7 +420,7 @@ export default function GodMode() {
               </div>
               <div className="gm-tiles">
                 {[
-                  ["Learners", c.users, `+${c.users_24h} today`],
+                  ["Learners", c.users, `+${c.users_24h} today · ${c.coach_questions} coach Qs`],
                   ["Quiz attempts", c.quiz_attempts, `${c.voice_calls} by voice`],
                   ["Items finished", c.items_done, `${c.steps_done} project steps`],
                   ["Submissions", c.submissions, `${data.machine.content.weeks_open}/${data.machine.content.weeks_planned} weeks open`],
