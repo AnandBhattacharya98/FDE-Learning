@@ -62,6 +62,9 @@ def test_full_sign_in_creates_account_and_returns_token(client, google_on, monke
     assert frag["next"] == "/weeks/week-01"
     me = client.get("/api/fde/me", headers={"Authorization": f"Bearer {frag['token']}"}).json()
     assert me["email"] == "new.person@gmail.com" and me["name"] == "New Person"
+    # The token says it came from Google, which God mode requires.
+    import jwt
+    assert jwt.decode(frag["token"], get_settings().jwt_secret, algorithms=["HS256"])["via"] == "google"
 
     # Signing in again lands in the same account.
     again = _fragment(_finish(client, monkeypatch, {"email": "new.person@gmail.com", "email_verified": True})

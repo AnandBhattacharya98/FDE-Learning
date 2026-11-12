@@ -4,6 +4,7 @@ import Login from "./pages/Login.jsx";
 import AuthCallback from "./pages/AuthCallback.jsx";
 import Home from "./pages/Home.jsx";
 import Week from "./pages/Week.jsx";
+import GodMode from "./pages/GodMode.jsx";
 
 function RequireAuth({ children }) {
   const { user, ready } = useAuth();
@@ -21,6 +22,7 @@ export default function App() {
         <Link to="/" className="brand">FDE Learning <span>· RevRag</span></Link>
         {user && (
           <div className="small">
+            {user.admin && <><Link to="/god" className="gm-link-top">GOD MODE</Link>{" "}</>}
             <span className="muted">{user.name} · </span>
             <button className="btn link" onClick={signOut}>Log out</button>
           </div>
@@ -32,6 +34,7 @@ export default function App() {
           <Route path="/auth/callback" element={<AuthCallback />} />
           <Route path="/" element={<RequireAuth><Home /></RequireAuth>} />
           <Route path="/weeks/:weekId/:itemId?" element={<RequireAuth><Week /></RequireAuth>} />
+          <Route path="/god" element={<RequireAuth><GodMode /></RequireAuth>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
