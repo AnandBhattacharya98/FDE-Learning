@@ -28,3 +28,15 @@ With `ADMIN_EMAILS` empty, nobody gets in.
 - Every other assignment starts as not started. Set it with the buttons on its card and add a note.
 - A status you set by hand wins. On P1/P2, "Follow course progress again" clears it.
 - New weeks: add entries to `content/assignments.json` (unique `id`, `week` as shown on the board).
+
+## Build log (keep it updated)
+
+`content/build-log.json` holds one entry per shipped feature: where it lives in the code,
+how it works in plain English, and a tiny demo (commands, output and notes). God mode shows
+the entries on the assignment cards they practise and as a timeline under the assignment bus.
+
+**Every PR that ships a feature appends one entry to the end of `entries`, in the same PR.**
+The fields are described at the top of the file. `assignments` uses ids from
+`content/assignments.json` (it can be empty). The API checks the file at start-up and the tests
+fail on a bad entry, so a mistake can't take the live site down. Never put emails, keys or
+connection strings in it.

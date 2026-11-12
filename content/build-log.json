@@ -210,7 +210,7 @@
       "id": "god-mode-build-log",
       "date": "2026-11-12",
       "title": "Build log on the assignment bus",
-      "pr": null,
+      "pr": 8,
       "assignments": [],
       "where": ["content/build-log.json", "backend/app/admin.py", "frontend/src/pages/GodMode.jsx"],
       "how": [
