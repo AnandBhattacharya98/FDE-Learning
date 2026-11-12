@@ -11,6 +11,8 @@ from datetime import datetime, timedelta, timezone
 from functools import lru_cache
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from typing import Literal
+
 from pydantic import BaseModel, Field
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
@@ -47,6 +49,44 @@ def load_assignments() -> list[Assignment]:
     if len(ids) != len(set(ids)):
         raise ValueError("assignments.json has duplicate ids")
     return items
+
+
+class DemoLine(BaseModel):
+    kind: Literal["cmd", "out", "note"]
+    text: str
+
+
+class Demo(BaseModel):
+    title: str
+    lines: list[DemoLine] = Field(min_length=1)
+
+
+class BuildEntry(BaseModel):
+    id: str = Field(pattern=r"^[a-z0-9][a-z0-9-]*$")
+    date: str = Field(pattern=r"^\d{4}-\d{2}-\d{2}$")
+    title: str
+    pr: int | None = None
+    assignments: list[str] = []
+    where: list[str] = Field(min_length=1)
+    how: list[str] = Field(min_length=1)
+    demo: Demo
+
+
+@lru_cache
+def load_build_log() -> list[BuildEntry]:
+    """content/build-log.json: one entry per shipped feature, appended by whoever ships it."""
+    raw = json.loads((get_settings().content_dir / "build-log.json").read_text())
+    entries = [BuildEntry(**e) for e in raw["entries"]]
+    known = {a.id for a in load_assignments()}
+    seen: set[str] = set()
+    for e in entries:
+        if e.id in seen:
+            raise ValueError(f"build-log.json: duplicate id {e.id!r}")
+        seen.add(e.id)
+        unknown = set(e.assignments) - known
+        if unknown:
+            raise ValueError(f"build-log.json: {e.id!r} names unknown assignments {sorted(unknown)}")
+    return entries
 
 
 def is_admin(user: User, claims: dict) -> bool:
@@ -87,6 +127,7 @@ def overview(admin: User = Depends(require_admin), db: Session = Depends(get_db)
     s = get_settings()
     saved = {r.assignment_id: r for r in db.scalars(
         select(AssignmentStatus).where(AssignmentStatus.user_id == admin.id)).all()}
+    log = load_build_log()
     assignments = []
     for a in load_assignments():
         progress = _project_progress(db, admin.id, a.project) if a.project else None
@@ -99,6 +140,7 @@ def overview(admin: User = Depends(require_admin), db: Session = Depends(get_db)
             "status_source": "manual" if row else ("course" if progress else "default"),
             "note": row.note if row else "",
             "updated_at": row.updated_at.isoformat() if row else None,
+            "features": [e.id for e in log if a.id in e.assignments],
         })
 
     since = datetime.now(timezone.utc) - timedelta(hours=24)
@@ -120,6 +162,7 @@ def overview(admin: User = Depends(require_admin), db: Session = Depends(get_db)
     return {
         "admin": {"name": admin.name},
         "assignments": assignments,
+        "build_log": [e.model_dump() for e in reversed(log)],  # newest first
         "machine": {
             "uptime_s": int(time.time() - STARTED),
             "database": "postgres" if s.database_url.startswith("postgresql") else "sqlite",
