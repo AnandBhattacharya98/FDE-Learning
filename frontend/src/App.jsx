@@ -2,8 +2,10 @@ import { Link, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { useAuth } from "./auth.jsx";
 import { ThemeToggle } from "./theme.jsx";
 import Login from "./pages/Login.jsx";
+import AuthCallback from "./pages/AuthCallback.jsx";
 import Home from "./pages/Home.jsx";
 import Week from "./pages/Week.jsx";
+import GodMode from "./pages/GodMode.jsx";
 
 function RequireAuth({ children }) {
   const { user, ready } = useAuth();
@@ -34,6 +36,7 @@ export default function App() {
           </Link>
           <div className="topbar-actions">
             <ThemeToggle />
+            {user?.admin && <Link to="/god" className="gm-link-top">GOD MODE</Link>}
             {user && (
               <div className="user-chip">
                 <span className="user-initial" aria-hidden="true">{user.name.trim().charAt(0).toUpperCase()}</span>
@@ -48,8 +51,10 @@ export default function App() {
         <main>
           <Routes>
             <Route path="/login" element={<Login />} />
+            <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/" element={<RequireAuth><Home /></RequireAuth>} />
             <Route path="/weeks/:weekId/:itemId?" element={<RequireAuth><Week /></RequireAuth>} />
+            <Route path="/god" element={<RequireAuth><GodMode /></RequireAuth>} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>

@@ -13,6 +13,7 @@ a multiple-choice quiz and a LiveKit voice quiz.
 | `frontend/` | React (Vite) site. |
 | `voice_agent/` | LiveKit Agents worker that runs the voice quiz. |
 | `docs/build-plan.md` | The 11-step build list and how this merges into sunny-side later. |
+| `docs/google-sign-in.md` | Turning on "Sign in with Google": Google Cloud setup and env vars. |
 
 ## Run it on your laptop
 
