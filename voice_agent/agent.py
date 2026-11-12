@@ -4,6 +4,8 @@ The same worker also runs "Ask the coach" by voice: when the room metadata has m
 it answers the learner's questions, looking them up in the course through the API.
 
 Run locally:   python agent.py dev
+When the coach scores the learner, and again when the call closes, the worker posts a
+scorecard (per-question result, missed points and the transcript) to the API.
 The backend's token endpoint dispatches this agent (agent_name "fde-voice-quiz") into the
 learner's room and puts {"week_id", "user_id"} in the room metadata.
 """
@@ -15,6 +17,7 @@ from pathlib import Path
 
 import httpx
 from dotenv import load_dotenv
+from pydantic import BaseModel
 from livekit.agents import Agent, AgentSession, JobContext, RunContext, WorkerOptions, cli, function_tool
 from livekit.plugins import silero
 
@@ -52,55 +55,91 @@ def build_instructions(week: dict, prompts: list[dict]) -> str:
         lines.append(f"  A good answer covers: {'; '.join(p['look_for'])}.")
     lines += [
         "",
-        "Score each answer 1 if it covers most of the points, otherwise 0.",
-        "After the last question, call record_score once with the total and a one-line note per question id,",
-        "then tell them their score, wish them luck, and say goodbye.",
+        "An answer is correct if it covers most of the points, otherwise it isn't.",
+        "After the last question, call record_score once with one result per question id: whether it was correct,",
+        "a one-line note, and the listed points they missed (copied from the list above).",
+        "Then tell them their score, name the topic to review if they missed any, wish them luck, and say goodbye.",
     ]
     return "\n".join(lines)
 
 
+class AnswerResult(BaseModel):
+    question_id: str
+    correct: bool
+    note: str
+    missed: list[str] = []
+
+
+def transcript_turn(role: str, text: str | None) -> dict | None:
+    """A chat item as a scorecard transcript line, or None for anything that isn't speech."""
+    who = {"assistant": "coach", "user": "learner"}.get(role)
+    text = " ".join((text or "").split())
+    return {"role": who, "text": text} if who and text else None
+
+
+def call_body(call_id: str, user_id: int, week_id: str, prompts: list[dict], transcript: list[dict],
+              results: list[AnswerResult] | None) -> dict:
+    """What the API's /internal/voice-quiz/calls expects. results=None means not scored yet."""
+    by_id = {r.question_id: r for r in results or []}
+    questions = []
+    for p in prompts:
+        r = by_id.get(p["id"])
+        questions.append({"id": p["id"], "correct": r.correct if r else (False if results is not None else None),
+                          "note": r.note if r else "", "missed": r.missed if r else []})
+    return {"call_id": call_id, "user_id": user_id, "week_id": week_id, "complete": results is not None,
+            "questions": questions, "transcript": list(transcript)}
+
+
+async def post_call(body: dict) -> bool:
+    api_url = (os.getenv("API_URL") or "").rstrip("/")
+    key = os.getenv("VOICE_WORKER_KEY") or ""
+    if not api_url or not key:
+        log.warning("API_URL or VOICE_WORKER_KEY not set; scorecard not saved")
+        return False
+    try:
+        async with httpx.AsyncClient(timeout=10) as client:
+            r = await client.post(f"{api_url}/api/fde/internal/voice-quiz/calls", json=body,
+                                  headers={"x-worker-key": key})
+            r.raise_for_status()
+    except httpx.HTTPError as e:
+        log.error("saving scorecard failed: %s", e)
+        return False
+    return True
+
+
 class QuizCoach(Agent):
-    def __init__(self, week: dict, user_id: int, prompts: list[dict]):
+    def __init__(self, week: dict, user_id: int, prompts: list[dict], call_id: str, transcript: list[dict]):
         super().__init__(instructions=build_instructions(week, prompts))
         self.week_id = week["id"]
         self.user_id = user_id
-        self.total = len(prompts)
-        self.recorded = False
+        self.prompts = prompts
+        self.call_id = call_id
+        self.transcript = transcript
+        self.results: list[AnswerResult] | None = None
 
     async def on_enter(self):
         self.session.generate_reply(
             instructions="Greet the learner in one sentence, say you'll ask a few quick questions out loud, then ask question 1."
         )
 
+    def body(self) -> dict:
+        return call_body(self.call_id, self.user_id, self.week_id, self.prompts, self.transcript, self.results)
+
     @function_tool
-    async def record_score(self, context: RunContext, score: int, notes: dict[str, str]) -> str:
-        """Save the learner's voice-quiz result. Call once, after the last question.
+    async def record_score(self, context: RunContext, results: list[AnswerResult]) -> str:
+        """Save the learner's voice-quiz scorecard. Call once, after the last question.
 
         Args:
-            score: How many questions they answered well.
-            notes: One short note per question id about what they covered or missed.
+            results: One entry per question id: whether the answer was correct, a one-line note,
+                and the points from the list that they missed.
         """
-        if self.recorded:
+        if self.results is not None:
             return "Already saved."
-        api_url = (os.getenv("API_URL") or "").rstrip("/")
-        key = os.getenv("VOICE_WORKER_KEY") or ""
-        if not api_url or not key:
-            log.warning("API_URL or VOICE_WORKER_KEY not set; score not saved")
-            return "Couldn't save the score, but carry on and tell them their score."
-        body = {"user_id": self.user_id, "score": max(0, min(score, self.total)), "total": self.total, "notes": notes}
-        try:
-            async with httpx.AsyncClient(timeout=10) as client:
-                r = await client.post(
-                    f"{api_url}/api/fde/internal/weeks/{self.week_id}/voice-quiz/result",
-                    json=body,
-                    headers={"x-worker-key": key},
-                )
-                r.raise_for_status()
-        except httpx.HTTPError as e:
-            log.error("saving score failed: %s", e)
-            return "Couldn't save the score, but carry on and tell them their score."
-        self.recorded = True
-        return "Saved."
+        self.results = results
+        score = sum(r.correct for r in results)
+        if not await post_call(self.body()):
+            return f"Couldn't save the scorecard, but carry on and tell them they got {score} of {len(self.prompts)}."
+        return f"Saved. They got {score} of {len(self.prompts)}."
 
 
 COACH_INSTRUCTIONS = """You are the FDE Coach for new Forward Deployed Engineers at RevRag, on a voice call.
@@ -154,6 +193,7 @@ def format_passages(passages: list[dict]) -> str:
 
 async def entrypoint(ctx: JobContext):
     await ctx.connect()
+    transcript: list[dict] = []
     meta = json.loads(ctx.room.metadata or "{}")
     if meta.get("mode") == "coach":
         session = AgentSession(stt=STT_MODEL, llm=LLM_MODEL, tts=TTS_MODEL, vad=silero.VAD.load())
@@ -168,7 +208,20 @@ async def entrypoint(ctx: JobContext):
         tts=TTS_MODEL,
         vad=silero.VAD.load(),
     )
-    await session.start(agent=QuizCoach(week, int(meta["user_id"]), prompts), room=ctx.room)
+    coach = QuizCoach(week, int(meta["user_id"]), prompts, call_id=ctx.job.id, transcript=transcript)
+
+    @session.on("conversation_item_added")
+    def _on_item(ev):
+        turn = transcript_turn(getattr(ev.item, "role", ""), getattr(ev.item, "text_content", None))
+        if turn:
+            transcript.append(turn)
+
+    async def _save_transcript():
+        # Runs when the call closes: saves the full transcript, or an unscored card if they hung up early.
+        await post_call(coach.body())
+
+    ctx.add_shutdown_callback(_save_transcript)
+    await session.start(agent=coach, room=ctx.room)
 
 
 if __name__ == "__main__":

@@ -10,6 +10,7 @@ from .cohort import router as cohort_router
 from .course import router as course_router
 from .google_auth import router as google_router
 from .grading import load_grading, router as grading_router
+from .voice import router as voice_router
 from .config import get_settings
 from .content import load_course, load_weeks
 from .db import init_db
@@ -44,6 +45,7 @@ def create_app() -> FastAPI:
     app.include_router(coach_router, prefix=API_PREFIX)
     app.include_router(cohort_router, prefix=API_PREFIX)
     app.include_router(grading_router, prefix=API_PREFIX)
+    app.include_router(voice_router, prefix=API_PREFIX)
 
     @app.get("/health")
     def health():
