@@ -69,3 +69,7 @@
 .co-project ul, .co-attempts { margin: 4px 0 0; padding-left: 18px; font-size: 0.85rem; overflow-wrap: anywhere; }
 .co-project a { color: var(--gm-accent); }
 @media (prefers-reduced-motion: reduce) { .co-bar > div { transition: none; } }
+.co-call { margin: 6px 0; }
+.co-call summary { cursor: pointer; }
+.co-transcript { margin: 6px 0 0; padding-left: 18px; font-size: 0.85rem; max-height: 280px; overflow-y: auto; }
+.co-transcript li.coach { color: var(--gm-muted); }

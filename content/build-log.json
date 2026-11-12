@@ -482,6 +482,34 @@
           }
         ]
       }
+    },
+    {
+      "id": "god-mode-cohort-voice",
+      "date": "2026-11-12",
+      "title": "Cohort view shows voice scorecards and project grades",
+      "pr": 15,
+      "assignments": [],
+      "where": [
+        "backend/app/cohort.py",
+        "frontend/src/components/Cohort.jsx"
+      ],
+      "how": [
+        "cohort.py registers voice.voice_summary as LEARNER_EXTRAS[\"voice\"]; grading.py already registers \"grades\".",
+        "Each row shows the latest voice score and top weak topics; the learner drawer lists their voice calls with weak topics and the full transcript."
+      ],
+      "demo": {
+        "title": "Weak topics per learner",
+        "lines": [
+          {
+            "kind": "cmd",
+            "text": "curl -H \"Authorization: Bearer $GOOGLE_ADMIN_TOKEN\" $API/api/fde/admin/learners"
+          },
+          {
+            "kind": "out",
+            "text": "{\"name\": \"Priya\", \"voice\": {\"latest\": {\"score\": 4, \"total\": 5}, \"weak_topics\": [\"Status codes\"], \"calls\": 2}, \"grades\": {\"P1\": {\"score\": 82, \"status\": \"passed\"}}}"
+          }
+        ]
+      }
     }
   ]
 }

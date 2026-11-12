@@ -94,3 +94,16 @@ def test_extras_hook_merges_into_rows(client, google_admin, monkeypatch):
     _, uid = _signup(client, "Extra")
     monkeypatch.setitem(cohort.LEARNER_EXTRAS, "grades", lambda db, ids: {uid: {"P1": {"score": 8, "max": 10}}})
     assert _row(client, google_admin, uid)["grades"]["P1"]["score"] == 8
+
+
+def test_voice_scorecards_show_on_rows(client, google_admin):
+    from app.models_voice import VoiceScorecard
+
+    _, uid = _signup(client, "Voicey")
+    with SessionLocal() as db:
+        db.add(VoiceScorecard(call_id=f"cohort-{uid}", user_id=uid, week_id="week-01", score=3, total=5, complete=True,
+                              questions=[], weak_topics=["Status codes"], transcript=[]))
+        db.commit()
+    voice = _row(client, google_admin, uid)["voice"]
+    assert voice["calls"] == 1 and voice["latest"]["score"] == 3 and voice["weak_topics"] == ["Status codes"]
+    assert "grades" in _row(client, google_admin, uid)  # registered by grading.py

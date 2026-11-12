@@ -223,3 +223,9 @@ def learner(user_id: int, admin: User = Depends(require_admin), db: Session = De
          "item": (q.answers or {}).get("_item") if isinstance(q.answers, dict) else None, "at": _iso(q.created_at)}
         for q in sorted(d.quizzes[user.id], key=lambda q: _utc(q.created_at), reverse=True)[:30]]
     return row
+
+
+# Voice-quiz scorecards (backend/app/voice.py): latest scored call, weak topics, number of calls.
+from .voice import voice_summary  # noqa: E402  (voice.py doesn't import this module)
+
+LEARNER_EXTRAS["voice"] = voice_summary
