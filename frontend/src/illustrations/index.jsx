@@ -70,7 +70,10 @@ function VoiceLoop({ title }) {
   );
 }
 
+import { DIAGRAMS } from "./diagrams.jsx";
+
 export const ILLUSTRATIONS = {
   "restaurant-analogy": RestaurantAnalogy,
   "voice-loop": VoiceLoop,
+  ...DIAGRAMS,
 };

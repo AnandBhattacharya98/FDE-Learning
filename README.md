@@ -48,7 +48,7 @@ Keys never go in code, GitHub, chat or screenshots. Locally they go in each fold
 
 | Variable | Where you get it | Goes in |
 |---|---|---|
-| `DATABASE_URL` | Neon → your project → **Connect**. Change `postgresql://` to `postgresql+psycopg://`. | `backend/.env`, Render |
+| `DATABASE_URL` | Neon → your project → **Connect**. Click Show password, then copy the whole string on one line. | `backend/.env`, Render |
 | `JWT_SECRET` | Make one: `python -c "import secrets; print(secrets.token_urlsafe(48))"` | `backend/.env`, Render |
 | `VOICE_WORKER_KEY` | Make one the same way. Must match in both places. | `backend/.env`, `voice_agent/.env`, Render, wherever the worker runs |
 | `LIVEKIT_URL`, `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET` | LiveKit Cloud → your project → **Settings → API keys** | `backend/.env`, `voice_agent/.env`, Render |
@@ -65,9 +65,14 @@ through your LiveKit project and needs no separate speech or LLM keys.
 - **Render:** the API deploys from the `Dockerfile` at the repo root. Either use New → Blueprint (reads `render.yaml`), or New → Web Service with Language **Docker**, Root Directory blank, Dockerfile Path `./Dockerfile`, Health Check Path `/health`. Add the secret values in its Environment tab.
 - To test the image locally: `docker build -t fde-learning-api . && docker run -p 8000:8000 --env-file backend/.env fde-learning-api`
 - **Vercel:** import the repo with root directory `frontend` and set `VITE_API_URL`.
-- **LiveKit:** run the worker with `python agent.py start` on any always-on host, or deploy it to LiveKit Cloud.
+- **Voice-quiz worker:** it holds a live connection to LiveKit, so it needs an always-on host. Vercel
+  can't run it, and Render's free web services sleep. Build the image from the repo root:
+  `docker build -f voice_agent/Dockerfile -t fde-voice-quiz .` and run it on any always-on Docker
+  host (for example a Render background worker) with `LIVEKIT_URL`, `LIVEKIT_API_KEY`,
+  `LIVEKIT_API_SECRET`, `VOICE_WORKER_KEY` and `API_URL` set. LiveKit Cloud's own agent hosting
+  (`lk agent create`) is the other option.
 
 ## Adding a new week
 
-Add `content/week-NN.json` with the same shape as `week-01-02.json`. The API validates every
+Add `content/week-NN.json` with the same shape as `week-01.json`, then set its `id` in `content/course.json`. The API validates every
 file at startup, so a typo shows up as an error straight away.

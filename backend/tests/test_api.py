@@ -1,20 +1,19 @@
 from app.content import load_weeks
 
-W = "/api/fde/weeks/week-01-02"
+W = "/api/fde/weeks/week-01"
 
 
 def test_content_loads_and_is_complete():
-    week = load_weeks()["week-01-02"]
-    assert len(week.concepts) == 16
-    assert len(week.quiz) == 24
-    assert len(week.voice_quiz) == 7
-    assert len(week.illustrations) == 18
-    assert [p.id for p in week.projects] == ["P1", "P2"]
+    w1, w2 = load_weeks()["week-01"], load_weeks()["week-02"]
+    assert len(w1.concepts) + len(w2.concepts) == 16
+    assert len(w1.quiz) == 18 and len(w2.quiz) == 14
+    assert len(w1.voice_quiz) + len(w2.voice_quiz) == 7
+    assert [p.id for p in w1.projects] == ["P1"] and [p.id for p in w2.projects] == ["P2"]
 
 
 def test_week_list_and_detail_hide_answers(client):
     weeks = client.get("/api/fde/weeks").json()
-    assert weeks[0]["id"] == "week-01-02"
+    assert [w["id"] for w in weeks] == ["week-01", "week-02"]
     week = client.get(W).json()
     assert "answer" not in week["quiz"][0]
     assert "explanation" not in week["quiz"][0]
@@ -43,18 +42,18 @@ def test_short_password_rejected(client):
 
 def test_quiz_is_graded_on_server_and_best_score_kept(client, auth):
     headers, _ = auth
-    week = load_weeks()["week-01-02"]
+    week = load_weeks()["week-01"]
     all_right = {q.id: q.answer for q in week.quiz}
     one_wrong = dict(all_right, q01=(week.quiz[0].answer + 1) % 4)
 
     r = client.post(f"{W}/quiz", json={"answers": one_wrong}, headers=headers)
-    assert r.json()["score"] == 23
+    assert r.json()["score"] == 17
     assert r.json()["results"][0]["correct"] is False
     client.post(f"{W}/quiz", json={"answers": all_right}, headers=headers)
     client.post(f"{W}/quiz", json={"answers": {}}, headers=headers)
 
     prog = client.get(f"{W}/progress", headers=headers).json()
-    assert prog["quiz"] == {"best": {"score": 24, "total": 24}, "attempts": 3}
+    assert prog["quiz"] == {"best": {"score": 18, "total": 18}, "attempts": 3}
     assert client.post(f"{W}/quiz", json={"answers": {}}).status_code == 401
 
 
@@ -95,12 +94,12 @@ def test_voice_quiz_token_when_configured(client, auth, monkeypatch):
     headers, user = auth
     r = client.post(f"{W}/voice-quiz/token", headers=headers)
     assert r.status_code == 200
-    assert r.json()["room"] == f"fde-quiz-week-01-02-u{user['id']}"
+    assert r.json()["room"] == f"fde-quiz-week-01-u{user['id']}"
 
 
 def test_voice_result_requires_worker_key(client, auth):
     headers, user = auth
-    url = "/api/fde/internal/weeks/week-01-02/voice-quiz/result"
+    url = "/api/fde/internal/weeks/week-01/voice-quiz/result"
     body = {"user_id": user["id"], "score": 5, "total": 7}
     assert client.post(url, json=body).status_code == 401
     assert client.post(url, json=body, headers={"x-worker-key": "wrong"}).status_code == 401

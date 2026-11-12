@@ -71,19 +71,34 @@ class Illustration(BaseModel):
     brief: str
 
 
-class PaceWeek(BaseModel):
-    week: int
-    focus: str
-    items: list[str]
+ITEM_TYPES = "^(overview|lesson|reading|practice|quiz|project|voice)$"
+
+
+class Item(BaseModel):
+    id: str
+    type: str = Field(pattern=ITEM_TYPES)
+    title: str
+    ref: str | None = None
+    refs: list[str] = []
+
+
+class Module(BaseModel):
+    id: str
+    title: str
+    summary: str = ""
+    items: list[Item]
 
 
 class Week(BaseModel):
     id: str
-    weeks: list[int]
+    number: int
     title: str
     goal: str
     due: str
-    pace: list[PaceWeek] = []
+    kickoff: str = ""
+    learn: list[str] = []
+    pass_percent: int = Field(default=80, ge=1, le=100)
+    modules: list[Module]
     concepts: list[Concept]
     resources: list[ResourceGroup]
     projects: list[Project]
@@ -100,7 +115,30 @@ class Week(BaseModel):
         ids = [q.id for q in self.quiz] + [v.id for v in self.voice_quiz]
         if len(ids) != len(set(ids)):
             raise ValueError("duplicate quiz ids")
+
+        known = {
+            "lesson": concept_ids,
+            "reading": {g.group for g in self.resources},
+            "project": {p.id for p in self.projects},
+        }
+        many = {"practice": {q.id for q in self.quiz}, "quiz": {q.id for q in self.quiz},
+                "voice": {v.id for v in self.voice_quiz}}
+        seen = set()
+        for item in self.items():
+            if item.id in seen:
+                raise ValueError(f"duplicate item id {item.id!r}")
+            seen.add(item.id)
+            if item.type in known and item.ref not in known[item.type]:
+                raise ValueError(f"{item.id}: unknown {item.type} {item.ref!r}")
+            if item.type in many and (not item.refs or not set(item.refs) <= many[item.type]):
+                raise ValueError(f"{item.id}: bad refs {item.refs}")
         return self
+
+    def items(self) -> list[Item]:
+        return [i for m in self.modules for i in m.items]
+
+    def item(self, item_id: str) -> Item | None:
+        return next((i for i in self.items() if i.id == item_id), None)
 
     def public(self) -> dict:
         """The week as sent to the browser: quiz answers and explanations removed."""
@@ -110,6 +148,31 @@ class Week(BaseModel):
             for q in self.quiz
         ]
         return data
+
+
+class OutlineWeek(BaseModel):
+    number: int
+    id: str | None = None
+    title: str
+    focus: str
+    build: str
+
+
+class Course(BaseModel):
+    title: str
+    subtitle: str
+    weeks: list[OutlineWeek]
+
+
+@lru_cache
+def load_course() -> Course:
+    path = get_settings().content_dir / "course.json"
+    course = Course.model_validate(json.loads(path.read_text(encoding="utf-8")))
+    weeks = load_weeks()
+    for w in course.weeks:
+        if w.id is not None and w.id not in weeks:
+            raise ValueError(f"course.json points to missing week {w.id!r}")
+    return course
 
 
 @lru_cache

@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { api } from "../api.js";
 
-export default function Quiz({ week, onDone }) {
+export default function Quiz({ week, item, onDone }) {
+  const questions = week.quiz.filter((q) => item.refs.includes(q.id));
+  const graded = item.type === "quiz";
   const [answers, setAnswers] = useState({});
   const [result, setResult] = useState(null);
   const [error, setError] = useState("");
@@ -14,7 +16,7 @@ export default function Quiz({ week, onDone }) {
     setBusy(true);
     setError("");
     try {
-      const r = await api(`/weeks/${week.id}/quiz`, { method: "POST", body: { answers } });
+      const r = await api(`/weeks/${week.id}/items/${item.id}/quiz`, { method: "POST", body: { answers } });
       setResult(r);
       onDone();
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -34,14 +36,19 @@ export default function Quiz({ week, onDone }) {
   return (
     <form onSubmit={submit} className="stack">
       {result ? (
-        <div className="notice ok" role="status">
-          You scored <strong>{result.score} of {result.total}</strong>. Read the explanations below, then try again whenever you like.{" "}
+        <div className={`notice ${!graded || result.passed ? "ok" : "warn"}`} role="status">
+          You scored <strong>{result.score} of {result.total}</strong>.{" "}
+          {graded ? (result.passed ? "You passed. " : `You need ${result.pass_percent}% to pass. `) : ""}
+          Read the explanations below, then try again whenever you like.{" "}
           <button type="button" className="btn link" onClick={retry}>Retake the quiz</button>
         </div>
       ) : (
-        <p className="muted">{week.quiz.length} questions. Answers are checked when you submit, and every attempt is saved.</p>
+        <p className="muted">
+          {questions.length} questions.{" "}
+          {graded ? `Pass with ${week.pass_percent}% or more. You can retake it, and your best score counts.` : "Practice only: this doesn't count towards your grade."}
+        </p>
       )}
-      {week.quiz.map((q, n) => {
+      {questions.map((q, n) => {
         const r = byId[q.id];
         return (
           <fieldset key={q.id} className="card" style={{ margin: 0 }}>
@@ -71,7 +78,7 @@ export default function Quiz({ week, onDone }) {
       {error && <p className="notice error" role="alert">{error}</p>}
       {!result && (
         <button className="btn primary" type="submit" disabled={busy || answered === 0}>
-          {busy ? "Checking…" : `Submit ${answered} of ${week.quiz.length} answers`}
+          {busy ? "Checking…" : `Submit ${answered} of ${questions.length} answers`}
         </button>
       )}
     </form>

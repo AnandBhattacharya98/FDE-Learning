@@ -72,7 +72,7 @@ def _week(week_id: str) -> Week:
 @router.get("/weeks")
 def list_weeks():
     return [
-        {"id": w.id, "weeks": w.weeks, "title": w.title, "goal": w.goal, "due": w.due}
+        {"id": w.id, "number": w.number, "title": w.title, "goal": w.goal, "due": w.due}
         for w in load_weeks().values()
     ]
 
