@@ -1,0 +1,60 @@
+{
+  "about": "How learner projects are auto-graded. Checks come from grader/run_checks.py (run in a sandbox on GitHub Actions); the rubric is scored by Claude reading the repo. Points are out of 100.",
+  "pass_mark": 70,
+  "projects": {
+    "P1": {
+      "week_id": "week-01",
+      "title": "P1: a small call-log app",
+      "checks": [
+        {"id": "clone", "label": "Repo is public and clones", "points": 5},
+        {"id": "readme", "label": "README explains how to run it", "points": 5},
+        {"id": "no_secrets", "label": "No keys or connection strings committed", "points": 10},
+        {"id": "backend_routes", "label": "API has GET /calls and POST /calls", "points": 5},
+        {"id": "calls_table", "label": "A calls table is defined", "points": 3},
+        {"id": "frontend_react", "label": "A React frontend is present", "points": 2},
+        {"id": "py_install", "label": "Python dependencies install", "points": 5},
+        {"id": "py_compile", "label": "Python code compiles", "points": 3},
+        {"id": "tests", "label": "The repo's own tests pass", "points": 5},
+        {"id": "frontend_build", "label": "Frontend builds (npm run build)", "points": 5},
+        {"id": "live_api", "label": "Live API answers GET /calls", "points": 7},
+        {"id": "live_page", "label": "Live React page loads", "points": 5}
+      ],
+      "rubric": [
+        {"id": "requirements", "label": "Meets the brief", "points": 15,
+         "guide": "Postgres calls table, a Python API with GET and POST /calls, a React page that lists calls, all deployed. Compare with the checks and the code."},
+        {"id": "code_quality", "label": "Code quality", "points": 10,
+         "guide": "Readable structure, input validation on POST, sensible error handling, no dead code dumps."},
+        {"id": "security", "label": "Secrets and safety", "points": 5,
+         "guide": "Connection string read from the environment, .env ignored, a .env.example with blanks, parameterised SQL."},
+        {"id": "docs", "label": "README and submission", "points": 10,
+         "guide": "Someone new could run it from the README. The curl and Postman requests in the submission match the API."}
+      ]
+    },
+    "P2": {
+      "week_id": "week-02",
+      "title": "P2: a LiveKit voice bot",
+      "checks": [
+        {"id": "clone", "label": "Repo is public and clones", "points": 5},
+        {"id": "readme", "label": "README explains how to run it", "points": 5},
+        {"id": "no_secrets", "label": "No LiveKit or model keys committed", "points": 12},
+        {"id": "livekit_agents", "label": "Uses the LiveKit Agents framework", "points": 8},
+        {"id": "prompt", "label": "The bot's prompt is in the repo", "points": 5},
+        {"id": "env_example", "label": ".env.example lists the keys with blanks", "points": 3},
+        {"id": "py_install", "label": "Python dependencies install", "points": 7},
+        {"id": "py_compile", "label": "Python code compiles", "points": 5},
+        {"id": "tests", "label": "The repo's own tests pass", "points": 5},
+        {"id": "recording", "label": "Recording link opens", "points": 5}
+      ],
+      "rubric": [
+        {"id": "use_case", "label": "Prompt fits a real use case", "points": 12,
+         "guide": "A short, specific prompt for a real job such as qualifying a loan lead: goal, tone, what to collect, when to stop."},
+        {"id": "pipeline", "label": "Voice pipeline", "points": 10,
+         "guide": "STT, LLM and TTS (or a realtime model) wired with the Agents framework; turn detection and interruptions considered."},
+        {"id": "experiments", "label": "Notes on 3 setting changes", "points": 12,
+         "guide": "Three distinct changes (voice, turn detection, interruption...), each with what changed, what they expected and what happened."},
+        {"id": "docs", "label": "README and hygiene", "points": 6,
+         "guide": "Run steps, keys only in .env, .env.example present."}
+      ]
+    }
+  }
+}
