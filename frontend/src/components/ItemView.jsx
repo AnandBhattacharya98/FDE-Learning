@@ -9,15 +9,15 @@ function Overview({ week }) {
   return (
     <div className="lesson-body">
       <p style={{ fontSize: "1.1rem" }}>{week.goal}</p>
-      <h2>What you'll learn</h2>
+      <h3>What you'll learn</h3>
       <ul>{week.learn.map((l) => <li key={l}>{l}</li>)}</ul>
-      <h2 style={{ marginTop: 20 }}>This week's modules</h2>
+      <h3 style={{ marginTop: 20 }}>This week's modules</h3>
       <ol>
         {week.modules.slice(1).map((m) => (
           <li key={m.id}><strong>{m.title}.</strong> {m.summary}</li>
         ))}
       </ol>
-      <h2 style={{ marginTop: 20 }}>How you're assessed</h2>
+      <h3 style={{ marginTop: 20 }}>How you're assessed</h3>
       <ul>
         {quiz && <li><strong>Graded quiz:</strong> {quiz.refs.length} questions. Pass with {week.pass_percent}% or more; retake as often as you like.</li>}
         {week.projects.map((p) => <li key={p.id}><strong>Assignment {p.id}:</strong> {p.title}. Done when: {p.done_when}</li>)}

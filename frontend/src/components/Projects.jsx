@@ -57,13 +57,13 @@ export default function Projects({ week, only, progress, onChange }) {
         return (
           <section key={p.id} className="card" aria-labelledby={`proj-${p.id}`}>
             <span className="pill">{p.id}</span>
-            <h2 id={`proj-${p.id}`} style={{ marginTop: 8 }}>{p.title}</h2>
+            <h3 className="project-title" id={`proj-${p.id}`} style={{ marginTop: 8 }}>{p.title}</h3>
             <p className="muted">{p.summary}</p>
             {(() => {
               const fig = week.illustrations.find((i) => i.id === `${p.id.toLowerCase()}-architecture`);
               return fig ? <Illustration id={fig.id} brief={fig} /> : null;
             })()}
-            <h3>Steps</h3>
+            <h4>Steps</h4>
             {p.steps.map((s, i) => {
               const id = `${p.id}-step-${i}`;
               return (
@@ -76,7 +76,7 @@ export default function Projects({ week, only, progress, onChange }) {
             })}
             <p className="notice ok" style={{ marginTop: 12 }}><strong>Done when:</strong> {p.done_when}</p>
             {p.warning && <p className="notice warn">{p.warning}</p>}
-            <h3 style={{ marginTop: 20 }}>What you submit</h3>
+            <h4 style={{ marginTop: 20 }}>What you submit</h4>
             <p className="small muted">Saved to your account when you leave each box. Never paste keys or passwords here.</p>
             {p.submit.map((f) => (
               <SubmitField key={f.id} weekId={week.id} projectId={p.id} field={f} saved={mine.submission[f.id]} />
