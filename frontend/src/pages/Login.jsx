@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { api } from "../api.js";
 import { useAuth } from "../auth.jsx";
+import { AgentStage } from "../components/Agent.jsx";
 
 export default function Login() {
   const { user, signIn } = useAuth();
@@ -34,9 +35,11 @@ export default function Login() {
 
   const signup = mode === "signup";
   return (
-    <div className="auth-wrap">
-      <h1>{signup ? "Create your account" : "Log in"}</h1>
-      <p className="muted">Your quiz scores and project progress are saved to your account.</p>
+    <div className="auth-layout">
+      <div className="auth-wrap">
+      <span className="eyebrow">FDE training</span>
+      <h1 className="display" style={{ marginTop: 12 }}>{signup ? <>Create your <span className="grad-text">account</span></> : <>Welcome <span className="grad-text">back</span></>}</h1>
+      <p className="muted">{signup ? "Your quiz scores and project progress are saved to your account." : "Log in to pick up where you left off. Your quiz scores and project progress are saved to your account."}</p>
       <form className="card" onSubmit={submit} noValidate>
         {signup && (
           <div className="field">
@@ -66,6 +69,18 @@ export default function Login() {
           {signup ? "Log in" : "Create an account"}
         </button>
       </p>
+      </div>
+      <AgentStage
+        compact
+        label="A voice coach agent quizzing a learner"
+        fields={[
+          { label: "Lesson", value: "How a voice agent works", state: "done" },
+          { label: "Project", value: "P2: your own voice bot", state: "active" },
+        ]}
+        bubble="Explain what an API does, the way you would to a client."
+        name="Voice coach"
+        status="Listening"
+      />
     </div>
   );
 }

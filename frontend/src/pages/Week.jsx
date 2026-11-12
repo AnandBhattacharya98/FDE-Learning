@@ -66,8 +66,21 @@ export default function Week() {
   return (
     <div>
       <nav className="breadcrumb" aria-label="Breadcrumb">
-        <Link to="/">Course</Link> › Week {week.number}: {week.title}
+        <Link to="/">Course</Link> <span aria-hidden="true">/</span> Week {week.number}
       </nav>
+      <header className="week-head">
+        <div>
+          <span className="eyebrow">Week {week.number}{week.due ? ` · due ${week.due}` : ""}</span>
+          <h1 className="week-head-title">{week.title}</h1>
+        </div>
+        <div className="week-head-progress">
+          <span className="small muted">{done.size} of {items.length} done</span>
+          <div className="progress-bar" role="progressbar" aria-label={`Week ${week.number} progress`} aria-valuemin={0} aria-valuemax={100}
+               aria-valuenow={items.length ? Math.round((100 * done.size) / items.length) : 0}>
+            <div style={{ width: `${items.length ? (100 * done.size) / items.length : 0}%` }} />
+          </div>
+        </div>
+      </header>
       <div className="course-layout">
         <div>
           <button className="btn course-nav-toggle" aria-expanded={navOpen} aria-controls="course-nav" onClick={() => setNavOpen(!navOpen)}>
@@ -79,8 +92,11 @@ export default function Week() {
 
         <article className="card" aria-labelledby="item-title">
           <header className="item-head">
-            <div className="item-type-label">{item.module.title} · {TYPE_LABEL[item.type]}</div>
-            <h1 id="item-title" style={{ fontSize: "1.6rem", marginTop: 4 }}>{item.title}</h1>
+            <div className="item-meta">
+              <span className={`type-pill type-${item.type}`}>{TYPE_LABEL[item.type]}</span>
+              <span className="item-type-label">{item.module.title}</span>
+            </div>
+            <h2 id="item-title" className="item-title">{item.title}</h2>
           </header>
 
           <ItemView week={week} item={item} progress={progress} onChange={refresh} />
