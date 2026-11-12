@@ -184,7 +184,7 @@ function Schematic({ machine }) {
 
 /* ---------- Assignment modules ---------- */
 
-function AssignmentCard({ a, onSave }) {
+function AssignmentCard({ a, onSave, features }) {
   const [note, setNote] = useState(a.note);
   const [busy, setBusy] = useState(false);
   useEffect(() => setNote(a.note), [a.note]);
@@ -223,6 +223,12 @@ function AssignmentCard({ a, onSave }) {
         )}
         {a.status_source === "course" && <span className="gm-meta">Auto from your course checklist</span>}
       </div>
+      {features.length > 0 && (
+        <details className="gm-built">
+          <summary>Built on this site · {features.length}</summary>
+          {features.map((e) => <FeatureEntry key={e.id} e={e} />)}
+        </details>
+      )}
       <label className="gm-note">
         <span className="gm-meta">Note</span>
         <textarea rows={2} value={note} maxLength={2000} placeholder="Links, blockers, what's left…"
@@ -242,6 +248,84 @@ function Gauge({ label, n, of }) {
         <div style={{ width: `${pct}%` }} />
       </div>
     </div>
+  );
+}
+
+/* ---------- Build log: where and how each feature was added ---------- */
+
+const REPO = "https://github.com/AnandBhattacharya98/FDE-Learning";
+
+function DemoPlayer({ demo }) {
+  const [shown, setShown] = useState(demo.lines.length);
+  const timer = useRef(null);
+  useEffect(() => () => clearInterval(timer.current), []);
+  const play = () => {
+    clearInterval(timer.current);
+    if (REDUCED) { setShown(demo.lines.length); return; }
+    setShown(0);
+    timer.current = setInterval(() => setShown((n) => {
+      if (n + 1 >= demo.lines.length) clearInterval(timer.current);
+      return n + 1;
+    }), 650);
+  };
+  return (
+    <div className="gm-demo">
+      <div className="gm-demo-bar">
+        <span>demo · {demo.title}</span>
+        <button type="button" onClick={play} aria-label={`Replay demo: ${demo.title}`}>▶ Replay</button>
+      </div>
+      <div className="gm-demo-body" aria-live="polite">
+        {demo.lines.slice(0, shown).map((l, i) => (
+          <p key={i} className={`gm-demo-${l.kind}`}>
+            {l.kind === "cmd" ? "$ " : l.kind === "note" ? "# " : ""}{l.text}
+          </p>
+        ))}
+        {shown < demo.lines.length && <p><span className="gm-caret" /></p>}
+      </div>
+    </div>
+  );
+}
+
+function FeatureEntry({ e, inTimeline = false }) {
+  const pr = e.pr ? <a href={`${REPO}/pull/${e.pr}`} target="_blank" rel="noreferrer">PR #{e.pr}</a> : null;
+  return (
+    <div className="gm-feature">
+      {inTimeline ? (pr && <p className="gm-meta">{pr}</p>) : (
+        <>
+          <p className="gm-meta">{e.date}{pr && <> · {pr}</>}</p>
+          <h4>{e.title}</h4>
+        </>
+      )}
+      <div className="gm-where" aria-label="Where in the code">
+        {e.where.map((w) => <code key={w}>{w}</code>)}
+      </div>
+      <ul className="gm-how">{e.how.map((h) => <li key={h}>{h}</li>)}</ul>
+      <DemoPlayer demo={e.demo} />
+    </div>
+  );
+}
+
+function BuildLog({ entries }) {
+  return (
+    <section className="gm-panel">
+      <div className="gm-board-head">
+        <h2>Build log</h2>
+        <span className="gm-meta">{entries.length} features shipped · newest first</span>
+      </div>
+      <ol className="gm-timeline">
+        {entries.map((e, i) => (
+          <li key={e.id}>
+            <details open={i === 0}>
+              <summary>
+                <span className="gm-meta">{e.date}{e.pr ? ` · #${e.pr}` : ""}</span>
+                <strong>{e.title}</strong>
+              </summary>
+              <FeatureEntry e={e} inTimeline />
+            </details>
+          </li>
+        ))}
+      </ol>
+    </section>
   );
 }
 
@@ -297,6 +381,8 @@ export default function GodMode() {
     const list = data.assignments.filter((a) => filter === "all" || a.status === filter);
     return WEEKS.map((w) => ({ w, items: list.filter((a) => a.week === w) })).filter((g) => g.items.length);
   }, [data, filter]);
+
+  const featureById = useMemo(() => Object.fromEntries((data?.build_log || []).map((e) => [e.id, e])), [data]);
 
   if (!user?.admin || error === "denied") return <Navigate to="/" replace />;
 
@@ -357,10 +443,13 @@ export default function GodMode() {
             {grouped.map((g) => (
               <div key={g.w} className="gm-board">
                 <div className="gm-board-label"><span>WEEK {g.w}</span></div>
-                <div className="gm-modules">{g.items.map((a) => <AssignmentCard key={a.id} a={a} onSave={save} />)}</div>
+                <div className="gm-modules">{g.items.map((a) => <AssignmentCard key={a.id} a={a} onSave={save}
+                  features={a.features.map((id) => featureById[id]).filter(Boolean)} />)}</div>
               </div>
             ))}
           </section>
+
+          <BuildLog entries={data.build_log} />
 
           <Terminal events={data.machine.events} />
         </>

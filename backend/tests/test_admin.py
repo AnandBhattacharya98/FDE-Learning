@@ -91,3 +91,41 @@ def test_admin_emails_env_is_parsed(monkeypatch):
 
     monkeypatch.setenv("ADMIN_EMAILS", " A@Example.com , 'b@example.com',, ")
     assert Settings().admin_emails == {"a@example.com", "b@example.com"}
+
+
+def test_build_log_is_valid_and_linked_to_assignments(client, admin):
+    from app.admin import load_build_log
+
+    entries = load_build_log()
+    assert len(entries) >= 10
+    google, _ = admin
+    body = client.get(OVERVIEW, headers=google).json()
+    log = body["build_log"]
+    assert log[0]["date"] >= log[-1]["date"]  # newest first
+    p1 = body["assignments"][0]
+    assert "site-stack" in p1["features"]
+    ids = {e["id"] for e in log}
+    assert all(f in ids for a in body["assignments"] for f in a["features"])
+
+
+def test_build_log_rejects_unknown_assignment(tmp_path, monkeypatch):
+    import json
+    import shutil
+
+    from app import admin
+
+    for name in ("assignments.json",):
+        shutil.copy(get_settings().content_dir / name, tmp_path / name)
+    entry = {"id": "x", "date": "2026-11-12", "title": "x", "assignments": ["nope"], "where": ["a"],
+             "how": ["b"], "demo": {"title": "c", "lines": [{"kind": "note", "text": "d"}]}}
+    (tmp_path / "build-log.json").write_text(json.dumps({"entries": [entry]}))
+    monkeypatch.setattr(get_settings(), "content_dir", tmp_path)
+    admin.load_build_log.cache_clear()
+    admin.load_assignments.cache_clear()
+    try:
+        with pytest.raises(ValueError, match="unknown assignments"):
+            admin.load_build_log()
+    finally:
+        monkeypatch.undo()
+        admin.load_build_log.cache_clear()
+        admin.load_assignments.cache_clear()

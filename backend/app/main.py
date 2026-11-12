@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .admin import load_assignments, router as admin_router
+from .admin import load_assignments, load_build_log, router as admin_router
 from .api import router
 from .course import router as course_router
 from .google_auth import router as google_router
@@ -19,6 +19,7 @@ async def lifespan(_: FastAPI):
     load_weeks()  # fail fast if a content file is invalid
     load_course()
     load_assignments()
+    load_build_log()
     init_db()
     yield
 

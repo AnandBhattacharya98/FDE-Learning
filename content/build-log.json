@@ -1,0 +1,230 @@
+{
+  "_how_to_add": "Every thread that ships a feature appends one entry to the END of `entries`, in the same PR. Fields: id (unique, kebab-case), date (YYYY-MM-DD), title, pr (number or null), assignments (ids from assignments.json that this feature practises, may be []), where (repo paths), how (2-4 short plain-English bullets), demo (title + lines; each line has kind cmd|out|note and text). Never put emails, keys or connection strings in it.",
+  "entries": [
+    {
+      "id": "site-stack",
+      "date": "2026-11-11",
+      "title": "The site itself: React page, Python API, Postgres",
+      "pr": 1,
+      "assignments": ["w12-p1"],
+      "where": ["backend/app/api.py", "backend/app/models.py", "frontend/src/api.js", "frontend/src/pages/"],
+      "how": [
+        "Same three parts as P1: a React page (Vite) calls a FastAPI backend, which saves rows in Postgres.",
+        "Every route lives on one router under /api/fde, so it can later be mounted inside sunny-side.",
+        "Tables start with fde_ so they can share a database with other apps."
+      ],
+      "demo": {
+        "title": "Call the API yourself, like P1's curl POST",
+        "lines": [
+          {"kind": "cmd", "text": "curl https://fde-learnings.onrender.com/api/fde/weeks"},
+          {"kind": "out", "text": "[{\"id\":\"week-01\",\"number\":1,\"title\":\"Programming fundamentals\",...}]"},
+          {"kind": "note", "text": "GET reads rows; the site's React page makes this same call and draws the result."}
+        ]
+      }
+    },
+    {
+      "id": "deploy-render-vercel-neon",
+      "date": "2026-11-11",
+      "title": "Deployed: API on Render, site on Vercel, database on Neon",
+      "pr": 1,
+      "assignments": ["w12-p1"],
+      "where": ["Dockerfile", "render.yaml", "frontend/vercel.json", "backend/app/config.py"],
+      "how": [
+        "Render builds the API from the Dockerfile on every push to main; Vercel builds the frontend folder.",
+        "All settings come from environment variables set in each host's dashboard, never from code.",
+        "The backend tidies a pasted Neon string (quotes, psql prefix, line breaks) and ignores trailing slashes in CORS_ORIGINS."
+      ],
+      "demo": {
+        "title": "Check the live API is up",
+        "lines": [
+          {"kind": "cmd", "text": "curl https://fde-learnings.onrender.com/health"},
+          {"kind": "out", "text": "{\"ok\":true}"},
+          {"kind": "note", "text": "On Render's free plan the first call after a quiet spell takes about a minute while it wakes."}
+        ]
+      }
+    },
+    {
+      "id": "voice-quiz",
+      "date": "2026-11-11",
+      "title": "Voice quiz on LiveKit",
+      "pr": 1,
+      "assignments": ["w12-p2"],
+      "where": ["voice_agent/agent.py", "backend/app/api.py (voice-quiz/token)", "frontend/src/components/VoiceQuiz.jsx"],
+      "how": [
+        "The API hands the browser a 15-minute LiveKit token for a private room, and asks LiveKit to send the fde-voice-quiz agent in.",
+        "The agent is a P2-style voice bot: speech-to-text, then the LLM, then text-to-speech, reading the week's questions.",
+        "Keys live only in the API's and worker's environment."
+      ],
+      "demo": {
+        "title": "What happens when you press Start call",
+        "lines": [
+          {"kind": "cmd", "text": "POST /api/fde/weeks/week-02/voice-quiz/token"},
+          {"kind": "out", "text": "{\"url\":\"wss://<project>.livekit.cloud\",\"token\":\"eyJ…\",\"room\":\"fde-quiz-week-02-u7\"}"},
+          {"kind": "note", "text": "The browser joins that room; the agent joins too and starts asking."}
+        ]
+      }
+    },
+    {
+      "id": "signed-worker-callback",
+      "date": "2026-11-11",
+      "title": "Shared-secret callback from the voice worker",
+      "pr": 1,
+      "assignments": ["w3-p3", "w5-p5"],
+      "where": ["backend/app/api.py (record_voice_result)", "voice_agent/agent.py"],
+      "how": [
+        "When a quiz call ends, the worker POSTs the score to the API, like P3's post-call webhook.",
+        "It sends a shared secret in the X-Worker-Key header; the API compares it in constant time and rejects anything else, as P5's Lambda must."
+      ],
+      "demo": {
+        "title": "A request with the wrong key is rejected",
+        "lines": [
+          {"kind": "cmd", "text": "curl -X POST $API/api/fde/internal/weeks/week-02/voice-quiz/result -H 'X-Worker-Key: wrong' -d '{…}'"},
+          {"kind": "out", "text": "401 {\"detail\":\"Bad worker key.\"}"},
+          {"kind": "note", "text": "With the right key the score is saved and shows on the learner's page."}
+        ]
+      }
+    },
+    {
+      "id": "course-player",
+      "date": "2026-11-11",
+      "title": "Coursera-style course: modules, readings, quizzes, 18 diagrams",
+      "pr": 2,
+      "assignments": [],
+      "where": ["content/course.json", "content/week-01.json", "content/week-02.json", "backend/app/course.py", "frontend/src/illustrations/diagrams.jsx"],
+      "how": [
+        "Each week is a JSON file split into modules of lessons, readings, practice quizzes, a graded quiz (80% to pass) and the project.",
+        "Quizzes are marked on the server, so answers never reach the browser.",
+        "Diagrams are hand-drawn SVG components, so they stay sharp and follow the theme."
+      ],
+      "demo": {
+        "title": "Adding week 3 later",
+        "lines": [
+          {"kind": "note", "text": "1. Write content/week-03.json in the same shape as week-02.json."},
+          {"kind": "note", "text": "2. In content/course.json set week 3's id to \"week-03\"."},
+          {"kind": "note", "text": "3. Push; the API checks the file at start-up and the week opens."}
+        ]
+      }
+    },
+    {
+      "id": "revrag-theme",
+      "date": "2026-11-11",
+      "title": "Colours and type matched to revrag.ai",
+      "pr": 3,
+      "assignments": [],
+      "where": ["frontend/src/styles.css"],
+      "how": [
+        "Colours were read from revrag.ai's live styles: violet accent, ink text, Inter.",
+        "Everything uses CSS variables, so a colour changes in one place."
+      ],
+      "demo": {
+        "title": "Change the accent everywhere",
+        "lines": [
+          {"kind": "cmd", "text": ":root { --accent: #6645eb; }"},
+          {"kind": "note", "text": "Buttons, links, progress bars and diagrams all read this one variable."}
+        ]
+      }
+    },
+    {
+      "id": "google-sign-in",
+      "date": "2026-11-12",
+      "title": "Sign in with Google",
+      "pr": 4,
+      "assignments": ["w5-infosec"],
+      "where": ["backend/app/google_auth.py", "frontend/src/pages/AuthCallback.jsx", "docs/google-sign-in.md"],
+      "how": [
+        "Server-side OAuth, as in sunny-side: the API sends you to Google, Google sends you back with a code, and the API swaps it for your verified email.",
+        "A signed state value plus a cookie stops someone else's sign-in from being slipped into yours.",
+        "The login token comes back after # in the link, which browsers never send to servers, so it stays out of logs."
+      ],
+      "demo": {
+        "title": "The round trip",
+        "lines": [
+          {"kind": "cmd", "text": "GET /api/fde/auth/google/start"},
+          {"kind": "out", "text": "302 → accounts.google.com/o/oauth2/v2/auth?client_id=…&state=…"},
+          {"kind": "cmd", "text": "GET /api/fde/auth/google/callback?code=…&state=…"},
+          {"kind": "out", "text": "302 → https://fde-learning-rho.vercel.app/auth/callback#token=…"}
+        ]
+      }
+    },
+    {
+      "id": "god-mode",
+      "date": "2026-11-12",
+      "title": "God mode: this dashboard",
+      "pr": 5,
+      "assignments": ["w5-infosec"],
+      "where": ["backend/app/admin.py", "content/assignments.json", "frontend/src/pages/GodMode.jsx", "frontend/src/godmode.css"],
+      "how": [
+        "Two checks on every request: your email is in ADMIN_EMAILS, and you signed in with Google (the token records how).",
+        "Everyone else gets a plain 404, so the page doesn't advertise that it exists.",
+        "The reactor, schematic and log are SVG and CSS animations drawn from live database counts."
+      ],
+      "demo": {
+        "title": "Anyone else asking for it",
+        "lines": [
+          {"kind": "cmd", "text": "curl $API/api/fde/admin/overview -H 'Authorization: Bearer <a learner's token>'"},
+          {"kind": "out", "text": "404 {\"detail\":\"Not Found\"}"},
+          {"kind": "note", "text": "Your Google token gets the full overview."}
+        ]
+      }
+    },
+    {
+      "id": "agent-redesign",
+      "date": "2026-11-12",
+      "title": "Redesign in the style of Revrag's voice and in-app agents, with a light/dark toggle",
+      "pr": 6,
+      "assignments": ["w4-p4"],
+      "where": ["frontend/src/styles.css", "frontend/src/theme.jsx", "frontend/src/components/Agent.jsx", "frontend/src/components/VoiceQuiz.jsx"],
+      "how": [
+        "Agent-style hero, call pill and waveform, like the in-app agent you'll embed in P4.",
+        "Light is the default; the toggle sets data-theme on the page and is remembered per browser, applied before first paint so it never flashes."
+      ],
+      "demo": {
+        "title": "How the toggle works",
+        "lines": [
+          {"kind": "cmd", "text": "document.documentElement.dataset.theme = \"dark\""},
+          {"kind": "note", "text": "Every colour is a CSS variable redefined under [data-theme=\"dark\"], so one attribute flips the whole site."}
+        ]
+      }
+    },
+    {
+      "id": "allowed-domains",
+      "date": "2026-11-12",
+      "title": "Only allowed email domains can use the site",
+      "pr": 7,
+      "assignments": ["w5-infosec"],
+      "where": ["backend/app/config.py (ALLOWED_EMAIL_DOMAINS)", "backend/app/google_auth.py", "backend/app/security.py"],
+      "how": [
+        "ALLOWED_EMAIL_DOMAINS (for example revrag.ai) is checked at Google sign-in, password log-in and on every signed-in request.",
+        "Password sign-up closes once it's set, because only Google proves you own the address.",
+        "Addresses in ADMIN_EMAILS always get in, so the admin can't lock themselves out."
+      ],
+      "demo": {
+        "title": "Someone outside the domain",
+        "lines": [
+          {"kind": "cmd", "text": "Continue with Google → picks someone@gmail.com"},
+          {"kind": "out", "text": "Back on /login: \"This site is only for … accounts.\""}
+        ]
+      }
+    },
+    {
+      "id": "god-mode-build-log",
+      "date": "2026-11-12",
+      "title": "Build log on the assignment bus",
+      "pr": null,
+      "assignments": [],
+      "where": ["content/build-log.json", "backend/app/admin.py", "frontend/src/pages/GodMode.jsx"],
+      "how": [
+        "Every shipped feature is one entry in content/build-log.json: where it lives, how it works and a tiny demo.",
+        "Each assignment card lists the features that practise it; the full timeline sits under the bus.",
+        "Every thread adds its entry in the same PR as the feature, so it stays current."
+      ],
+      "demo": {
+        "title": "Add an entry",
+        "lines": [
+          {"kind": "cmd", "text": "content/build-log.json → append {\"id\": \"my-feature\", \"date\": \"2026-11-13\", …}"},
+          {"kind": "note", "text": "The API validates the file at start-up; a bad entry fails the tests, not the live site."}
+        ]
+      }
+    }
+  ]
+}

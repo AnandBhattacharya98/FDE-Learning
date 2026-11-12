@@ -1,4 +1,4 @@
-/* God mode. Its own tokens, built on the site palette, so it follows the light/dark theme:
+/* God mode. Its own tokens, built on the site palette, so it follows the site toggle ([data-theme]):
    light = a violet blueprint on white, dark = a glowing engine room. */
 .gm {
   --gm-bg: #f7f5ff;
@@ -15,23 +15,6 @@
   --gm-off: #9aa1b2;
   --gm-bad: #b42318;
   --gm-glow: 0 0 0 rgba(0, 0, 0, 0);
-}
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .gm {
-    --gm-bg: #07060d;
-    --gm-panel: rgba(20, 18, 32, 0.78);
-    --gm-line: #2c2747;
-    --gm-grid: rgba(167, 139, 250, 0.07);
-    --gm-muted: #a3a3b8;
-    --gm-accent: #a78bfa;
-    --gm-accent-2: #5eead4;
-    --gm-core-hot: #f5f0ff;
-    --gm-ok: #6fd39b;
-    --gm-warn: #fbbf24;
-    --gm-off: #4b4863;
-    --gm-bad: #ff9a8f;
-    --gm-glow: 0 0 24px rgba(167, 139, 250, 0.25);
-  }
 }
 :root[data-theme="dark"] .gm, .dark .gm {
   --gm-bg: #07060d;
@@ -221,3 +204,38 @@
 @media (prefers-reduced-motion: reduce) {
   .gm *, .gm *::before, .gm *::after, .gm-scan { animation: none !important; transition: none !important; }
 }
+
+/* build log */
+.gm-built { border-top: 1px dashed var(--gm-line); padding-top: 8px; }
+.gm-built > summary, .gm-timeline summary { cursor: pointer; font: 600 0.78rem var(--mono); color: var(--gm-accent); letter-spacing: 0.04em; list-style: none; }
+.gm-built > summary::-webkit-details-marker, .gm-timeline summary::-webkit-details-marker { display: none; }
+.gm-built > summary::before, .gm-timeline summary::before { content: "▸ "; display: inline-block; transition: transform 0.2s; }
+.gm-built[open] > summary::before, .gm-timeline details[open] > summary::before { transform: rotate(90deg); }
+.gm-built .gm-feature + .gm-feature { border-top: 1px solid var(--gm-line); }
+.gm-feature { padding: 10px 0 4px; }
+.gm-feature h4 { margin: 2px 0 6px; font-size: 0.92rem; color: var(--gm-text); }
+.gm-feature a { color: var(--gm-accent); }
+.gm-where { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 6px; }
+.gm-where code { font-size: 0.72rem; padding: 2px 6px; border-radius: 6px; background: var(--gm-bg); border: 1px solid var(--gm-line); color: var(--gm-accent-2); word-break: break-all; }
+.gm-how { margin: 0 0 8px; padding-left: 1.1rem; font-size: 0.85rem; }
+.gm-how li + li { margin-top: 2px; }
+
+.gm-demo { border-radius: 10px; overflow: hidden; border: 1px solid var(--gm-line); background: #0b0a14; color: #d6d3f0; }
+.gm-demo-bar { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 4px 4px 4px 10px; background: #15131f; font: 500 0.7rem var(--mono); color: #8d89a8; }
+.gm-demo-bar button { font: 600 0.7rem var(--mono); color: #c4b5fd; background: none; border: 1px solid #3a3650; border-radius: 999px; min-height: 28px; padding: 0 10px; cursor: pointer; white-space: nowrap; }
+.gm-demo-bar button:hover { border-color: #a78bfa; }
+.gm-demo-body { padding: 8px 10px; font: 0.74rem/1.6 var(--mono); min-height: 3.2em; }
+.gm-demo-body p { margin: 0; white-space: pre-wrap; word-break: break-word; animation: gm-type 0.25s ease-out; }
+.gm-demo-cmd { color: #f5f0ff; }
+.gm-demo-out { color: #5eead4; }
+.gm-demo-note { color: #8d89a8; }
+@keyframes gm-type { from { opacity: 0; transform: translateX(-4px); } }
+
+.gm-timeline { list-style: none; margin: 8px 0 0; padding: 0 0 0 18px; position: relative; }
+.gm-timeline::before { content: ""; position: absolute; left: 5px; top: 6px; bottom: 6px; width: 2px; background: linear-gradient(var(--gm-accent), var(--gm-line)); }
+.gm-timeline > li { position: relative; padding: 6px 0 6px 10px; }
+.gm-timeline > li::before { content: ""; position: absolute; left: -17px; top: 13px; width: 10px; height: 10px; border-radius: 50%; background: var(--gm-bg); border: 2px solid var(--gm-accent); }
+.gm-timeline > li:first-child::before { background: var(--gm-accent); box-shadow: 0 0 10px var(--gm-accent); }
+.gm-timeline summary { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; color: var(--gm-text); }
+.gm-timeline summary strong { font-family: var(--font); font-size: 0.95rem; letter-spacing: 0; }
+.gm-timeline .gm-feature { max-width: 760px; }
