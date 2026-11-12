@@ -34,3 +34,9 @@ services:
         sync: false
       - key: COACH_MODEL
         sync: false
+      - key: GRADER_GITHUB_TOKEN
+        sync: false
+      - key: GRADER_REPO
+        sync: false
+      - key: GRADER_CALLBACK_KEY
+        sync: false

@@ -1,0 +1,80 @@
+# Grades one learner project. The FDE API starts this through GitHub's API when a learner
+# saves their repo link (or an admin presses Regrade in God mode). See docs/project-grading.md.
+#
+# Two jobs, so learner code never runs next to a secret:
+#   sandbox: clones the learner's repo and runs the checks. Learner code runs only inside
+#            Docker containers. This job has no secrets and a read-only token.
+#   report:  posts result.json to the API with GRADER_CALLBACK_KEY. Runs no learner code.
+name: Grade a learner project
+run-name: "Grade ${{ inputs.project }} · run ${{ inputs.run_id }}"
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_id: {description: "Grading run id in the FDE database", required: true}
+      run_token: {description: "One-time token for this run", required: true}
+      project: {description: "P1 or P2", required: true}
+      repo_url: {description: "Learner's GitHub repo", required: true}
+      links: {description: "JSON of the learner's live links", required: false, default: "{}"}
+
+permissions: {}
+
+concurrency:
+  group: grade-${{ inputs.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  sandbox:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: grader
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Pull sandbox images
+        run: docker pull -q python:3.12-slim && docker pull -q node:20-slim
+      - name: Run the checks
+        # Inputs go through env, never straight into the script, so a crafted link can't inject shell.
+        env:
+          PROJECT: ${{ inputs.project }}
+          REPO_URL: ${{ inputs.repo_url }}
+          LINKS: ${{ inputs.links }}
+        run: python grader/run_checks.py --project "$PROJECT" --repo "$REPO_URL" --links "$LINKS" --out result.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: result
+          path: result.json
+          retention-days: 7
+
+  report:
+    needs: sandbox
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: grader
+          persist-credentials: false
+      - uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: result
+          path: result
+      - name: Send the result to the FDE API
+        env:
+          GRADER_CALLBACK_KEY: ${{ secrets.GRADER_CALLBACK_KEY }}
+          FDE_API_URL: ${{ vars.FDE_API_URL }}
+          RUN_ID: ${{ inputs.run_id }}
+          RUN_TOKEN: ${{ inputs.run_token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          SANDBOX_RESULT: ${{ needs.sandbox.result }}
+        run: python3 grader/report.py

@@ -3,7 +3,7 @@ from datetime import timedelta
 
 import hmac
 
-from fastapi import APIRouter, Depends, Header, HTTPException, status
+from fastapi import APIRouter, BackgroundTasks, Depends, Header, HTTPException, status
 from pydantic import BaseModel, EmailStr, Field
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
@@ -176,7 +176,7 @@ def set_step(week_id: str, project_id: str, step_index: int, body: StepToggle,
 
 
 @router.put("/weeks/{week_id}/projects/{project_id}/submission/{field_id}")
-def set_submission(week_id: str, project_id: str, field_id: str, body: SubmissionIn,
+def set_submission(week_id: str, project_id: str, field_id: str, body: SubmissionIn, background: BackgroundTasks,
                    user: User = Depends(current_user), db: Session = Depends(get_db)):
     project = _project(_week(week_id), project_id)
     field = next((f for f in project.submit if f.id == field_id), None)
@@ -193,6 +193,10 @@ def set_submission(week_id: str, project_id: str, field_id: str, body: Submissio
     else:
         db.add(Submission(user_id=user.id, week_id=week_id, project_id=project_id, field_id=field_id, value=value))
     db.commit()
+    # A new repo link starts auto-grading (see grading.py).
+    from .grading import queue_for_submission
+
+    queue_for_submission(db, user.id, week_id, project_id, field_id, background)
     return {"value": value}
 
 

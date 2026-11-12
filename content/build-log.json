@@ -361,6 +361,48 @@
           "at": "2026-11-12T16:30:00Z"
         }
       ]
+    },
+    {
+      "id": "project-auto-grading",
+      "date": "2026-11-12",
+      "title": "Auto-grading of P1 and P2 submissions",
+      "pr": 12,
+      "assignments": [
+        "w12-p1",
+        "w12-p2"
+      ],
+      "where": [
+        "content/grading.json",
+        "grader/run_checks.py",
+        ".github/workflows/grade-submission.yml",
+        "backend/app/grading.py",
+        "frontend/src/components/GraderPanel.jsx",
+        "frontend/src/components/GradeCard.jsx",
+        "docs/project-grading.md"
+      ],
+      "how": [
+        "Saving a GitHub repo link on P1 or P2 starts a GitHub Actions run that clones the repo and installs, compiles, tests and builds it inside Docker, then calls the live links.",
+        "Learner code never runs in the API or next to a secret: a second job posts result.json back with a shared key.",
+        "Claude scores the rubric in content/grading.json from the repo, the checks and the learner's notes: 60 points of checks plus 40 of review, pass mark 70.",
+        "Learners see the score and feedback under their submission; God mode's Project grader lists every learner with a live pipeline, details and Regrade."
+      ],
+      "demo": {
+        "title": "Grade a P1 repo by hand",
+        "lines": [
+          {
+            "kind": "cmd",
+            "text": "python grader/run_checks.py --project P1 --repo https://github.com/<learner>/call-log --links '{\"api_url\": \"https://...\"}'"
+          },
+          {
+            "kind": "out",
+            "text": "P1: 11/12 checks passed in 142s"
+          },
+          {
+            "kind": "note",
+            "text": "Switch on: GRADER_GITHUB_TOKEN + GRADER_CALLBACK_KEY on Render, the same key as an Actions secret (docs/project-grading.md)."
+          }
+        ]
+      }
     }
   ]
 }
