@@ -13,9 +13,13 @@ export default function Login() {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [google, setGoogle] = useState(false);
+  const [signupOpen, setSignupOpen] = useState(true);
 
   useEffect(() => {
-    api("/auth/providers").then((p) => setGoogle(!!p.google)).catch(() => {});
+    api("/auth/providers").then((p) => {
+      setGoogle(!!p.google);
+      setSignupOpen(p.password_signup !== false);
+    }).catch(() => {});
     // Google sign-in problems come back as /login#error=...
     const err = new URLSearchParams(window.location.hash.slice(1)).get("error");
     if (err) {
@@ -83,12 +87,12 @@ export default function Login() {
           {busy ? "One moment…" : signup ? "Create account" : "Log in"}
         </button>
       </form>
-      <p className="small" style={{ marginTop: 16 }}>
+      {(signupOpen || signup) && <p className="small" style={{ marginTop: 16 }}>
         {signup ? "Already have an account? " : "New here? "}
         <button className="btn link" onClick={() => { setMode(signup ? "login" : "signup"); setError(""); }}>
           {signup ? "Log in" : "Create an account"}
         </button>
-      </p>
+      </p>}
       </div>
       <AgentStage
         compact

@@ -13,7 +13,7 @@ from .config import get_settings
 from .content import Week, load_weeks
 from .db import get_db
 from .models import QuizAttempt, StepProgress, Submission, User
-from .security import create_token, current_user, token_claims, hash_password, verify_password
+from .security import create_token, current_user, token_claims, hash_password, verify_password, not_allowed_message
 
 router = APIRouter()
 
@@ -37,6 +37,8 @@ def _user_out(u: User) -> dict:
 
 @router.post("/auth/signup", status_code=status.HTTP_201_CREATED)
 def signup(body: SignUp, db: Session = Depends(get_db)):
+    if not get_settings().password_signup_open:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "New accounts use Sign in with Google. " + not_allowed_message())
     user = User(email=body.email.lower(), name=body.name.strip(), password_hash=hash_password(body.password))
     db.add(user)
     try:
@@ -52,6 +54,8 @@ def login(body: LogIn, db: Session = Depends(get_db)):
     user = db.scalar(select(User).where(User.email == body.email.lower()))
     if user is None or not verify_password(body.password, user.password_hash):
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "That email and password don't match.")
+    if not get_settings().email_allowed(user.email):
+        raise HTTPException(status.HTTP_403_FORBIDDEN, not_allowed_message())
     return {"token": create_token(user.id), "user": _user_out(user)}
 
 

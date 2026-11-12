@@ -25,7 +25,7 @@ from sqlalchemy.orm import Session
 from .config import get_settings
 from .db import get_db
 from .models import User
-from .security import create_token, hash_password
+from .security import create_token, hash_password, not_allowed_message
 
 router = APIRouter()
 
@@ -82,7 +82,8 @@ def fetch_google_profile(code: str, redirect_uri: str) -> dict:
 @router.get("/auth/providers")
 def providers():
     """Which sign-in buttons the site should show."""
-    return {"google": get_settings().google_configured}
+    s = get_settings()
+    return {"google": s.google_configured, "password_signup": s.password_signup_open}
 
 
 @router.get("/auth/google/start")
@@ -102,6 +103,8 @@ def google_start(request: Request, next: str | None = None):
         "scope": "openid email profile",
         "state": state,
         "prompt": "select_account",
+        # With exactly one allowed domain, Google's account picker shows only that domain.
+        **({"hd": sorted(s.allowed_email_domains)[0]} if len(s.allowed_email_domains) == 1 else {}),
     })
     resp = RedirectResponse(f"{GOOGLE_AUTH_URL}?{query}", status_code=302)
     resp.set_cookie(STATE_COOKIE, nonce, max_age=int(STATE_TTL.total_seconds()), httponly=True,
@@ -132,6 +135,8 @@ def google_callback(request: Request, code: str | None = None, state: str | None
     email = (profile.get("email") or "").strip().lower()
     if not email or "@" not in email or profile.get("email_verified") is not True:
         return _to_site("/login", error="Google didn't share a verified email address for that account.")
+    if not get_settings().email_allowed(email):
+        return _to_site("/login", error=not_allowed_message())
     name = (profile.get("name") or email.split("@")[0]).strip()[:120]
 
     user = db.scalar(select(User).where(User.email == email))

@@ -60,6 +60,26 @@ class Settings:
             if e.strip().strip("'\"")
         }
 
+        # Who may use the site: comma-separated email domains, e.g. "revrag.ai". Blank = anyone.
+        # Addresses in ADMIN_EMAILS are always let in so the admin can't lock themselves out.
+        self.allowed_email_domains = {
+            d.strip().strip("'\"").lstrip("@").lower()
+            for d in (os.getenv("ALLOWED_EMAIL_DOMAINS") or "").split(",")
+            if d.strip().strip("'\"").lstrip("@")
+        }
+
+    def email_allowed(self, email: str) -> bool:
+        if not self.allowed_email_domains:
+            return True
+        email = (email or "").strip().lower()
+        return email in self.admin_emails or email.rsplit("@", 1)[-1] in self.allowed_email_domains
+
+    @property
+    def password_signup_open(self) -> bool:
+        # A password sign-up doesn't prove the person owns the address, so once the site is
+        # limited to certain domains, new accounts come through Google only.
+        return not self.allowed_email_domains
+
     @property
     def google_configured(self) -> bool:
         return bool(self.google_client_id and self.google_client_secret)

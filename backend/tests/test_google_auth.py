@@ -30,7 +30,7 @@ def _start(client, next_path="/weeks/week-01"):
 
 
 def test_providers_reports_google_off_by_default(client):
-    assert client.get("/api/fde/auth/providers").json() == {"google": False}
+    assert client.get("/api/fde/auth/providers").json() == {"google": False, "password_signup": True}
 
 
 def test_start_without_keys_sends_back_to_login(client, monkeypatch):
@@ -40,7 +40,7 @@ def test_start_without_keys_sends_back_to_login(client, monkeypatch):
 
 
 def test_start_redirects_to_google_with_state_cookie(client, google_on):
-    assert client.get("/api/fde/auth/providers").json() == {"google": True}
+    assert client.get("/api/fde/auth/providers").json()["google"] is True
     r, q = _start(client)
     assert r.headers["location"].startswith(google_auth.GOOGLE_AUTH_URL)
     assert q["client_id"] == "test-client-id"
@@ -108,3 +108,36 @@ def test_cancel_on_google_screen(client, google_on):
 ])
 def test_next_is_kept_on_site(raw, expected):
     assert google_auth._safe_next(raw) == expected
+
+
+@pytest.fixture
+def revrag_only(google_on, monkeypatch):
+    monkeypatch.setattr(google_on, "allowed_email_domains", {"revrag.ai"})
+    monkeypatch.setattr(google_on, "admin_emails", {"boss@gmail.com"})
+    return google_on
+
+
+def test_domain_rule_on_google_sign_in(client, revrag_only, monkeypatch):
+    _, q = _start(client)
+    assert q["hd"] == "revrag.ai"
+    ok = _finish(client, monkeypatch, {"email": "fde@revrag.ai", "email_verified": True})
+    assert "/auth/callback#" in ok.headers["location"]
+    no = _finish(client, monkeypatch, {"email": "someone@gmail.com", "email_verified": True})
+    assert "/login#error=" in no.headers["location"] and "revrag.ai" in _fragment(no.headers["location"])["error"]
+    # Admins listed in ADMIN_EMAILS always get in.
+    admin = _finish(client, monkeypatch, {"email": "boss@gmail.com", "email_verified": True})
+    assert "/auth/callback#" in admin.headers["location"]
+
+
+def test_domain_rule_on_passwords_and_old_tokens(client, google_on, monkeypatch):
+    # Accounts made before the rule was switched on.
+    out = client.post("/api/fde/auth/signup", json={"email": "old@gmail.com", "name": "O", "password": "longenough"}).json()
+    client.post("/api/fde/auth/signup", json={"email": "in@revrag.ai", "name": "I", "password": "longenough"})
+    monkeypatch.setattr(google_on, "allowed_email_domains", {"revrag.ai"})
+
+    assert client.get("/api/fde/auth/providers").json()["password_signup"] is False
+    r = client.post("/api/fde/auth/signup", json={"email": "new@revrag.ai", "name": "N", "password": "longenough"})
+    assert r.status_code == 403  # can't prove they own the address, so Google only
+    assert client.post("/api/fde/auth/login", json={"email": "old@gmail.com", "password": "longenough"}).status_code == 403
+    assert client.post("/api/fde/auth/login", json={"email": "in@revrag.ai", "password": "longenough"}).status_code == 200
+    assert client.get("/api/fde/me", headers={"Authorization": f"Bearer {out['token']}"}).status_code == 403

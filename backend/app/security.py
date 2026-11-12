@@ -54,4 +54,11 @@ def current_user(
         raise unauthorized
     if user is None:
         raise unauthorized
+    if not get_settings().email_allowed(user.email):
+        raise HTTPException(status.HTTP_403_FORBIDDEN, not_allowed_message())
     return user
+
+
+def not_allowed_message() -> str:
+    domains = sorted(get_settings().allowed_email_domains)
+    return "This site is only open to " + ", ".join("@" + d for d in domains) + " accounts."
