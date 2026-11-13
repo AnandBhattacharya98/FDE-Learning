@@ -510,6 +510,43 @@
           }
         ]
       }
+    },
+    {
+      "id": "god-mode-cohort-rows",
+      "date": "2026-11-13",
+      "title": "Cohort redesign: one row per learner, click for stats",
+      "pr": null,
+      "assignments": [],
+      "where": [
+        "frontend/src/components/Cohort.jsx",
+        "frontend/src/cohort.css"
+      ],
+      "how": [
+        "The wide table (a column per week's quiz, voice, flags) became a list with one row per learner: avatar, name and status, the top flag or next item, a progress bar, score pills (quiz average, latest voice, project grades) and last active.",
+        "Each row is a button; clicking it opens a side drawer with stat tiles (progress, graded quizzes, voice, projects), the flags, weak topics, then every week, project link, voice call and quiz attempt.",
+        "Rows are a CSS grid, so on a phone they stack into cards instead of scrolling sideways. Colours come from the --gm-* tokens, so light and dark both work. No API changes."
+      ],
+      "demo": {
+        "title": "What a row is built from",
+        "lines": [
+          {
+            "kind": "cmd",
+            "text": "GET /api/fde/admin/learners  ->  one entry per learner"
+          },
+          {
+            "kind": "out",
+            "text": "PN  Priya Nair  ON TRACK   29% ███░░░░   Quiz 90%  Voice 4/5  P1 92   1m ago  ›"
+          },
+          {
+            "kind": "out",
+            "text": "RM  Rohan Mehta STUCK  ▲ Failed the week 1 quiz 2 times   17%   Quiz 0%   just now  ›"
+          },
+          {
+            "kind": "note",
+            "text": "Click a row -> GET /admin/learners/{id} + /admin/voice-scorecards?user_id={id} fill the drawer."
+          }
+        ]
+      }
     }
   ]
 }

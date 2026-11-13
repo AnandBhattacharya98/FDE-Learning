@@ -49,6 +49,36 @@ function Grades({ grades }) {
   ));
 }
 
+function initials(name) {
+  return (name || "?").split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0].toUpperCase()).join("");
+}
+
+function Avatar({ name, state, big }) {
+  return <span className={`co-avatar ${state} ${big ? "big" : ""}`} aria-hidden="true">{initials(name)}</span>;
+}
+
+// Best graded-quiz result across weeks, as a percent, plus how many weeks were passed.
+function quizSummary(weeks) {
+  const taken = weeks.filter((w) => w.quiz);
+  if (!taken.length) return null;
+  const avg = Math.round(taken.reduce((n, w) => n + pct(w.quiz), 0) / taken.length);
+  return { avg, passed: taken.filter((w) => w.quiz_passed).length, taken: taken.length, of: weeks.length };
+}
+
+function bestVoice(r) {
+  return r.voice?.latest || r.weeks.map((w) => w.voice).filter(Boolean).sort((a, b) => pct(b) - pct(a))[0] || null;
+}
+
+function Stat({ label, value, sub, tone }) {
+  return (
+    <div className={`co-stat ${tone || ""}`}>
+      <span className="gm-meta">{label}</span>
+      <strong>{value}</strong>
+      {sub && <span className="gm-meta">{sub}</span>}
+    </div>
+  );
+}
+
 function Detail({ id, onClose }) {
   const [d, setD] = useState(null);
   const [err, setErr] = useState("");
@@ -65,32 +95,62 @@ function Detail({ id, onClose }) {
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
 
+  const quiz = d && quizSummary(d.weeks);
+  const voice = d && bestVoice(d);
+  const grades = d?.grades ? Object.entries(d.grades) : [];
+
   // Portal to <body> so the drawer covers the viewport; the gm class carries the theme tokens.
   return createPortal(
     <div className="gm co-drawer-wrap" onClick={onClose}>
-      <aside className="co-drawer" role="dialog" aria-modal="true" aria-label="Learner detail" onClick={(e) => e.stopPropagation()}>
+      <aside className="co-drawer" role="dialog" aria-modal="true" aria-label={d ? `${d.name}: stats` : "Learner stats"} onClick={(e) => e.stopPropagation()}>
         <button type="button" className="co-close" onClick={onClose} aria-label="Close">×</button>
         {err && <p className="notice error">{err}</p>}
         {!d && !err && <p className="gm-meta">Loading…</p>}
         {d && (
           <>
-            <p className="gm-meta">Joined {ago(d.joined_at)} · last active {ago(d.last_active)}</p>
-            <h3 className="co-name">{d.name}{d.is_you && <span className="co-chip">you</span>}</h3>
-            <p><span className={`gm-status co-state ${d.state}`}>{STATE[d.state]}</span> <strong>{d.percent}%</strong> <span className="gm-meta">({d.done}/{d.total} items)</span></p>
-            {d.flags.length > 0 && <ul className="co-flags">{d.flags.map((f) => <li key={f.code + f.label}>{f.label}</li>)}</ul>}
-            {d.next_up && <p className="gm-meta">Next up: week {d.next_up.week} · {d.next_up.title}</p>}
-            {d.voice?.weak_topics?.length > 0 && (
-              <p>Weak topics (voice): {d.voice.weak_topics.map((t) => <span key={t} className="co-chip bad">{t}</span>)}</p>
+            <header className="co-dhead">
+              <Avatar name={d.name} state={d.state} big />
+              <div>
+                <h3 className="co-name">{d.name}{d.is_you && <span className="co-chip">you</span>}</h3>
+                <span className={`gm-status co-state ${d.state}`}>{STATE[d.state]}</span>
+                <span className="gm-meta"> joined {ago(d.joined_at)} · active {ago(d.last_active)}</span>
+              </div>
+            </header>
+
+            <div className="co-stats">
+              <Stat label="Progress" value={`${d.percent}%`} sub={`${d.done}/${d.total} items`} />
+              <Stat label="Graded quizzes" value={quiz ? `${quiz.avg}%` : "–"} sub={quiz ? `${quiz.passed}/${quiz.of} weeks passed` : "none taken"}
+                tone={quiz ? (quiz.passed === quiz.taken ? "ok" : "bad") : ""} />
+              <Stat label="Voice quiz" value={voice ? `${voice.score}/${voice.total}` : "–"} sub={d.voice ? `${d.voice.calls} call${d.voice.calls === 1 ? "" : "s"}` : "no calls"} />
+              <Stat label="Projects" value={grades.length ? grades.map(([, g]) => g.score ?? "…").join(" · ") : "–"}
+                sub={grades.length ? grades.map(([k]) => k).join(" · ") + " / 100" : "not graded"}
+                tone={grades.length ? (grades.every(([, g]) => g.status === "passed") ? "ok" : grades.some(([, g]) => g.status === "failed") ? "bad" : "") : ""} />
+            </div>
+            <Bar n={d.done} of={d.total} label={`${d.name} progress`} />
+
+            {d.flags.length > 0 && (
+              <div className="co-alert">
+                <strong>Needs a nudge</strong>
+                <ul className="co-flags">{d.flags.map((f) => <li key={f.code + f.label}>{f.label}</li>)}</ul>
+              </div>
             )}
-            {d.grades && <p>Project grades: <Grades grades={d.grades} /></p>}
+            {d.next_up && <p className="co-next"><span className="gm-meta">Next up</span> Week {d.next_up.week} · {d.next_up.title}</p>}
+            {d.voice?.weak_topics?.length > 0 && (
+              <p className="co-weak"><span className="gm-meta">Weak topics (voice)</span> {d.voice.weak_topics.map((t) => <span key={t} className="co-chip bad">{t}</span>)}</p>
+            )}
 
             {d.weeks.map((w) => (
               <section key={w.id} className="co-week">
-                <h4>Week {w.number}: {w.title} <span className="gm-meta">{w.done}/{w.total}</span></h4>
-                <p className="gm-meta">
-                  Graded quiz <Score s={w.quiz} passed={w.quiz ? w.quiz_passed : undefined} /> · Voice <Score s={w.voice} />
-                  {w.practice_avg !== null && <> · Practice avg {w.practice_avg}%</>}
-                </p>
+                <div className="co-week-head">
+                  <h4>Week {w.number}: {w.title}</h4>
+                  <span className="gm-meta">{w.done}/{w.total}</span>
+                </div>
+                <Bar n={w.done} of={w.total} label={`Week ${w.number} progress`} />
+                <dl className="co-kv">
+                  <div><dt>Graded quiz</dt><dd><Score s={w.quiz} passed={w.quiz ? w.quiz_passed : undefined} /></dd></div>
+                  <div><dt>Voice</dt><dd><Score s={w.voice} /></dd></div>
+                  <div><dt>Practice avg</dt><dd>{w.practice_avg !== null ? <span className="co-score">{w.practice_avg}%</span> : <span className="gm-meta">–</span>}</dd></div>
+                </dl>
                 {w.modules.map((m) => (
                   <div key={m.title} className="co-module">
                     <span className="gm-meta">{m.title}</span>
@@ -101,7 +161,8 @@ function Detail({ id, onClose }) {
                 ))}
                 {w.projects.map((p) => (
                   <div key={p.id} className="co-project">
-                    <span className="gm-meta">{p.title}: {p.steps_done}/{p.steps_total} steps</span>
+                    <span className="gm-meta">{p.title}: {p.steps_done}/{p.steps_total} steps
+                      {d.grades?.[p.id] && <Grades grades={{ [p.id]: d.grades[p.id] }} />}</span>
                     <ul>
                       {p.submission.map((s) => (
                         <li key={s.label}>
@@ -174,7 +235,6 @@ export default function Cohort() {
 
   const close = useCallback(() => setOpen(null), []);
   const s = data?.summary;
-  const weekNums = data?.learners[0]?.weeks.map((w) => w.number) || [];
 
   return (
     <section className="gm-panel co" aria-labelledby="co-title">
@@ -208,47 +268,51 @@ export default function Cohort() {
             <input type="search" className="co-search" placeholder="Search by name" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Search learners" />
           </div>
 
-          <div className="co-table-wrap">
-            <table className="co-table">
-              <thead>
-                <tr>
-                  <th scope="col">Learner</th>
-                  <th scope="col">Progress</th>
-                  {weekNums.map((n) => <th key={n} scope="col">Wk {n} quiz</th>)}
-                  <th scope="col">Voice</th>
-                  <th scope="col">Last active</th>
-                  <th scope="col">Why flagged / next up</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.length === 0 && <tr><td colSpan={5 + weekNums.length} className="gm-meta">Nobody here.</td></tr>}
-                {rows.map((r) => {
-                  const bestVoice = r.voice?.latest || r.weeks.map((w) => w.voice).filter(Boolean).sort((a, b) => pct(b) - pct(a))[0];
-                  return (
-                    <tr key={r.id} className={`co-row ${r.state}`} tabIndex={0} onClick={() => setOpen(r.id)}
-                      onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), setOpen(r.id))}>
-                      <th scope="row">
-                        <span className={`co-led ${r.state}`} aria-hidden="true" />
+          <div className="co-list" role="list" aria-label="Learners">
+            <div className="co-list-head" aria-hidden="true">
+              <span>Learner</span><span>Progress</span><span>Scores</span><span>Last active</span><span />
+            </div>
+            {rows.length === 0 && <p className="gm-meta co-empty">Nobody here.</p>}
+            {rows.map((r) => {
+              const quiz = quizSummary(r.weeks);
+              const voice = bestVoice(r);
+              const grades = r.grades ? Object.entries(r.grades) : [];
+              const note = r.flags[0]?.label || (r.next_up ? `Next: week ${r.next_up.week} · ${r.next_up.title}` : "All done");
+              return (
+                <button key={r.id} type="button" role="listitem" className={`co-row ${r.state}`} onClick={() => setOpen(r.id)}
+                  aria-label={`${r.name}, ${STATE[r.state]}, ${r.percent}% done. Open stats`}>
+                  <span className="co-who">
+                    <Avatar name={r.name} state={r.state} />
+                    <span className="co-who-text">
+                      <span className="co-who-name">
                         {r.name}{r.is_you && <span className="co-chip">you</span>}
-                        <div><span className={`gm-status co-state ${r.state}`}>{STATE[r.state]}</span></div>
-                      </th>
-                      <td className="co-progress"><strong>{r.percent}%</strong> <span className="gm-meta">{r.done}/{r.total}</span><Bar n={r.done} of={r.total} label={`${r.name} progress`} /></td>
-                      {r.weeks.map((w) => <td key={w.id}><Score s={w.quiz} passed={w.quiz ? w.quiz_passed : undefined} /></td>)}
-                      <td><Score s={bestVoice} />{r.voice?.weak_topics?.slice(0, 2).map((t) => <span key={t} className="co-chip bad">{t}</span>)}</td>
-                      <td className="gm-meta">{ago(r.last_active)}</td>
-                      <td>
-                        {r.flags.length > 0
-                          ? <ul className="co-flags">{r.flags.map((f) => <li key={f.code + f.label}>{f.label}</li>)}</ul>
-                          : r.next_up ? <span className="gm-meta">Next: wk {r.next_up.week} · {r.next_up.title}</span> : <span className="gm-meta">All done</span>}
-                        <Grades grades={r.grades} />
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                        <span className={`gm-status co-state ${r.state}`}>{STATE[r.state]}</span>
+                      </span>
+                      <span className={`co-note ${r.flags.length ? "bad" : ""}`} title={r.flags.map((f) => f.label).join("\n") || note}>
+                        {r.flags.length ? "▲ " : ""}{note}{r.flags.length > 1 && <span className="co-more"> +{r.flags.length - 1}</span>}
+                      </span>
+                    </span>
+                  </span>
+                  <span className="co-progress">
+                    <span className="co-progress-num"><strong>{r.percent}%</strong> <span className="gm-meta">{r.done}/{r.total}</span></span>
+                    <Bar n={r.done} of={r.total} label={`${r.name} progress`} />
+                  </span>
+                  <span className="co-scores">
+                    <span className={`co-pill ${quiz ? (quiz.passed === quiz.taken ? "ok" : "bad") : "off"}`} title="Graded quizzes, average">
+                      Quiz {quiz ? `${quiz.avg}%` : "–"}
+                    </span>
+                    <span className={`co-pill ${voice ? "" : "off"}`} title="Voice quiz, latest">Voice {voice ? `${voice.score}/${voice.total}` : "–"}</span>
+                    {grades.map(([k, g]) => (
+                      <span key={k} className={`co-pill ${g.status === "passed" ? "ok" : g.status === "failed" ? "bad" : ""}`} title={`Project ${k}`}>{k} {g.score ?? "…"}</span>
+                    ))}
+                  </span>
+                  <span className="co-when gm-meta">{ago(r.last_active)}</span>
+                  <span className="co-chev" aria-hidden="true">›</span>
+                </button>
+              );
+            })}
           </div>
-          <p className="gm-meta">Click a learner for every item, project link and quiz attempt.</p>
+          <p className="gm-meta">Click a learner to see all their stats.</p>
         </>
       )}
       {open !== null && <Detail id={open} onClose={close} />}
