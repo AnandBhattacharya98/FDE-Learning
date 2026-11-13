@@ -552,7 +552,7 @@
       "id": "god-mode-assignment-rows",
       "date": "2026-11-13",
       "title": "Assignment bus: one row per assignment, click for details",
-      "pr": null,
+      "pr": 17,
       "assignments": [],
       "where": [
         "frontend/src/pages/GodMode.jsx (AssignmentRow, AssignmentDrawer)",
