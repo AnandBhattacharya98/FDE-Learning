@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Navigate } from "react-router-dom";
 import { api } from "../api.js";
 import { useAuth } from "../auth.jsx";
@@ -187,6 +188,55 @@ function Schematic({ machine }) {
 
 /* ---------- Assignment modules ---------- */
 
+// One compact row per assignment; clicking it opens the full card in a side drawer.
+function AssignmentRow({ a, features, onOpen }) {
+  const p = a.progress;
+  const done = p ? p.steps_done + p.fields_done : 0;
+  const total = p ? p.steps_total + p.fields_total : 0;
+  return (
+    <button type="button" className={`ab-row ${a.status}`} onClick={() => onOpen(a.id)}
+      aria-label={`${a.title}, ${STATUS_LABEL[a.status]}. Open details`}>
+      <span className="gm-led" aria-hidden="true" />
+      <span className="ab-title">
+        <strong>{a.title}</strong>
+        <span className="gm-meta">{KIND_LABEL[a.kind] || a.kind} · due {a.due}</span>
+      </span>
+      <span className="ab-progress">
+        {p ? (
+          <>
+            <span className="gm-meta">{done}/{total}</span>
+            <span className="gm-gauge-bar" aria-hidden="true"><span style={{ width: `${total ? Math.round((100 * done) / total) : 0}%` }} /></span>
+          </>
+        ) : <span className="gm-meta">{a.deliver.length} deliverable{a.deliver.length === 1 ? "" : "s"}</span>}
+      </span>
+      <span className="ab-extra">
+        {features.length > 0 && <span className="ab-chip" title="Features on this site that practise it">{features.length} built</span>}
+        {a.note && <span className="ab-chip" title={a.note}>note</span>}
+      </span>
+      <span className={`gm-status ${a.status}`}>{STATUS_LABEL[a.status]}</span>
+      <span className="ab-chev" aria-hidden="true">›</span>
+    </button>
+  );
+}
+
+function AssignmentDrawer({ a, features, onSave, onClose }) {
+  useEffect(() => {
+    const onKey = (e) => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+  // Portal to <body> like the cohort drawer; the gm class carries the theme tokens.
+  return createPortal(
+    <div className="gm co-drawer-wrap" onClick={onClose}>
+      <aside className="co-drawer" role="dialog" aria-modal="true" aria-label={a.title} onClick={(e) => e.stopPropagation()}>
+        <button type="button" className="co-close" onClick={onClose} aria-label="Close">×</button>
+        <AssignmentCard a={a} onSave={onSave} features={features} />
+      </aside>
+    </div>,
+    document.body,
+  );
+}
+
 function AssignmentCard({ a, onSave, features }) {
   const [note, setNote] = useState(a.note);
   const [busy, setBusy] = useState(false);
@@ -197,11 +247,11 @@ function AssignmentCard({ a, onSave, features }) {
   };
   const p = a.progress;
   return (
-    <article className={`gm-module ${a.status}`}>
+    <article className={`gm-module ab-detail ${a.status}`}>
       <header>
         <span className="gm-led" aria-hidden="true" />
         <div style={{ flex: 1 }}>
-          <p className="gm-meta">{KIND_LABEL[a.kind] || a.kind} · due {a.due}</p>
+          <p className="gm-meta">Week {a.week} · {KIND_LABEL[a.kind] || a.kind} · due {a.due}</p>
           <h3>{a.title}</h3>
         </div>
         <span className={`gm-status ${a.status}`}>{STATUS_LABEL[a.status]}</span>
@@ -237,7 +287,7 @@ function AssignmentCard({ a, onSave, features }) {
         </div>
       )}
       {features.length > 0 && (
-        <details className="gm-built">
+        <details className="gm-built" open>
           <summary>Built on this site · {features.length}</summary>
           {features.map((e) => <FeatureEntry key={e.id} e={e} />)}
         </details>
@@ -396,6 +446,10 @@ export default function GodMode() {
   }, [data, filter]);
 
   const featureById = useMemo(() => Object.fromEntries((data?.build_log || []).map((e) => [e.id, e])), [data]);
+  const featuresOf = useCallback((a) => a.features.map((id) => featureById[id]).filter(Boolean), [featureById]);
+  const [openId, setOpenId] = useState(null);
+  const closeA = useCallback(() => setOpenId(null), []);
+  const openA = data?.assignments.find((a) => a.id === openId);
 
   if (!user?.admin || error === "denied") return <Navigate to="/" replace />;
 
@@ -458,12 +512,17 @@ export default function GodMode() {
             </div>
             {grouped.length === 0 && <p className="gm-meta">Nothing here.</p>}
             {grouped.map((g) => (
-              <div key={g.w} className="gm-board">
-                <div className="gm-board-label"><span>WEEK {g.w}</span></div>
-                <div className="gm-modules">{g.items.map((a) => <AssignmentCard key={a.id} a={a} onSave={save}
-                  features={a.features.map((id) => featureById[id]).filter(Boolean)} />)}</div>
+              <div key={g.w} className="ab-week">
+                <div className="ab-week-head">
+                  <h3>Week {g.w}</h3>
+                  <span className="gm-meta">{g.items.filter((a) => a.status === "done").length}/{g.items.length} done</span>
+                </div>
+                <div className="ab-list">
+                  {g.items.map((a) => <AssignmentRow key={a.id} a={a} onOpen={setOpenId} features={featuresOf(a)} />)}
+                </div>
               </div>
             ))}
+            {openA && <AssignmentDrawer a={openA} onSave={save} onClose={closeA} features={featuresOf(openA)} />}
           </section>
 
           <BuildLog entries={data.build_log} />

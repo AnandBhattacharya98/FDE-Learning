@@ -21,6 +21,12 @@ With `ADMIN_EMAILS` empty, nobody gets in.
 2. Make sure Google sign-in is set up (see `google-sign-in.md`).
 3. Sign out, sign in with Google, and open `/god` or use the GOD MODE link.
 
+## Assignment bus
+
+Each week is a list with one row per assignment (status, title, due date, progress, how many
+site features practise it). Click a row to open the full card in a side drawer: deliverables,
+status buttons, shipped-work updates, built-on-this-site demos and your note.
+
 ## Status of each assignment
 
 - P1 and P2 follow your course checklist automatically: not started, in progress once any step
