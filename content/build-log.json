@@ -515,7 +515,7 @@
       "id": "god-mode-cohort-rows",
       "date": "2026-11-13",
       "title": "Cohort redesign: one row per learner, click for stats",
-      "pr": null,
+      "pr": 16,
       "assignments": [],
       "where": [
         "frontend/src/components/Cohort.jsx",
