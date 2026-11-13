@@ -547,6 +547,43 @@
           }
         ]
       }
+    },
+    {
+      "id": "god-mode-assignment-rows",
+      "date": "2026-11-13",
+      "title": "Assignment bus: one row per assignment, click for details",
+      "pr": null,
+      "assignments": [],
+      "where": [
+        "frontend/src/pages/GodMode.jsx (AssignmentRow, AssignmentDrawer)",
+        "frontend/src/godmode.css (.ab-*)"
+      ],
+      "how": [
+        "The bus used to be a grid of tall cards in columns. Now each week is a short list with one row per assignment: status light, title, kind and due date, progress (or how many deliverables), a 'built' count and the status pill.",
+        "Clicking a row opens the full card in the same side drawer the cohort view uses: deliverables, done-when, status buttons, what shipped work updated it, the features built on this site with their demos, and your note.",
+        "The drawer reads the assignment fresh from each refresh, so status clicks and notes update in place. On a phone rows wrap to two lines instead of squeezing into columns."
+      ],
+      "demo": {
+        "title": "A week on the bus",
+        "lines": [
+          {
+            "kind": "out",
+            "text": "WEEK 3                                                         0/3 done"
+          },
+          {
+            "kind": "out",
+            "text": "● P3: a signed post-call webhook   2 deliverables  1 built  IN PROGRESS ›"
+          },
+          {
+            "kind": "out",
+            "text": "○ Campaign call lifecycle diagram   1 deliverable            NOT STARTED ›"
+          },
+          {
+            "kind": "note",
+            "text": "Click a row: the drawer shows the whole card, and Escape or a click outside closes it."
+          }
+        ]
+      }
     }
   ]
 }
