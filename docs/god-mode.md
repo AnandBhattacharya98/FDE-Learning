@@ -43,9 +43,11 @@ connection strings in it.
 
 ## Cohort view
 
-The **Cohort** panel lists every learner (names only, never emails) with overall progress,
-best graded-quiz score per week, best voice score, last activity and why they look stuck.
-Stuck learners sort first. Click a row for every item, project links and all quiz attempts.
+The **Cohort** panel lists every learner as one row (names only, never emails): status, the top
+flag or next item, overall progress, score pills (graded-quiz average, latest voice score, project
+grades) and last activity. Stuck learners sort first. Click a row to open their stats drawer:
+stat tiles, flags, weak topics, every week's items and quiz/voice/practice scores, project links,
+voice calls with transcripts and all quiz attempts.
 
 A learner is flagged **stuck** when any of these is true (constants at the top of `backend/app/cohort.py`):
 
