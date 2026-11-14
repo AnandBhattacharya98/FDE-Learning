@@ -785,7 +785,7 @@
       "id": "coach-highlight-sections",
       "date": "2026-11-14",
       "title": "Voice coach highlights each section as it explains it",
-      "pr": 0,
+      "pr": 29,
       "assignments": [],
       "where": [
         "frontend/src/components/screenAgent.js",
