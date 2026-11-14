@@ -125,5 +125,6 @@ sup.coach-cite { line-height: 1; }
 }
 .coach-lang select option { color: #111; }
 .coach-call-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
-.coach-start { background: #fff; color: #2a1170; border-color: transparent; font-weight: 600; }
-.coach-back { color: #fff; border-color: rgba(255, 255, 255, 0.4); background: transparent; }
+.coach-call .btn.coach-start { background: #fff; color: #2a1170; border-color: transparent; font-weight: 600; }
+.coach-call .btn.ghost.coach-back { color: #fff; border-color: rgba(255, 255, 255, 0.55); background: transparent; }
+.coach-call .btn.ghost.coach-back:hover { background: rgba(255, 255, 255, 0.16); color: #fff; }
