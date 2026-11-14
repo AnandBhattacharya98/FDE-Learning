@@ -14,3 +14,6 @@ venv/
 # node
 node_modules/
 dist/
+
+# LiveKit CLI (written by lk agent create; CI builds its own)
+voice_agent/livekit.toml

@@ -635,6 +635,39 @@
           }
         ]
       }
+    },
+    {
+      "id": "auto-deploy-voice-worker",
+      "date": "2026-11-14",
+      "title": "Voice worker redeploys itself from GitHub",
+      "pr": null,
+      "assignments": [],
+      "where": [
+        ".github/workflows/deploy-voice-worker.yml",
+        "docs/voice-worker.md"
+      ],
+      "how": [
+        "A GitHub Action runs whenever voice_agent/ changes on main: it runs the worker's tests, installs the LiveKit CLI and runs lk agent deploy.",
+        "The LiveKit keys come from repository secrets; the worker's own secrets stay on LiveKit Cloud.",
+        "It can also be run by hand from the Actions tab (Run workflow)."
+      ],
+      "demo": {
+        "title": "Ship a worker change",
+        "lines": [
+          {
+            "kind": "note",
+            "text": "Merge a PR that touches voice_agent/ ..."
+          },
+          {
+            "kind": "out",
+            "text": "Actions → Deploy voice worker → ✓ Test the worker → ✓ Deploy to LiveKit Cloud"
+          },
+          {
+            "kind": "note",
+            "text": "No terminal needed; lk agent status in the log shows the new version Running."
+          }
+        ]
+      }
     }
   ]
 }

@@ -1,0 +1,66 @@
+# Redeploys the voice worker (voice quiz + voice coach) on LiveKit Cloud whenever
+# voice_agent/ changes on main, so nobody has to run `lk agent deploy` by hand.
+# Needs three repository secrets: LIVEKIT_URL, LIVEKIT_API_KEY, LIVEKIT_API_SECRET
+# (same values as on Render). See docs/voice-worker.md.
+name: Deploy voice worker
+
+on:
+  push:
+    branches: [main]
+    paths: ["voice_agent/**", ".github/workflows/deploy-voice-worker.yml"]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-voice-worker
+  cancel-in-progress: false
+
+env:
+  # The agent created with `lk agent create` on 2026-11-14. Not a secret.
+  LIVEKIT_AGENT_ID: CA_divAMHGY5LUN
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Test the worker
+        working-directory: voice_agent
+        run: |
+          pip install -q -r requirements.txt pytest
+          python -m pytest -q
+
+      - name: Check the LiveKit secrets are set
+        env:
+          LIVEKIT_URL: ${{ secrets.LIVEKIT_URL }}
+          LIVEKIT_API_KEY: ${{ secrets.LIVEKIT_API_KEY }}
+          LIVEKIT_API_SECRET: ${{ secrets.LIVEKIT_API_SECRET }}
+        run: |
+          for v in LIVEKIT_URL LIVEKIT_API_KEY LIVEKIT_API_SECRET; do
+            if [ -z "${!v}" ]; then echo "::error::Add the $v repository secret (Settings > Secrets and variables > Actions)"; exit 1; fi
+          done
+
+      - name: Install the LiveKit CLI
+        run: curl -sSL https://get.livekit.io/cli | bash && lk --version
+
+      - name: Deploy to LiveKit Cloud
+        working-directory: voice_agent
+        env:
+          LIVEKIT_URL: ${{ secrets.LIVEKIT_URL }}
+          LIVEKIT_API_KEY: ${{ secrets.LIVEKIT_API_KEY }}
+          LIVEKIT_API_SECRET: ${{ secrets.LIVEKIT_API_SECRET }}
+        run: |
+          # livekit.toml says which project and agent to update. It isn't committed (each
+          # person's `lk agent create` writes their own), so build it from the URL and agent id.
+          subdomain=$(echo "$LIVEKIT_URL" | sed -E 's#^[a-z]+://##; s#\.livekit\.cloud.*$##')
+          printf '[project]\n  subdomain = "%s"\n\n[agent]\n  id = "%s"\n' "$subdomain" "$LIVEKIT_AGENT_ID" > livekit.toml
+          lk agent deploy
+          lk agent status
