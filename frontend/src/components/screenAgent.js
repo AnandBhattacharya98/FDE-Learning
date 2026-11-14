@@ -83,6 +83,35 @@ export function findAction(label) {
     .sort((a, b) => b[0] - a[0] || Number(b[1]) - Number(a[1]))[0]?.[2] || null;
 }
 
+const SECTION = "li, section, article, .card, fieldset, tr";
+
+/** The page section whose heading or text best matches a spoken name, e.g. "Voice AI basics". */
+export function findSection(text) {
+  const want = clean(text).toLowerCase();
+  if (!want) return null;
+  const main = document.querySelector("main") || document.body;
+  let best = null, bestScore = 0;
+  for (const el of main.querySelectorAll("h1, h2, h3, h4, legend, strong, p")) {
+    if (el.closest(SKIP) || !visible(el)) continue;
+    const t = clean(el.innerText).toLowerCase();
+    const score = t === want ? 3 : t.startsWith(want) ? 2 : t.includes(want) ? 1 : 0;
+    if (score > bestScore) { best = el; bestScore = score; }
+  }
+  return best ? best.closest(SECTION) || best : null;
+}
+
+let lit = null;
+/** Scrolls a section to the middle of the screen and outlines it until the next highlight. */
+export function highlightSection(text) {
+  const el = findSection(text);
+  if (!el) return { ok: false, error: `No section called "${text}" on this page. Read the screen again for the headings.` };
+  lit?.classList.remove("coach-highlight");
+  el.classList.add("coach-highlight");
+  lit = el;
+  el.scrollIntoView({ behavior: "smooth", block: "center" });
+  return { ok: true, highlighted: clean(el.innerText).slice(0, 80) };
+}
+
 export function clickOnScreen(label) {
   const el = findAction(label);
   if (!el) return { ok: false, error: `Nothing called "${label}" on this page. Read the screen again for the labels.` };
@@ -104,6 +133,11 @@ export function registerScreenActions(room, onAction) {
   };
   lp.registerRpcMethod("screen.read", wrap(() => { onAction?.("Reading your screen"); return readScreen(); }));
   lp.registerRpcMethod("screen.scroll", wrap(({ direction }) => { onAction?.(`Scrolling ${direction || "down"}`); return scrollPage(direction); }));
+  lp.registerRpcMethod("screen.highlight", wrap(({ text }) => {
+    const r = highlightSection(text);
+    onAction?.(r.ok ? `Showing "${text}"` : `Couldn't find "${text}"`);
+    return r;
+  }));
   lp.registerRpcMethod("screen.click", wrap(({ label }) => {
     const r = clickOnScreen(label);
     onAction?.(r.ok ? `Opened "${r.clicked}"` : r.refused ? `Left "${label}" for you to press` : `Couldn't find "${label}"`);

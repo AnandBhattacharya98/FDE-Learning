@@ -154,7 +154,9 @@ def test_screen_tools_call_the_browser():
     assert '"ok": true' in asyncio.run(coach.read_screen._func(coach, None))
     asyncio.run(coach.scroll_page._func(coach, None, "down"))
     asyncio.run(coach.click_on_screen._func(coach, None, "Next"))
-    assert calls == [("screen.read", {}), ("screen.scroll", {"direction": "down"}), ("screen.click", {"label": "Next"})]
+    asyncio.run(coach.highlight_section._func(coach, None, "Voice AI basics"))
+    assert calls == [("screen.read", {}), ("screen.scroll", {"direction": "down"}), ("screen.click", {"label": "Next"}),
+                     ("screen.highlight", {"text": "Voice AI basics"})]
 
 
 def test_screen_tools_without_a_browser():

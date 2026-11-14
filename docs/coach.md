@@ -43,8 +43,8 @@ uses it when `SARVAM_API_KEY` is set as a worker secret (free key at dashboard.s
 (auto speech-to-text + Cartesia Sonic 3). English always uses the worker's default models.
 
 **Screen actions.** During a call the worker can read the learner's page, scroll it and open links,
-tabs and lessons (tools `read_screen`, `scroll_page`, `click_on_screen` in `voice_agent/coach_voice.py`,
-calling LiveKit RPC methods `screen.read`, `screen.scroll`, `screen.click` registered by
+tabs and lessons (tools `read_screen`, `scroll_page`, `highlight_section`, `click_on_screen` in `voice_agent/coach_voice.py`,
+calling LiveKit RPC methods `screen.read`, `screen.scroll`, `screen.highlight`, `screen.click` registered by
 `frontend/src/components/screenAgent.js`). Policy: navigate and read only. It may press "Mark as
 completed" and Next/Previous, but quiz answers, form fields and submit buttons are refused in the
 browser, whatever the model asks. Each action shows as a note in the call transcript. When a request
