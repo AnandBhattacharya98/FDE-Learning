@@ -4,12 +4,14 @@
 //
 // During a voice call the worker sends JSON on the "fde.coach" text topic (voice_agent/coach_voice.py):
 // finished lines for the transcript, the references behind each answer, and "navigate" when the
-// learner asks to be taken to one. The panel shrinks to a call pill 10 seconds after it last
+// learner asks to be taken to one. The worker can also read, scroll and click on the page through
+// LiveKit RPC (screenAgent.js); it never answers quizzes or submits forms. The panel shrinks to a call pill 10 seconds after it last
 // needed attention, and opens again when new references arrive or the learner clicks it.
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { api } from "../api.js";
 import { AgentAvatar, Waveform } from "./Agent.jsx";
+import { registerScreenActions } from "./screenAgent.js";
 import "../coach.css";
 
 const STORE = "fde.coach";
@@ -120,6 +122,7 @@ function useVoiceCall({ weekId, onAttention, onNavigate }) {
         setSpeaking(speakers.some((p) => p.identity !== room.localParticipant.identity));
       });
       room.on(RoomEvent.Disconnected, () => { setStatus((s) => (s === "failed" ? s : "ended")); setSpeaking(false); });
+      registerScreenActions(room, (text) => setLines((l) => [...l, { role: "note", text }]));
       // Transcript and references arrive as text streams; the call still works without them.
       room.registerTextStreamHandler?.(TOPIC, async (reader) => {
         try { onMessage(JSON.parse(await reader.readAll())); } catch { /* ignore a bad message */ }
@@ -205,7 +208,8 @@ export default function Coach() {
   const [messages, setMessages] = useState(load);
   const [draft, setDraft] = useState("");
   const [busy, setBusy] = useState(false);
-  const [voice, setVoice] = useState(false); // voice view (pre-call picker or the call)
+  const [mode, setMode] = useState(null); // null: choose chat or voice; "chat"; "voice"
+  const voice = mode === "voice";
   const [mini, setMini] = useState(false); // call running with the panel shrunk to a pill
   const [lang, setLang] = useState(loadLang);
   const [info, setInfo] = useState(null);
@@ -235,11 +239,11 @@ export default function Coach() {
   useEffect(() => {
     if (!open) return;
     if (!info) api("/coach/status").then(setInfo).catch(() => {});
-    if (!voice) inputRef.current?.focus();
+    if (mode === "chat") inputRef.current?.focus();
     const onKey = (e) => e.key === "Escape" && (live ? setMini(true) : setOpen(false));
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [open, info, voice, live]);
+  }, [open, info, mode, live]);
 
   async function ask(text) {
     const question = text.trim();
@@ -266,7 +270,7 @@ export default function Coach() {
   function close() {
     if (live) { setMini(true); return; } // closing during a call just shrinks it
     setOpen(false);
-    setVoice(false);
+    setMode(null);
   }
 
   const languages = info?.languages || FALLBACK_LANGUAGES;
@@ -282,14 +286,19 @@ export default function Coach() {
             <AgentAvatar size={38} live={busy || (live && call.speaking)} />
             <div className="coach-head-text">
               <strong>FDE Coach</strong>
-              <span>{voice ? "Voice call · answers from your course" : info && !info.ai ? "Searching the course for you" : "Answers from your course"}</span>
+              <span>{voice ? "Voice · answers from your course" : mode === "chat" ? (info && !info.ai ? "Chat · searching the course for you" : "Chat · answers from your course") : "Chat or talk, your choice"}</span>
             </div>
+            {mode && !live && (
+              <button type="button" className="coach-icon-btn" onClick={() => setMode(null)} aria-label="Back to chat or voice" title="Back">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>
+              </button>
+            )}
             {live && (
               <button type="button" className="coach-icon-btn" onClick={() => setMini(true)} aria-label="Minimize the call" title="Minimize">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 12h12" /></svg>
               </button>
             )}
-            {!voice && messages.length > 0 && (
+            {mode === "chat" && messages.length > 0 && (
               <button type="button" className="coach-icon-btn" onClick={() => setMessages([])} aria-label="Start a new chat" title="New chat">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.3-5.6M4 4v4h4" /></svg>
               </button>
@@ -299,24 +308,47 @@ export default function Coach() {
             </button>
           </header>
 
-          {voice ? (
+          {!mode ? (
+            <div className="coach-choose">
+              <p className="coach-choose-hi">Hi! How would you like to ask?</p>
+              <button type="button" className="coach-choice" onClick={() => setMode("chat")}>
+                <span className="coach-choice-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M4 5h16v11H8l-4 4z" /></svg>
+                </span>
+                <span className="coach-choice-text">
+                  <strong>Chat</strong>
+                  <span>Type a question and get answers with links to the lessons.</span>
+                </span>
+              </button>
+              <button type="button" className="coach-choice voice" onClick={() => setMode("voice")}>
+                <span className="coach-choice-icon" aria-hidden="true"><MicIcon /></span>
+                <span className="coach-choice-text">
+                  <strong>Talk</strong>
+                  <span>A voice call in English or an Indian language. It can read this page, scroll and open lessons for you.</span>
+                </span>
+              </button>
+            </div>
+          ) : voice ? (
             <div className="coach-call">
               {call.status === "idle" || call.status === "ended" || call.status === "failed" ? (
                 <div className="coach-call-stage">
                   <AgentAvatar size={72} />
                   <p className="coach-call-title">{call.status === "ended" ? "Call ended" : "Talk to your coach"}</p>
-                  <label className="coach-lang">
-                    <span>Language</span>
-                    <select value={lang} onChange={(e) => setLang(e.target.value)}>
-                      {languages.map((l) => <option key={l.code} value={l.code}>{l.name}</option>)}
-                    </select>
-                  </label>
+                  <fieldset className="coach-langs">
+                    <legend>Speak in</legend>
+                    {languages.map((l) => (
+                      <label key={l.code} className={`coach-lang-chip${lang === l.code ? " on" : ""}`}>
+                        <input type="radio" name="coach-lang" value={l.code} checked={lang === l.code} onChange={() => setLang(l.code)} />
+                        {l.name}
+                      </label>
+                    ))}
+                  </fieldset>
                   {call.error && <p className="coach-call-error" role="alert">{call.error}</p>}
                   <div className="coach-call-actions">
                     <button type="button" className="btn coach-start" onClick={startCall}>
                       {call.status === "ended" ? "Call again" : "Start the call"}
                     </button>
-                    <button type="button" className="btn ghost coach-back" onClick={() => setVoice(false)}>Back to typing</button>
+                    <button type="button" className="btn ghost coach-back" onClick={() => setMode("chat")}>Switch to chat</button>
                   </div>
                   {call.status === "ended" && call.lines.length > 0 && <Transcript lines={call.lines} />}
                 </div>
@@ -358,7 +390,7 @@ export default function Coach() {
                 <textarea id="coach-q" ref={inputRef} rows={1} value={draft} maxLength={1000}
                   placeholder="Ask about the course…" onChange={(e) => setDraft(e.target.value)}
                   onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); ask(draft); } }} />
-                <button type="button" className="coach-icon-btn mic" onClick={() => setVoice(true)} aria-label="Talk to the coach" title="Talk to the coach">
+                <button type="button" className="coach-icon-btn mic" onClick={() => setMode("voice")} aria-label="Talk to the coach" title="Talk to the coach">
                   <MicIcon />
                 </button>
                 <button type="submit" className="coach-send" disabled={busy || !draft.trim()} aria-label="Send">

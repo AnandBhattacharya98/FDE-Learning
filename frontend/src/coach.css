@@ -128,3 +128,36 @@ sup.coach-cite { line-height: 1; }
 .coach-call .btn.coach-start { background: #fff; color: #2a1170; border-color: transparent; font-weight: 600; }
 .coach-call .btn.ghost.coach-back { color: #fff; border-color: rgba(255, 255, 255, 0.55); background: transparent; }
 .coach-call .btn.ghost.coach-back:hover { background: rgba(255, 255, 255, 0.16); color: #fff; }
+
+/* First screen: choose chat or voice. */
+.coach-choose { flex: 1; display: flex; flex-direction: column; gap: 12px; padding: 20px 16px; background: var(--bg-soft); overflow-y: auto; }
+.coach-choose-hi { margin: 0 0 4px; font-weight: 600; font-size: 1.02rem; }
+.coach-choice {
+  display: flex; align-items: center; gap: 14px; width: 100%; padding: 16px; text-align: left; cursor: pointer;
+  border: 1px solid var(--border); border-radius: 18px; background: var(--surface); color: var(--text); font: inherit;
+  transition: border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+}
+.coach-choice:hover { border-color: var(--accent); transform: translateY(-1px); box-shadow: 0 10px 24px -16px rgba(91, 33, 230, 0.6); }
+.coach-choice:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.coach-choice-icon {
+  flex: none; width: 46px; height: 46px; border-radius: 14px; display: inline-flex; align-items: center; justify-content: center;
+  background: var(--accent-soft); color: var(--accent-strong);
+}
+.coach-choice.voice .coach-choice-icon { background: linear-gradient(135deg, #2a1170 0%, #5b21e6 60%, #8a5cf0 100%); color: #fff; }
+.coach-choice-icon svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.coach-choice-text { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.coach-choice-text strong { font-size: 1rem; }
+.coach-choice-text span { font-size: 0.82rem; color: var(--muted); line-height: 1.4; }
+
+/* Voice: language chips. */
+.coach-langs { border: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; max-width: 340px; }
+.coach-langs legend { width: 100%; margin-bottom: 8px; font-size: 0.82rem; opacity: 0.85; text-align: center; padding: 0; }
+.coach-lang-chip {
+  position: relative; display: inline-flex; align-items: center; padding: 6px 12px; border-radius: 999px; cursor: pointer; margin: 0;
+  border: 1px solid rgba(255, 255, 255, 0.35); background: rgba(255, 255, 255, 0.08); color: #fff; font-size: 0.82rem; font-weight: 500;
+}
+.coach-lang-chip input { position: absolute; opacity: 0; pointer-events: none; }
+.coach-lang-chip:hover { background: rgba(255, 255, 255, 0.18); }
+.coach-lang-chip.on { background: #fff; color: #2a1170; border-color: #fff; font-weight: 600; }
+.coach-lang-chip:focus-within { outline: 2px solid #fff; outline-offset: 2px; }
+.coach-call-stage { overflow-y: auto; }

@@ -22,7 +22,7 @@ from pydantic import BaseModel
 from livekit.agents import Agent, AgentSession, JobContext, RunContext, WorkerOptions, cli, function_tool
 from livekit.plugins import silero
 
-from coach_voice import CourseCoach, sender, speech_models, wire_transcript
+from coach_voice import CourseCoach, screen_caller, sender, speech_models, wire_transcript
 
 load_dotenv()
 log = logging.getLogger("fde-voice-quiz")
@@ -180,7 +180,8 @@ async def entrypoint(ctx: JobContext):
         language = meta.get("language") or "en"
         stt, tts = speech_models(language, STT_MODEL, TTS_MODEL)
         session = AgentSession(stt=stt, llm=LLM_MODEL, tts=tts, vad=silero.VAD.load())
-        agent = CourseCoach(meta.get("week_id"), int(meta["user_id"]), language, send=sender(ctx.room))
+        agent = CourseCoach(meta.get("week_id"), int(meta["user_id"]), language,
+                            send=sender(ctx.room), screen=screen_caller(ctx.room))
         wire_transcript(session, agent)
         await session.start(agent=agent, room=ctx.room)
         return
