@@ -589,7 +589,7 @@
       "id": "teacher-mode",
       "date": "2026-11-14",
       "title": "Teacher mode: materials, Claude-written quizzes, project reviews",
-      "pr": null,
+      "pr": 18,
       "assignments": [],
       "where": [
         "backend/app/teacher.py (all /teacher routes, learner /weeks/{id}/class, /class-quizzes, /announcements, /admin/teachers)",
