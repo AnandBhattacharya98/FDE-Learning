@@ -710,7 +710,7 @@
       "id": "coach-chooser-screen-actions",
       "date": "2026-11-14",
       "title": "Coach: chat-or-voice chooser, screen actions, Sarvam voices",
-      "pr": 0,
+      "pr": 26,
       "assignments": [],
       "where": [
         "frontend/src/components/Coach.jsx",
