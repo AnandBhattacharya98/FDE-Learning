@@ -48,10 +48,17 @@ lk agent logs
 The logs should show the worker registered as `fde-voice-quiz`. Then open the site, start the voice
 quiz or press the mic in **Ask the coach**, and allow the microphone.
 
-## Later updates
+## Later updates (automatic)
 
-After a change to `voice_agent/` is merged, run `lk agent deploy` in `voice_agent/` to ship it.
-To change a secret: `lk agent update-secrets --secrets-file .env.cloud`.
+`.github/workflows/deploy-voice-worker.yml` redeploys the worker on LiveKit Cloud whenever a change
+under `voice_agent/` is merged to main. It runs the worker's tests first. One-time setup in GitHub:
+repo **Settings → Secrets and variables → Actions → New repository secret**, add `LIVEKIT_URL`,
+`LIVEKIT_API_KEY` and `LIVEKIT_API_SECRET` (same values as on Render). To redeploy without a code
+change, open **Actions → Deploy voice worker → Run workflow**.
+
+The worker's own secrets (`API_URL`, `VOICE_WORKER_KEY`) stay on LiveKit Cloud from `lk agent create`.
+To change one: `lk agent update-secrets --secrets-file .env.cloud` in `voice_agent/`.
+If the agent is ever recreated, update `LIVEKIT_AGENT_ID` in the workflow.
 
 ## How it fits
 
