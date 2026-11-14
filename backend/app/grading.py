@@ -366,7 +366,7 @@ def my_grade(week_id: str, project_id: str, user: User = Depends(current_user), 
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Unknown project.")
     run = _latest(db, user.id, project_id)
     _expire_if_stale(db, run)
-    return {"run": run_view(run) if run else None,
+    return {"run": run_view(run) if run else None, "teacher_review": teacher_review(db, run.id) if run else None,
             "rubric": {"checks": [c.model_dump() for c in p.checks], "rubric": [r.model_dump() for r in p.rubric],
                        "pass_mark": load_grading()[0]}}
 
@@ -491,6 +491,19 @@ def admin_regrade(run_id: int, background: BackgroundTasks, admin: User = Depend
     return {"run": run_view(run)}
 
 
+# ---------- teacher reviews (teacher.py writes them) ----------
+
+def teacher_review(db: Session, run_id: int) -> dict | None:
+    """A teacher's decision on a run: approved, override (with their score) or changes, plus feedback."""
+    from .models_teacher import GradeReview
+
+    r = db.scalar(select(GradeReview).where(GradeReview.run_id == run_id))
+    if r is None:
+        return None
+    return {"decision": r.decision, "score": r.score, "feedback": r.feedback, "teacher": r.teacher_name,
+            "updated_at": _aware(r.updated_at).isoformat()}
+
+
 # ---------- shared with the cohort view ----------
 
 def grades_for(db: Session, user_ids: list[int]) -> dict[int, dict]:
@@ -498,14 +511,23 @@ def grades_for(db: Session, user_ids: list[int]) -> dict[int, dict]:
     if not user_ids:
         return {}
     pass_mark = load_grading()[0]
+    from .models_teacher import GradeReview
+
     out: dict[int, dict] = {}
-    for run in db.scalars(select(GradingRun).where(GradingRun.user_id.in_(user_ids)).order_by(GradingRun.id.desc())).all():
+    runs = db.scalars(select(GradingRun).where(GradingRun.user_id.in_(user_ids)).order_by(GradingRun.id.desc())).all()
+    reviews = {r.run_id: r for r in db.scalars(select(GradeReview).where(GradeReview.user_id.in_(user_ids))).all()}
+    for run in runs:
         slot = out.setdefault(run.user_id, {})
         if run.project_id in slot:
             continue
-        state = ("passed" if run.score >= pass_mark else "failed") if run.status == "done" and run.score is not None else "pending"
-        slot[run.project_id] = {"score": run.score, "max": 100, "status": state,
-                                "graded_at": _aware(run.updated_at).isoformat() if run.status == "done" else None}
+        review = reviews.get(run.id)
+        # A teacher's override replaces the automatic score.
+        score = review.score if review and review.decision == "override" else run.score
+        done = run.status == "done" or (review is not None and review.decision == "override")
+        state = ("passed" if score >= pass_mark else "failed") if done and score is not None else "pending"
+        slot[run.project_id] = {"score": score if done else run.score, "max": 100, "status": state,
+                                "graded_at": _aware(run.updated_at).isoformat() if done else None,
+                                "reviewed": review.decision if review else None}
     return out
 
 

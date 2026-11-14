@@ -6,6 +6,8 @@ import { useAuth } from "../auth.jsx";
 import "../godmode.css";
 import Cohort from "../components/Cohort.jsx";
 import GraderPanel from "../components/GraderPanel.jsx";
+import TeachersPanel from "../components/TeachersPanel.jsx";
+import "../teacher.css";
 
 // God mode. The API decides who gets in (ADMIN_EMAILS + Google sign-in); this page only
 // hides itself from everyone else.
@@ -500,6 +502,8 @@ export default function GodMode() {
           <Cohort />
 
           <GraderPanel />
+
+          <TeachersPanel />
 
           <section className="gm-panel">
             <div className="gm-board-head">
