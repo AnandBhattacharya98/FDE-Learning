@@ -673,7 +673,7 @@
       "id": "voice-coach-references",
       "date": "2026-11-14",
       "title": "Voice coach: course answers, live transcript with references, Indian languages",
-      "pr": 0,
+      "pr": 21,
       "assignments": [],
       "where": [
         "voice_agent/coach_voice.py",
