@@ -32,7 +32,7 @@
 .breadcrumb a:hover { color: var(--accent); }
 
 .week-head { display: flex; flex-wrap: wrap; gap: 16px 32px; align-items: flex-end; justify-content: space-between; margin-bottom: 24px; }
-.week-head-title { font-size: clamp(1.5rem, 3.5vw, var(--fs-3xl)); font-weight: 600; letter-spacing: -0.022em; margin: 4px 0 0; }
+.week-head-title { margin: 6px 0 0; }
 .week-head-progress { width: min(280px, 100%); display: grid; gap: 6px; }
 
 .course-layout { display: grid; gap: 24px; grid-template-columns: minmax(0, 1fr); align-items: start; }
@@ -76,7 +76,7 @@ a[aria-current="page"] .check:not(.done) { border-color: var(--accent); }
 .item-head { margin-bottom: 20px; }
 .item-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .item-type-label { font-size: 0.82rem; color: var(--muted); }
-.item-title { font-size: clamp(1.375rem, 3vw, var(--fs-2xl)); font-weight: 600; letter-spacing: -0.02em; margin-top: var(--sp-2); }
+.item-title { font-family: var(--display); font-size: clamp(1.5rem, 3vw, 2rem); font-weight: 500; letter-spacing: -0.025em; margin-top: var(--sp-2); }
 .type-pill {
   display: inline-block; font-size: var(--fs-xs); font-weight: 500;
   padding: 1px 8px; border-radius: var(--radius-xs); background: var(--surface-2); color: var(--text); border: 1px solid var(--border);

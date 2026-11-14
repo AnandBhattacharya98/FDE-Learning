@@ -809,6 +809,40 @@
           }
         ]
       }
+    },
+    {
+      "id": "look-after-nike-sarvam",
+      "date": "2026-11-14",
+      "title": "New look after Nike and Sarvam; light mode only",
+      "pr": 30,
+      "assignments": [],
+      "where": [
+        "frontend/src/styles.css",
+        "frontend/src/pages/Home.jsx",
+        "frontend/src/pages/Login.jsx",
+        "frontend/src/App.jsx",
+        "frontend/index.html",
+        "docs/design-system.md"
+      ],
+      "how": [
+        "Sarvam-style aura heroes: blurred violet, coral and periwinkle washes (.aura) behind home, login and every inner page header.",
+        "Nike-style week tiles: cover art per week with huge condensed WEEK 01 type, status chip and progress.",
+        "Bricolage Grotesque display type, pill buttons, a framed progress panel overlapping the hero.",
+        "Dark mode removed: no toggle, no theme script, dark CSS deleted."
+      ],
+      "demo": {
+        "title": "A week cover",
+        "lines": [
+          {
+            "kind": "cmd",
+            "text": "<div class=\"cover\" style=\"--c2:#7c5cff; --c3:#ff8a5c\">WEEK 01</div>"
+          },
+          {
+            "kind": "out",
+            "text": "Three blurred washes + wave lines; locked weeks are desaturated"
+          }
+        ]
+      }
     }
   ]
 }

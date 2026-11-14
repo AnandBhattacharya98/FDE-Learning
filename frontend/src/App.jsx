@@ -1,6 +1,5 @@
 import { Link, NavLink, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { useAuth } from "./auth.jsx";
-import { ThemeToggle } from "./theme.jsx";
 import Login from "./pages/Login.jsx";
 import AuthCallback from "./pages/AuthCallback.jsx";
 import Home from "./pages/Home.jsx";
@@ -50,7 +49,6 @@ export default function App() {
               </NavLink>
             )}
             {user && <span className="topbar-sep" aria-hidden="true" />}
-            <ThemeToggle />
             {user && (
               <div className="user-chip">
                 <span className="user-initial" aria-hidden="true">{user.name.trim().charAt(0).toUpperCase()}</span>

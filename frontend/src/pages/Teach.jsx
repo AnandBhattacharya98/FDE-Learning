@@ -144,7 +144,7 @@ export default function Teach() {
   const c = data?.counts;
   return (
     <div>
-      <header className="tc-head">
+      <header className="tc-head page-band aura soft">
         <div>
           <span className="eyebrow">Teacher mode</span>
           <h1>Teach</h1>
