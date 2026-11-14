@@ -103,7 +103,7 @@ def call_body(call_id: str, user_id: int, week_id: str, prompts: list[dict], tra
 
 async def post_call(body: dict) -> bool:
     api_url = (os.getenv("API_URL") or "").rstrip("/")
-    key = os.getenv("VOICE_WORKER_KEY") or ""
+    key = (os.getenv("VOICE_WORKER_KEY") or "").strip()
     if not api_url or not key:
         log.warning("API_URL or VOICE_WORKER_KEY not set; scorecard not saved")
         return False

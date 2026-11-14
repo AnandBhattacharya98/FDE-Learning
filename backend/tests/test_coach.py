@@ -136,3 +136,9 @@ def test_unicode_tokens():
     from app.coach import _tokens
 
     assert "वेबहुक" in _tokens("वेबहुक क्या है")
+
+
+def test_worker_key_ignores_stray_whitespace(monkeypatch):
+    from app.config import Settings
+    monkeypatch.setenv("VOICE_WORKER_KEY", "abc123\n")
+    assert Settings().voice_worker_key == "abc123"

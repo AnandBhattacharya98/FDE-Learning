@@ -361,7 +361,7 @@ class SearchIn(BaseModel):
 def internal_search(body: SearchIn, x_worker_key: str = Header(default=""), db: Session = Depends(get_db)):
     """For the voice worker only: the top course passages for a spoken question."""
     expected = get_settings().voice_worker_key
-    if not expected or not hmac.compare_digest(x_worker_key, expected):
+    if not expected or not hmac.compare_digest(x_worker_key.strip(), expected):
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Bad worker key.")
     week_id = body.week_id if body.week_id in load_weeks() else None
     hits = get_index(db).search(body.query, week_id, k=4)
@@ -375,6 +375,6 @@ def internal_search(body: SearchIn, x_worker_key: str = Header(default=""), db: 
 def internal_ping(x_worker_key: str = Header(default="")):
     """For the voice worker: wakes the API (Render's free plan sleeps) and checks the key."""
     expected = get_settings().voice_worker_key
-    if not expected or not hmac.compare_digest(x_worker_key, expected):
+    if not expected or not hmac.compare_digest(x_worker_key.strip(), expected):
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Bad worker key.")
     return {"ok": True}
