@@ -1,5 +1,6 @@
 """Offline checks for the parts of the worker that don't need LiveKit."""
-from agent import build_instructions, format_passages, load_week
+from agent import build_instructions, load_week
+from coach_voice import format_passages
 
 
 def test_instructions_include_every_prompt():
@@ -13,7 +14,7 @@ def test_instructions_include_every_prompt():
 def test_coach_passages_are_read_as_plain_text():
     assert format_passages([]) == "Nothing in the course matches."
     text = format_passages([{"week": "Week 1: Basics", "title": "APIs", "text": "The waiter is the API."}])
-    assert text == "Week 1: Basics · APIs: The waiter is the API."
+    assert text == "[1] Week 1: Basics · APIs: The waiter is the API."
 
 def test_transcript_turn_keeps_only_speech():
     from agent import transcript_turn
@@ -68,3 +69,61 @@ def test_call_metadata_prefers_the_first_non_empty_source():
     assert call_metadata("", None, '{"mode": "coach", "user_id": 1}') == {"mode": "coach", "user_id": 1}
     assert call_metadata('{"week_id": "week-01", "user_id": 2}', "{}", "") == {"week_id": "week-01", "user_id": 2}
     assert call_metadata("not json", "", None) == {}
+
+
+def test_coach_helpers():
+    from coach_voice import instructions, looks_english, refs_message, speech_models
+
+    assert looks_english("what is a webhook?") and not looks_english("वेबहुक क्या है")
+    msg = refs_message([{"title": "APIs", "week": "Week 1", "path": "/weeks/week-01/lesson-api", "kind": "lesson", "text": "x"}])
+    assert msg == {"type": "refs", "refs": [{"n": 1, "title": "APIs", "week": "Week 1", "path": "/weeks/week-01/lesson-api", "kind": "lesson"}]}
+    assert speech_models("en", "stt-default", "tts-default") == ("stt-default", "tts-default")
+    assert "Hindi" in instructions("hi") and "open_reference" in instructions("en")
+
+
+def test_coach_search_sends_refs_and_open_reference_navigates(monkeypatch):
+    import asyncio
+
+    import coach_voice
+
+    sent = []
+
+    async def send(msg):
+        sent.append(msg)
+
+    class Reply:
+        status_code = 200
+
+        def raise_for_status(self):
+            pass
+
+        def json(self):
+            return {"passages": [{"title": "APIs", "week": "Week 1", "path": "/weeks/week-01/lesson-api",
+                                  "kind": "lesson", "text": "The waiter is the API."}]}
+
+    class Client:
+        def __init__(self, *a, **k):
+            pass
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *a):
+            pass
+
+        async def post(self, url, json, headers):
+            assert url.endswith("/api/fde/coach/internal/search") and headers["x-worker-key"] == "k"
+            return Reply()
+
+    monkeypatch.setenv("API_URL", "https://api.example.com")
+    monkeypatch.setenv("VOICE_WORKER_KEY", "k")
+    monkeypatch.setattr(coach_voice.httpx, "AsyncClient", Client)
+    coach = coach_voice.CourseCoach("week-01", 1, "en", send=send)
+
+    async def run():
+        out = await coach.search_course._func(coach, None, "what is an api")  # noqa: SLF001
+        assert "[1] Week 1 · APIs" in out
+        await coach.open_reference._func(coach, None, 1)  # noqa: SLF001
+
+    asyncio.run(run())
+    assert sent[0]["type"] == "refs" and sent[1] == {"type": "navigate", "path": "/weeks/week-01/lesson-api", "title": "APIs"}

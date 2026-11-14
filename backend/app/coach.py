@@ -10,7 +10,8 @@ How it works:
      matching passages, so the feature never breaks on a missing key.
 
 The graded quiz (questions, answers and explanations) is never indexed, so the coach
-can't hand out quiz answers.
+can't hand out quiz answers. Teacher materials (teacher mode) are indexed once published:
+their extracted text, description and notes, cut into chunks.
 """
 import hmac
 import json
@@ -51,17 +52,24 @@ class Passage:
     week_id: str
     week_title: str
     item_id: str | None
-    kind: str  # lesson | reading | project | voice | overview
+    kind: str  # lesson | reading | project | voice | overview | material
     title: str
     text: str
+    anchor: str = ""  # an element id on the page, e.g. "class-h" for teacher materials
+
+    @property
+    def path(self) -> str:
+        return f"/weeks/{self.week_id}/{self.item_id}" + (f"#{self.anchor}" if self.anchor else "")
 
     def source(self) -> dict:
         return {"week_id": self.week_id, "item_id": self.item_id, "kind": self.kind,
-                "title": self.title, "week": self.week_title}
+                "title": self.title, "week": self.week_title, "path": self.path}
 
 
 def _tokens(text: str) -> list[str]:
-    words = re.findall(r"[a-z0-9]+", text.lower())
+    # Unicode words, so Hindi, Tamil etc. typed in their own script can still match.
+    # (split on spaces and ASCII punctuation only: \w would cut Indic vowel signs out of words)
+    words = [w for w in re.split(r"[\s!-/:-@\[-`{-~\u0964\u0965]+", text.lower()) if w]
     out = []
     for w in words:
         if w in STOP or len(w) < 2:
@@ -131,8 +139,69 @@ class Index:
 
 
 @lru_cache
-def get_index() -> Index:
-    return Index([p for w in load_weeks().values() for p in _week_passages(w)])
+def _course_passages() -> tuple[Passage, ...]:
+    return tuple(p for w in load_weeks().values() for p in _week_passages(w))
+
+
+CHUNK = 900  # characters per teacher-material passage
+
+
+def _chunks(text: str, size: int = CHUNK) -> list[str]:
+    text = re.sub(r"\s+", " ", text or "").strip()
+    out, start = [], 0
+    while start < len(text):
+        end = min(len(text), start + size)
+        if end < len(text):  # break at a sentence or word, not mid-word
+            cut = max(text.rfind(". ", start, end), text.rfind(" ", start, end))
+            end = cut + 1 if cut > start + size // 2 else end
+        out.append(text[start:end].strip())
+        start = end
+    return [c for c in out if c]
+
+
+def material_passages(db: Session) -> list[Passage]:
+    """Published teacher materials as passages. They link to the "From your teachers" box on
+    the module's first page (or the week overview)."""
+    from .models_teacher import Material
+
+    weeks = load_weeks()
+    out = []
+    for m in db.scalars(select(Material).where(Material.published.is_(True)).order_by(Material.id)).all():
+        week = weeks.get(m.week_id)
+        if week is None:
+            continue
+        module = next((mod for mod in week.modules if mod.id == m.module_id), None) or week.modules[0]
+        item_id = module.items[0].id
+        title = f"From your teachers: {m.title}"
+        head = " ".join(x for x in (m.description, m.notes) if x)
+        parts = _chunks(f"{head} {m.text}") or [m.title]
+        for i, part in enumerate(parts[:40]):
+            out.append(Passage(week.id, f"Week {week.number}: {week.title}", item_id, "material",
+                               title if len(parts) == 1 else f"{title} (part {i + 1})", part, anchor="class-h"))
+    return out
+
+
+_index_cache: dict = {}
+
+
+def get_index(db: Session | None = None) -> Index:
+    """The course index, plus published teacher materials when a database session is given.
+    Rebuilt only when the materials change."""
+    if db is None:
+        key = ("course",)
+        if key not in _index_cache:
+            _index_cache[key] = Index(list(_course_passages()))
+        return _index_cache[key]
+    from .models_teacher import Material
+
+    stamp = db.execute(select(func.count(), func.max(Material.updated_at))
+                       .where(Material.published.is_(True))).one()
+    key = ("all", stamp[0], str(stamp[1]))
+    if key not in _index_cache:
+        for k in [k for k in _index_cache if k[0] == "all"]:
+            del _index_cache[k]
+        _index_cache[key] = Index(list(_course_passages()) + material_passages(db))
+    return _index_cache[key]
 
 
 SYSTEM = """You are the FDE Coach on RevRag's Forward Deployed Engineer training site.
@@ -192,7 +261,8 @@ class AskIn(BaseModel):
 
 @router.get("/status")
 def coach_status(_: User = Depends(current_user)):
-    return {"ai": get_settings().coach_ai_configured, "passages": len(get_index().passages)}
+    return {"ai": get_settings().coach_ai_configured, "passages": len(get_index().passages),
+            "languages": LANGUAGES}
 
 
 @router.post("/ask")
@@ -209,7 +279,7 @@ def ask(body: AskIn, user: User = Depends(current_user), db: Session = Depends(g
     week_id = body.week_id if body.week_id in load_weeks() else None
     # Search with the last question too, so follow-ups like "and in P2?" keep their topic.
     last_user = next((t.content for t in reversed(body.history) if t.role == "user"), "")
-    hits = get_index().search(f"{question} {last_user}", week_id)
+    hits = get_index(db).search(f"{question} {last_user}", week_id)
 
     mode = "search"
     answer = None
@@ -233,8 +303,25 @@ def ask(body: AskIn, user: User = Depends(current_user), db: Session = Depends(g
 # and the worker looks things up through /coach/internal/search below, so voice and chat
 # answer from the same index.
 
+# Languages the voice coach offers. Speech goes through LiveKit Inference: the worker picks a
+# speech-to-text provider for the language ("auto") and Cartesia Sonic 3 for the voice.
+LANGUAGES = [
+    {"code": "en", "name": "English"},
+    {"code": "hi", "name": "हिन्दी · Hindi"},
+    {"code": "ta", "name": "தமிழ் · Tamil"},
+    {"code": "te", "name": "తెలుగు · Telugu"},
+    {"code": "kn", "name": "ಕನ್ನಡ · Kannada"},
+    {"code": "ml", "name": "മലയാളം · Malayalam"},
+    {"code": "mr", "name": "मराठी · Marathi"},
+    {"code": "bn", "name": "বাংলা · Bengali"},
+    {"code": "gu", "name": "ગુજરાતી · Gujarati"},
+]
+LANGUAGE_CODES = {lang["code"] for lang in LANGUAGES}
+
+
 class VoiceIn(BaseModel):
     week_id: str | None = None
+    language: str = "en"
 
 
 @router.post("/voice/token")
@@ -247,7 +334,8 @@ def voice_token(body: VoiceIn, user: User = Depends(current_user)):
 
     week_id = body.week_id if body.week_id in load_weeks() else None
     room = f"fde-coach-u{user.id}-{int(datetime.now(timezone.utc).timestamp())}"
-    meta = json.dumps({"mode": "coach", "week_id": week_id, "user_id": user.id})
+    language = body.language if body.language in LANGUAGE_CODES else "en"
+    meta = json.dumps({"mode": "coach", "week_id": week_id, "user_id": user.id, "language": language})
     token = (
         lk.AccessToken(s.livekit_api_key, s.livekit_api_secret)
         .with_identity(f"user-{user.id}")
@@ -276,8 +364,17 @@ def internal_search(body: SearchIn, x_worker_key: str = Header(default=""), db: 
     if not expected or not hmac.compare_digest(x_worker_key, expected):
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Bad worker key.")
     week_id = body.week_id if body.week_id in load_weeks() else None
-    hits = get_index().search(body.query, week_id, k=4)
+    hits = get_index(db).search(body.query, week_id, k=4)
     if body.user_id and db.get(User, body.user_id):
         db.add(CoachQuestion(user_id=body.user_id, week_id=week_id, question=body.query[:1000], mode="voice"))
         db.commit()
     return {"passages": [{**p.source(), "text": p.text} for _, p in hits]}
+
+
+@router.get("/internal/ping")
+def internal_ping(x_worker_key: str = Header(default="")):
+    """For the voice worker: wakes the API (Render's free plan sleeps) and checks the key."""
+    expected = get_settings().voice_worker_key
+    if not expected or not hmac.compare_digest(x_worker_key, expected):
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Bad worker key.")
+    return {"ok": True}

@@ -57,6 +57,10 @@ export default function ClassMaterials({ week, moduleId }) {
   const load = useCallback(() => api(`/weeks/${week.id}/class`).then(setData).catch(() => setData({ materials: [], quizzes: [] })), [week.id]);
   useEffect(() => { load(); }, [load]);
   useEffect(() => { setOpen(null); }, [moduleId]);
+  // The coach links teacher materials as #class-h; scroll there once the box has loaded.
+  useEffect(() => {
+    if (data && window.location.hash === "#class-h") document.getElementById("class-h")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [data, moduleId]);
 
   if (!data || (!data.materials.length && !data.quizzes.length)) return null;
   // This module's things first, then the rest of the week.

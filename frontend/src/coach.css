@@ -98,3 +98,32 @@ sup.coach-cite { line-height: 1; }
 .coach-call-stage { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; text-align: center; }
 .coach-call-title { margin: 0; font-weight: 600; font-size: 1.05rem; }
 .coach-call-error { margin: 0; padding: 8px 12px; border-radius: 12px; background: rgba(0, 0, 0, 0.25); font-size: 0.85rem; }
+
+/* Voice call: transcript with references, mute state, language picker, minimized pill. */
+.coach-call { gap: 12px; min-height: 0; }
+.coach-transcript {
+  flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 10px;
+  padding: 12px; border-radius: 16px; background: var(--bg-soft); color: var(--text);
+}
+.coach-call-stage .coach-transcript { width: 100%; max-height: 180px; text-align: left; }
+.coach-transcript-empty { margin: auto; color: var(--muted); font-size: 0.85rem; text-align: center; }
+.coach-transcript .coach-bubble { font-size: 0.86rem; padding: 8px 12px; }
+.coach-note { margin: 0; align-self: center; font-size: 0.76rem; color: var(--muted); text-align: center; }
+.coach-call-pill { width: 100%; }
+.coach-call-pill.compact { width: auto; max-width: min(320px, calc(100vw - 32px)); }
+.call-btn.muted { background: #fff; color: var(--end-call); }
+.call-btn:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+
+.coach-mini { position: fixed; right: 20px; bottom: 20px; z-index: 60; cursor: pointer; border-radius: 999px; }
+.coach-mini:focus-visible { outline: 3px solid var(--accent-strong); outline-offset: 3px; }
+@media (max-width: 520px) { .coach-mini { right: 16px; bottom: 16px; } }
+
+.coach-lang { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: #fff; margin: 0; }
+.coach-lang select {
+  padding: 6px 10px; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.4);
+  background: rgba(0, 0, 0, 0.2); color: #fff; font: 0.85rem var(--font);
+}
+.coach-lang select option { color: #111; }
+.coach-call-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+.coach-start { background: #fff; color: #2a1170; border-color: transparent; font-weight: 600; }
+.coach-back { color: #fff; border-color: rgba(255, 255, 255, 0.4); background: transparent; }
