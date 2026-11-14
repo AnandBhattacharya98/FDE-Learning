@@ -8,7 +8,7 @@
   --gr-muted: var(--gm-muted, var(--muted));
   --gr-soft: var(--surface-2);
 }
-.gr-card { margin-top: 20px; padding: 16px; border: 1px solid var(--gr-line); border-radius: 14px; background: var(--surface); }
+.gr-card { margin-top: 20px; padding: 16px; border: 1px solid var(--gr-line); border-radius: var(--radius); background: var(--surface); }
 .gr-head { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
 
 .gr-ring { flex: none; }
@@ -20,7 +20,7 @@
 .gr-ring text { font: 600 17px var(--mono, ui-monospace, monospace); fill: currentColor; }
 
 .gr-pipe { display: flex; gap: 6px; list-style: none; padding: 0; margin: 12px 0 0; flex-wrap: wrap; }
-.gr-pipe li { display: flex; align-items: center; gap: 6px; font: 0.72rem var(--mono, ui-monospace, monospace); color: var(--gr-muted); padding: 3px 8px; border: 1px solid var(--gr-line); border-radius: 999px; }
+.gr-pipe li { display: flex; align-items: center; gap: 6px; font: 0.72rem var(--mono, ui-monospace, monospace); color: var(--gr-muted); padding: 3px 8px; border: 1px solid var(--gr-line); border-radius: 6px; }
 .gr-pipe .gr-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--gr-line); }
 .gr-pipe li.done .gr-dot { background: var(--gr-ok); }
 .gr-pipe li.now { color: var(--gr-accent); border-color: var(--gr-accent); }
@@ -51,10 +51,10 @@
 .gr-setup { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; margin: 4px 0 14px; }
 .gr-led { display: inline-flex; align-items: center; gap: 6px; font: 0.75rem var(--mono, ui-monospace, monospace); color: var(--gr-muted); }
 .gr-led i { width: 8px; height: 8px; border-radius: 50%; background: var(--gm-off, var(--gr-line)); }
-.gr-led.on i { background: var(--gr-ok); box-shadow: 0 0 8px var(--gr-ok); }
+.gr-led.on i { background: var(--gr-ok); }
 .gr-tiles { margin-bottom: 16px; }
 .gr-rows { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
-.gr-row { border: 1px solid var(--gr-line); border-radius: 12px; padding: 10px 12px; background: var(--gm-panel, var(--surface)); }
+.gr-row { border: 1px solid var(--gr-line); border-radius: var(--radius-sm); padding: 10px 12px; background: var(--gm-panel, var(--surface)); }
 .gr-row.reviewing, .gr-row.running, .gr-row.queued { border-color: var(--gr-accent); }
 .gr-row-main { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .gr-row-main .gr-pipe { margin: 0; }

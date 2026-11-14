@@ -740,6 +740,46 @@
           }
         ]
       }
+    },
+    {
+      "id": "design-system-pass",
+      "date": "2026-11-14",
+      "title": "Design system pass: calmer, crafted UI across every page",
+      "pr": 27,
+      "assignments": [],
+      "where": [
+        "frontend/src/styles.css",
+        "frontend/src/pages/Home.jsx",
+        "frontend/src/pages/Login.jsx",
+        "frontend/src/App.jsx",
+        "frontend/src/course.css",
+        "frontend/src/teacher.css",
+        "frontend/src/godmode.css",
+        "docs/design-system.md"
+      ],
+      "how": [
+        "One token set in styles.css: 9-step type scale, 4px spacing scale, 6/8/12 radii, neutral surfaces; violet only for interactive, selected or in-progress.",
+        "Removed gradients, glows, gradient text, pill-shaped everything and looping decoration; tabs are underlined, records are bordered lists with dividers.",
+        "Home leads with your progress and next week instead of a phone mock; login is a focused form; top bar uses icon nav links and a one-button theme switch.",
+        "God mode keeps its data views but sits on the site's surfaces (no grid, scanline, glow or spinning)."
+      ],
+      "demo": {
+        "title": "Same tokens, every page",
+        "lines": [
+          {
+            "kind": "cmd",
+            "text": ".tc-tabs button[aria-selected=\"true\"] { color: var(--text); border-bottom-color: var(--accent); }"
+          },
+          {
+            "kind": "out",
+            "text": "Teacher tabs, course tabs and God mode filters now share one look"
+          },
+          {
+            "kind": "note",
+            "text": "Before/after screenshots: project files ui-polish/"
+          }
+        ]
+      }
     }
   ]
 }

@@ -8,7 +8,7 @@
 
 .co-controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; margin: 14px 0 10px; }
 .co-search {
-  font: inherit; font-size: 0.85rem; padding: 6px 12px; border-radius: 999px; min-width: 0; flex: 0 1 220px;
+  font: inherit; font-size: 0.85rem; padding: 6px 12px; border-radius: 8px; min-width: 0; flex: 0 1 220px;
   border: 1px solid var(--gm-line); background: var(--gm-bg); color: var(--gm-text);
 }
 
@@ -53,7 +53,7 @@
 .co-progress { display: flex; flex-direction: column; gap: 2px; }
 .co-progress-num { font-size: 0.85rem; white-space: nowrap; }
 .co-scores { display: flex; flex-wrap: wrap; gap: 6px; }
-.co-pill { font: 500 0.7rem var(--mono); padding: 2px 8px; border-radius: 999px; border: 1px solid var(--gm-line); color: var(--gm-text); white-space: nowrap; }
+.co-pill { font: 500 0.7rem var(--mono); padding: 2px 8px; border-radius: 6px; border: 1px solid var(--gm-line); color: var(--gm-text); white-space: nowrap; }
 .co-pill.ok { color: var(--gm-ok); border-color: var(--gm-ok); }
 .co-pill.bad { color: var(--gm-bad); border-color: var(--gm-bad); }
 .co-pill.off { color: var(--gm-muted); border-style: dashed; }
@@ -83,7 +83,7 @@
 .co-score.ok { color: var(--gm-ok); }
 .co-score.bad { color: var(--gm-bad); }
 
-.co-chip { display: inline-block; font: 500 0.68rem var(--mono); padding: 1px 7px; margin: 2px 0 0 6px; border-radius: 999px; border: 1px solid var(--gm-line); color: var(--gm-muted); }
+.co-chip { display: inline-block; font: 500 0.68rem var(--mono); padding: 1px 7px; margin: 2px 0 0 6px; border-radius: 6px; border: 1px solid var(--gm-line); color: var(--gm-muted); }
 .co-chip.bad { color: var(--gm-bad); border-color: var(--gm-bad); }
 .co-chip.ok { color: var(--gm-ok); border-color: var(--gm-ok); }
 

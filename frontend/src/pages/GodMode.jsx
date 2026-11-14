@@ -17,22 +17,6 @@ const REDUCED = typeof window !== "undefined" && !!window.matchMedia?.("(prefers
 const STATUS_LABEL = { todo: "Not started", doing: "In progress", done: "Done" };
 const KIND_LABEL = { build: "Build", explain: "Explain", session: "Session" };
 
-function useScramble(text, run = true) {
-  const [out, setOut] = useState(text);
-  useEffect(() => {
-    if (!run || window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) { setOut(text); return; }
-    const glyphs = "01<>/{}[]#$%&*+=?";
-    let frame = 0;
-    const id = setInterval(() => {
-      frame += 1;
-      setOut(text.split("").map((c, i) => (c === " " || i < frame / 2 ? c : glyphs[(Math.random() * glyphs.length) | 0])).join(""));
-      if (frame / 2 > text.length) clearInterval(id);
-    }, 35);
-    return () => clearInterval(id);
-  }, [text, run]);
-  return out;
-}
-
 function fmtUptime(s) {
   const d = Math.floor(s / 86400), h = Math.floor((s % 86400) / 3600), m = Math.floor((s % 3600) / 60);
   return d ? `${d}d ${h}h` : h ? `${h}h ${m}m` : `${m}m ${s % 60}s`;
@@ -425,7 +409,6 @@ export default function GodMode() {
   const [data, setData] = useState(null);
   const [error, setError] = useState("");
   const [filter, setFilter] = useState("all");
-  const title = useScramble("GOD MODE", !!data);
   const timer = useRef(null);
 
   const load = useCallback(() => api("/admin/overview").then(setData).catch((e) => setError(e.status === 404 ? "denied" : e.message)), []);
@@ -458,24 +441,22 @@ export default function GodMode() {
   const c = data?.machine.counts;
   return (
     <div className="gm">
-      <div className="gm-grid-bg" aria-hidden="true" />
-      <div className="gm-scan" aria-hidden="true" />
 
       <section className="gm-head">
         <div>
-          <p className="gm-meta">Root access · {data ? data.admin.name : "…"}</p>
-          <h1 className="gm-title" aria-label="God mode">{title}</h1>
-          <p className="gm-sub">Inside the machine: your required FDE assignments, and every moving part of this site, live.</p>
+          <p className="eyebrow">Admin · {data ? data.admin.name : "…"}</p>
+          <h1 className="gm-title">God mode</h1>
+          <p className="gm-sub">Your required FDE assignments, the cohort, grading, and every moving part of this site.</p>
         </div>
         {data && (
           <div className="gm-status-line">
-            <span className="gm-led on" aria-hidden="true" /> core online · {data.machine.database} · refreshes every 30s
+            <span className="gm-led on" aria-hidden="true" /> Online · {data.machine.database} · refreshes every 30s
           </div>
         )}
       </section>
 
       {error && <p className="notice error" role="alert">{error}</p>}
-      {!data && !error && <p className="gm-meta">Booting the core…</p>}
+      {!data && !error && <p className="gm-meta">Loading…</p>}
 
       {data && (
         <>

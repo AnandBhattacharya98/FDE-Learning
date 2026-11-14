@@ -1,5 +1,4 @@
-// Visual pieces in the style of Revrag's voice and in-app agents: a call pill with a
-// live waveform, chat bubbles, and a violet wave-pattern stage that holds a phone mock.
+// Visual pieces in the style of Revrag's voice agents: a call pill with a live waveform.
 
 export function Waveform({ active = true, bars = 5 }) {
   return (
@@ -45,36 +44,5 @@ export function CallPill({ name = "Voice coach", status = "Speaking", live = tru
         <span className="call-btn end" aria-hidden="true"><HangUpIcon /></span>
       )}
     </div>
-  );
-}
-
-/** A field row in the phone mock, like the auto-filled form fields in Revrag's demos. */
-function Field({ label, value, state }) {
-  return (
-    <div className={`mock-field ${state}`}>
-      <span className="mock-label">{label}</span>
-      <span className="mock-value">{value}</span>
-      {state === "done" && <span className="mock-check" aria-hidden="true" />}
-      {state === "active" && <span className="mock-typing" aria-hidden="true"><i /><i /><i /></span>}
-    </div>
-  );
-}
-
-/**
- * Violet stage with a phone mock. `fields` are [{label, value, state: done|active|idle}],
- * `bubble` is what the agent is saying.
- */
-export function AgentStage({ fields, bubble, name, status, compact = false, label }) {
-  return (
-    <figure className={`agent-stage${compact ? " compact" : ""}`} aria-label={label} role="img">
-      <div className="phone">
-        <div className="phone-notch" />
-        <div className="phone-body">
-          {fields.map((f) => <Field key={f.label} {...f} />)}
-          {bubble && <p className="chat-bubble">{bubble}</p>}
-          <CallPill name={name} status={status} />
-        </div>
-      </div>
-    </figure>
   );
 }

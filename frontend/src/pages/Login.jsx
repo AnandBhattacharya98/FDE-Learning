@@ -2,7 +2,12 @@ import { useEffect, useState } from "react";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { api, BASE } from "../api.js";
 import { useAuth } from "../auth.jsx";
-import { AgentStage } from "../components/Agent.jsx";
+
+const POINTS = [
+  "Six weeks, from how apps work to scoping a client's voice agent",
+  "A project to ship every week, graded against a rubric",
+  "A voice coach that quizzes you the way a client would",
+];
 
 export default function Login() {
   const { user, signIn } = useAuth();
@@ -52,9 +57,8 @@ export default function Login() {
   return (
     <div className="auth-layout">
       <div className="auth-wrap">
-      <span className="eyebrow">FDE training</span>
-      <h1 className="display" style={{ marginTop: 12 }}>{signup ? <>Create your <span className="grad-text">account</span></> : <>Welcome <span className="grad-text">back</span></>}</h1>
-      <p className="muted">{signup ? "Your quiz scores and project progress are saved to your account." : "Log in to pick up where you left off. Your quiz scores and project progress are saved to your account."}</p>
+      <h1>{signup ? "Create your account" : "Log in to FDE Learning"}</h1>
+      <p className="muted">{signup ? "Your quiz scores and project progress are saved to your account." : "Pick up where you left off. Your quiz scores and project progress are saved to your account."}</p>
       <form className="card" onSubmit={submit} noValidate>
         {google && (
           <>
@@ -93,18 +97,12 @@ export default function Login() {
           {signup ? "Log in" : "Create an account"}
         </button>
       </p>}
+        <ul className="auth-points">
+          {POINTS.map((t) => (
+            <li key={t}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>{t}</li>
+          ))}
+        </ul>
       </div>
-      <AgentStage
-        compact
-        label="A voice coach agent quizzing a learner"
-        fields={[
-          { label: "Lesson", value: "How a voice agent works", state: "done" },
-          { label: "Project", value: "P2: your own voice bot", state: "active" },
-        ]}
-        bubble="Explain what an API does, the way you would to a client."
-        name="Voice coach"
-        status="Listening"
-      />
     </div>
   );
 }
