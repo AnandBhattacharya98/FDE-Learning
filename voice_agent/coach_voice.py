@@ -72,6 +72,20 @@ def refs_message(passages: list[dict]) -> dict:
         for i, p in enumerate(passages, 1)]}
 
 
+def search_problem(e: Exception) -> str:
+    """A line for the transcript saying why the course search failed, so it can be fixed."""
+    if isinstance(e, httpx.HTTPStatusError):
+        code = e.response.status_code
+        if code == 401:
+            return "Course search refused the worker key (401): VOICE_WORKER_KEY on LiveKit Cloud must match Render."
+        if code == 404:
+            return "Course search not found (404): check API_URL on LiveKit Cloud is https://fde-learnings.onrender.com."
+        return f"Course search failed on the server ({code}). Try again in a moment."
+    if isinstance(e, httpx.TimeoutException):
+        return "The course server is waking up. Try again in a moment."
+    return f"Couldn't reach the course server ({type(e).__name__}): check API_URL on LiveKit Cloud."
+
+
 def looks_english(text: str) -> bool:
     letters = [c for c in text if c.isalpha()]
     return bool(letters) and sum(c.isascii() for c in letters) / len(letters) > 0.8
@@ -109,7 +123,7 @@ class CourseCoach(Agent):
                 r.raise_for_status()
         except httpx.HTTPError as e:
             log.error("course search failed (%s): %r", api_url, e)
-            await self.emit({"type": "status", "text": "The course search didn't answer. Try again in a moment."})
+            await self.emit({"type": "status", "text": search_problem(e)})
             return None
         passages = r.json().get("passages", [])
         log.info("search %r -> %d passages", query[:80], len(passages))
