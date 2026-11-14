@@ -127,3 +127,15 @@ def test_coach_search_sends_refs_and_open_reference_navigates(monkeypatch):
 
     asyncio.run(run())
     assert sent[0]["type"] == "refs" and sent[1] == {"type": "navigate", "path": "/weeks/week-01/lesson-api", "title": "APIs"}
+
+
+def test_search_problem_names_the_cause():
+    import httpx
+    from coach_voice import search_problem
+    req = httpx.Request("POST", "https://api.example.com/x")
+    err = lambda code: httpx.HTTPStatusError("x", request=req, response=httpx.Response(code, request=req))
+    assert "VOICE_WORKER_KEY" in search_problem(err(401))
+    assert "API_URL" in search_problem(err(404))
+    assert "500" in search_problem(err(500))
+    assert "waking up" in search_problem(httpx.ReadTimeout("t", request=req))
+    assert "API_URL" in search_problem(httpx.ConnectError("no", request=req))
