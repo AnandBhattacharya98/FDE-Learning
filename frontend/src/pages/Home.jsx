@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../api.js";
 import { useAuth } from "../auth.jsx";
-import { AgentStage } from "../components/Agent.jsx";
 import "../course.css";
 import "../teacher.css";
 import { Icon } from "../components/teacher/common.jsx";
@@ -16,17 +15,6 @@ function Bar({ done, total, label }) {
       </div>
       <p className="small muted" style={{ margin: "6px 0 0" }}>{done} of {total} items done</p>
     </div>
-  );
-}
-
-function Ring({ pct }) {
-  const r = 26;
-  const c = 2 * Math.PI * r;
-  return (
-    <svg className="ring" viewBox="0 0 64 64" aria-hidden="true">
-      <circle cx="32" cy="32" r={r} className="ring-track" />
-      <circle cx="32" cy="32" r={r} className="ring-fill" strokeDasharray={c} strokeDashoffset={c * (1 - pct / 100)} />
-    </svg>
   );
 }
 
@@ -63,50 +51,46 @@ export default function Home() {
   const openWeeks = course?.weeks.filter((w) => w.open) || [];
   const nextWeek = openWeeks.find((w) => !progress[w.id] || progress[w.id].done < progress[w.id].total) || openWeeks[0];
 
-  // The phone mock shows the learner's real weeks, like an agent filling a form.
-  const fields = (course?.weeks.slice(0, 3) || []).map((w) => {
-    const p = progress[w.id];
-    const state = p && p.total && p.done === p.total ? "done" : w.open ? "active" : "idle";
-    return { label: `Week ${w.number}`, value: w.title, state };
-  });
+  const nextWeekProgress = nextWeek && progress[nextWeek.id];
   const first = user.name.trim().split(" ")[0];
 
   return (
     <div className="stack-lg">
       <section className="home-hero">
         <div className="home-hero-text">
-          <span className="eyebrow">FDE training · {course?.weeks.length || 6} weeks</span>
-          <h1 className="display">Hi {first}. Let's build <span className="grad-text">agents</span> that talk.</h1>
+          <span className="eyebrow">{course?.title || "FDE Training"} · {course?.weeks.length || 6} weeks</span>
+          <h1 className="display">Welcome back, {first}.</h1>
           <p className="lead">{course?.subtitle || "Six weeks from how apps work to scoping a client's solution."}</p>
           <div className="hero-actions">
             {nextWeek && (
               <Link className="btn primary" to={`/weeks/${nextWeek.id}`}>
                 {totals.done ? "Continue learning" : "Start week " + nextWeek.number}
-                <span aria-hidden="true">→</span>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
               </Link>
             )}
-            <a className="btn" href="#syllabus">See the syllabus</a>
+            <a className="btn" href="#syllabus">View syllabus</a>
           </div>
-          {totals.total > 0 && (
-            <div className="stat-row">
-              <div className="stat">
-                <Ring pct={pct} />
-                <div><strong>{pct}%</strong><span>course complete</span></div>
-              </div>
-              <div className="stat"><div><strong>{totals.done}/{totals.total}</strong><span>items done</span></div></div>
-              <div className="stat"><div><strong>{openWeeks.length}</strong><span>weeks open</span></div></div>
-            </div>
-          )}
         </div>
-        {fields.length > 0 && (
-          <AgentStage
-            label="An agent screen showing your weeks as form fields and a voice coach speaking"
-            fields={fields}
-            bubble={`Nice work, ${first}. Ready for the next lesson? I'll quiz you when you're done.`}
-            name="Voice coach"
-            status="Speaking"
-          />
-        )}
+        <aside className="card progress-panel" aria-labelledby="progress-heading">
+          <h2 id="progress-heading">Your progress</h2>
+          <div className="progress-big">
+            <strong>{pct}%</strong><span className="muted small">of the course</span>
+          </div>
+          <div className="progress-bar" role="progressbar" aria-label="Course progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct}>
+            <div style={{ width: `${pct}%` }} />
+          </div>
+          <dl className="kv">
+            <dt>Items done</dt><dd>{totals.done} of {totals.total}</dd>
+            <dt>Weeks open</dt><dd>{openWeeks.length} of {course?.weeks.length || 6}</dd>
+          </dl>
+          {nextWeek && (
+            <Link className="next-up" to={`/weeks/${nextWeek.id}`}>
+              <span>Up next · Week {nextWeek.number}</span>
+              <strong>{nextWeek.title}</strong>
+              {nextWeekProgress && <span>{nextWeekProgress.done} of {nextWeekProgress.total} items done</span>}
+            </Link>
+          )}
+        </aside>
       </section>
 
       {error && <p className="notice error" role="alert">{error}</p>}
@@ -132,15 +116,16 @@ export default function Home() {
 
       <section aria-labelledby="how-heading">
         <div className="section-head">
-          <span className="eyebrow">How it works</span>
-          <h2 id="how-heading" className="section-title">One loop, every week</h2>
+          <h2 id="how-heading" className="section-title">How each week works</h2>
         </div>
-        <div className="grid-3">
+        <div className="loop">
           {HOW.map((h) => (
-            <div key={h.title} className="card feature">
+            <div key={h.title} className="loop-item">
               <span className="feature-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d={h.icon} /></svg></span>
-              <h3>{h.title}</h3>
-              <p className="muted small">{h.text}</p>
+              <div>
+                <h3>{h.title}</h3>
+                <p>{h.text}</p>
+              </div>
             </div>
           ))}
         </div>
@@ -148,39 +133,44 @@ export default function Home() {
 
       <section id="syllabus" aria-labelledby="syllabus-heading">
         <div className="section-head">
-          <span className="eyebrow">Syllabus</span>
-          <h2 id="syllabus-heading" className="section-title">Your six weeks</h2>
+          <h2 id="syllabus-heading" className="section-title">Syllabus</h2>
+          <span className="small muted">{openWeeks.length} of {course?.weeks.length || 6} weeks open</span>
         </div>
         {!course && !error && <p className="muted">Loading the syllabus…</p>}
-        <div className="stack">
+        <div className="syllabus">
           {course?.weeks.map((w) => {
             const p = progress[w.id];
             const started = p && p.done > 0;
             const finished = p && p.total && p.done === p.total;
             return (
-              <article key={w.number} className={`card syllabus-week${w.open ? "" : " locked"}`} aria-labelledby={`wk-${w.number}`}>
-                <div className={`week-badge${finished ? " done" : ""}`} aria-hidden="true">{String(w.number).padStart(2, "0")}</div>
+              <article key={w.number} className={`syllabus-week${w.open ? "" : " locked"}`} aria-labelledby={`wk-${w.number}`}>
+                <div className={`week-badge${finished ? " done" : w.id === nextWeek?.id ? " current" : ""}`} aria-hidden="true">
+                  {finished ? <svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg> : w.number}
+                </div>
                 <div>
                   <div className="week-label">Week {w.number}{finished ? " · completed" : ""}</div>
                   <h3 id={`wk-${w.number}`} className="week-title">{w.title}</h3>
-                  <p className="muted" style={{ marginBottom: 8 }}>{w.focus}</p>
-                  <p className="small" style={{ marginBottom: 0 }}>
+                  <p className="week-focus">{w.focus}</p>
+                  <p className="week-build">
                     <span className="build-tag">Build</span> {w.build}{w.due ? ` · due ${w.due}` : ""}
                   </p>
                   {w.modules && (
                     <ul className="module-list">
-                      {w.modules.map((m) => <li key={m.id}>{m.title} <span className="muted small">· {m.items} item{m.items > 1 ? "s" : ""}</span></li>)}
+                      {w.modules.map((m) => <li key={m.id}>{m.title}</li>)}
                     </ul>
                   )}
-                  {p && <div style={{ marginTop: 14, maxWidth: 380 }}><Bar {...p} label={`Week ${w.number} progress`} /></div>}
+                  {p && <div style={{ marginTop: 12, maxWidth: 320 }}><Bar {...p} label={`Week ${w.number} progress`} /></div>}
                 </div>
                 <div className="week-action">
                   {w.open ? (
-                    <Link className={`btn${finished ? "" : " primary"}`} to={`/weeks/${w.id}`} aria-label={`${finished ? "Review" : started ? "Continue" : "Start"} week ${w.number}`}>
+                    <Link className={`btn small-btn${finished || w.id !== nextWeek?.id ? "" : " primary"}`} to={`/weeks/${w.id}`} aria-label={`${finished ? "Review" : started ? "Continue" : "Start"} week ${w.number}`}>
                       {finished ? "Review" : started ? "Continue" : "Start"}
                     </Link>
                   ) : (
-                    <span className="pill muted-pill">Opens at the week {w.number} kickoff</span>
+                    <span className="small muted lock-note">
+                      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2" /><path d="M8 11V8a4 4 0 0 1 8 0v3" /></svg>
+                      Opens at the week {w.number} kickoff
+                    </span>
                   )}
                 </div>
               </article>

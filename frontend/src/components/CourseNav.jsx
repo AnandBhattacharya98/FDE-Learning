@@ -3,12 +3,12 @@ import { TYPE_LABEL } from "./courseItems.js";
 
 export default function CourseNav({ id, open, week, done, current }) {
   return (
-    <nav id={id} className={`course-nav card${open ? " open" : ""}`} aria-label={`Week ${week.number} outline`} style={{ padding: "8px 16px" }}>
+    <nav id={id} className={`course-nav${open ? " open" : ""}`} aria-label={`Week ${week.number} outline`}>
       {week.modules.map((m) => {
         const count = m.items.filter((i) => done.has(i.id)).length;
         return (
           <div key={m.id} className="module">
-            <p className="module-title">{m.title} <span className="muted small" style={{ fontWeight: 400 }}>{count}/{m.items.length}</span></p>
+            <p className="module-title">{m.title} <span className="module-count">{count}/{m.items.length}</span></p>
             <ol>
               {m.items.map((i) => (
                 <li key={i.id}>

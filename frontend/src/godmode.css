@@ -288,3 +288,52 @@
 .gm-shipped a { color: var(--gm-accent); }
 .ab-row.done > .gm-led { background: var(--gm-ok); box-shadow: 0 0 8px var(--gm-ok); }
 .ab-row.doing > .gm-led { background: var(--gm-warn); box-shadow: 0 0 8px var(--gm-warn); }
+
+/* ---------- Calm console (design system pass) ----------
+   God mode keeps its data views (reactor, schematic, bus, log) but drops the sci-fi chrome:
+   it sits on the site's own surfaces, with no grid, scanline, glow, blinking or spinning.
+   Mono stays for machine data only. */
+.gm {
+  --gm-bg: var(--bg-soft);
+  --gm-panel: var(--surface);
+  --gm-line: var(--border);
+  --gm-grid: var(--surface-2);
+  --gm-muted: var(--muted);
+  --gm-accent: var(--accent);
+  --gm-accent-2: #0e7490;
+  --gm-ok: var(--ok);
+  --gm-bad: var(--bad);
+  --gm-off: var(--border-strong);
+  --gm-glow: none;
+}
+:root[data-theme="dark"] .gm { --gm-bg: var(--bg-soft); --gm-panel: var(--surface); --gm-line: var(--border); --gm-accent-2: #5eead4; --gm-warn: #f5b84a; --gm-off: var(--border-strong); --gm-glow: none; }
+.gm { background: none; border: 0; border-radius: 0; padding: 0; overflow: visible; }
+.gm > * + * { margin-top: var(--sp-5); }
+.gm-grid-bg, .gm-scan { display: none; }
+.gm-title {
+  font-family: var(--font); font-size: var(--fs-3xl); font-weight: 600; letter-spacing: -0.022em; margin: 4px 0 6px;
+  background: none; color: var(--text); animation: none;
+}
+.gm h2 { font-family: var(--font); font-size: var(--fs-md); font-weight: 600; text-transform: none; letter-spacing: -0.01em; color: var(--text); }
+.gm-panel, .gm-tile, .gm-module, .ab-list, .gm-terminal, .gm-demo { border-radius: var(--radius); box-shadow: none; backdrop-filter: none; }
+.gm-panel { padding: var(--sp-5); }
+.gm-tile strong { font: 600 var(--fs-2xl) var(--font); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.gm-spin, .gm-pulse, .gm-led, .gm-caret, .gm-packet { animation: none !important; }
+.gm-led.on, .done > header > .gm-led, .doing > header > .gm-led, .gm-node .gm-led, .gm-chip .gm-led,
+.ab-row.done > .gm-led, .ab-row.doing > .gm-led, .gm-timeline > li:first-child::before { box-shadow: none; }
+.gm-led { width: 8px; height: 8px; }
+.gm-module::before { display: none; }
+.gm-module:hover { transform: none; border-color: var(--border-strong); }
+.gm-status, .ab-chip, .gm-seg, .gm-seg button, .gm-demo-bar button { border-radius: var(--radius-xs); }
+.gm-status { font: 500 var(--fs-xs) var(--font); text-transform: none; letter-spacing: 0; padding: 1px 8px; }
+.gm-seg { border-radius: var(--radius-sm); }
+.gm-seg button { font: 500 var(--fs-sm) var(--font); min-height: 28px; }
+.gm-seg button.active { background: var(--surface); color: var(--text); box-shadow: 0 0 0 1px var(--border-strong); }
+.ab-list { background: var(--surface); }
+.ab-row:hover, .ab-row:focus-visible { background: var(--bg-soft); }
+.ab-week-head h3 { font: 600 var(--fs-xs) var(--font); letter-spacing: 0.06em; color: var(--muted); }
+.ab-progress .gm-gauge-bar > span, .gm-gauge-bar > div { background: var(--accent); }
+.gm-board-label::before { background: var(--border); opacity: 1; }
+.gm-board-label span { color: var(--muted); font-family: var(--font); letter-spacing: 0.1em; }
+.gm-timeline::before { background: var(--border); }
+.gm-built > summary, .gm-timeline summary { font-family: var(--font); }
