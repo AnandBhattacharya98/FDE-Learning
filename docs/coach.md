@@ -32,6 +32,24 @@ worker runs `CourseCoach`, which looks things up through `POST /api/fde/coach/in
 (protected by `VOICE_WORKER_KEY`). So voice needs the LiveKit keys and the worker running, the same as
 the voice quiz. Hosting steps: `voice-worker.md`.
 
+Opening "Ask the coach" first asks **Chat** or **Talk**. Talk shows language chips (English and eight
+Indian languages) and starts the call.
+
+**Indian-language voices.** LiveKit recommends Sarvam for Indian languages (native speech recognition
+and Bulbul voices for Hindi, Tamil, Telugu, Kannada, Malayalam, Marathi, Bengali, Gujarati). The worker
+uses it when `SARVAM_API_KEY` is set as a worker secret (free key at dashboard.sarvam.ai):
+`lk agent update-secrets --secrets "SARVAM_API_KEY=..."` then `lk agent restart`. Optional
+`SARVAM_SPEAKER` picks the voice (default `priya`). Without the key it falls back to LiveKit Inference
+(auto speech-to-text + Cartesia Sonic 3). English always uses the worker's default models.
+
+**Screen actions.** During a call the worker can read the learner's page, scroll it and open links,
+tabs and lessons (tools `read_screen`, `scroll_page`, `click_on_screen` in `voice_agent/coach_voice.py`,
+calling LiveKit RPC methods `screen.read`, `screen.scroll`, `screen.click` registered by
+`frontend/src/components/screenAgent.js`). Policy: navigate and read only. It may press "Mark as
+completed" and Next/Previous, but quiz answers, form fields and submit buttons are refused in the
+browser, whatever the model asks. Each action shows as a note in the call transcript. When a request
+is unclear, the coach asks a short question first.
+
 ## God mode
 
 Every question is stored in `fde_coach_questions`. God mode shows the count, a **Coach AI** chip in the

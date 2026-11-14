@@ -28,12 +28,21 @@ LANGUAGE_NAMES = {
 }
 
 
-def speech_models(language: str, stt_default: str, tts_default: str):
-    """(stt, tts) for a language. English keeps the worker's defaults; other languages let
-    LiveKit Inference pick a speech-to-text provider for that language, and use Cartesia
-    Sonic 3, which speaks the major Indian languages."""
+SARVAM_SPEAKER = os.getenv("SARVAM_SPEAKER") or "priya"  # a bulbul:v3 voice; all of them speak every language
+
+
+def speech_models(language: str, stt_default, tts_default):
+    """(stt, tts) for a language. English keeps the worker's defaults. For Indian languages LiveKit
+    recommends Sarvam (native speech recognition and voices for each language); it's used when
+    SARVAM_API_KEY is set on the worker. Without it, LiveKit Inference picks a speech-to-text
+    model for the language and Cartesia Sonic 3 speaks it."""
     if language == "en" or language not in LANGUAGE_NAMES:
         return stt_default, tts_default
+    if os.getenv("SARVAM_API_KEY"):
+        from livekit.plugins import sarvam
+        code = f"{language}-IN"
+        return (sarvam.STT(language=code),
+                sarvam.TTS(target_language_code=code, model="bulbul:v3", speaker=SARVAM_SPEAKER))
     stt = inference.STT(model="auto", language=language, fallback="cartesia/ink-whisper")
     tts = inference.TTS(model="cartesia/sonic-3", language=language)
     return stt, tts
@@ -56,6 +65,13 @@ out links or numbers in brackets. The learner sees the references on screen, so 
 "there's a lesson on this, it's on your screen".
 If the learner asks to open, see, or go to a lesson or reference, call open_reference with its number
 (the first one if they don't say which).
+You can also see and move around the page the learner has open. When they ask about "this page",
+what's on screen, or something they're looking at, call read_screen first. To move the page, call
+scroll_page. To open a link, tab or button they name, call click_on_screen with its label as shown by
+read_screen. You can open links and lessons and mark a reading item complete, but you never choose
+quiz answers or submit anything; tell them to do that themselves.
+If a request is unclear (which lesson, which button, what they mean), ask one short question before
+acting. When it helps, end with a short question to check they understood or to offer the next step.
 Never give the answer to a graded quiz question; explain the idea instead.
 For project help, give the next step and a hint rather than the whole solution."""
 
@@ -92,13 +108,14 @@ def looks_english(text: str) -> bool:
 
 
 class CourseCoach(Agent):
-    def __init__(self, week_id: str | None, user_id: int, language: str = "en", send=None):
+    def __init__(self, week_id: str | None, user_id: int, language: str = "en", send=None, screen=None):
         super().__init__(instructions=instructions(language))
         self.week_id = week_id
         self.user_id = user_id
         self.language = language
         self.refs: list[dict] = []
         self._send = send  # async callable(dict) -> None, posts a message to the browser
+        self._screen = screen  # async callable(method, dict) -> dict, runs a screen action in the browser
 
     async def emit(self, message: dict) -> None:
         if self._send:
@@ -189,6 +206,44 @@ class CourseCoach(Agent):
         return f"Opened \"{ref['title']}\" on their screen. Tell them briefly."
 
 
+    async def screen(self, method: str, args: dict | None = None) -> dict:
+        if not self._screen:
+            return {"error": "The learner's screen isn't connected."}
+        try:
+            return await self._screen(method, args or {})
+        except Exception as e:  # browser gone, old page version, timeout
+            log.warning("screen %s failed: %r", method, e)
+            return {"error": "Couldn't reach the learner's screen."}
+
+    @function_tool
+    async def read_screen(self, context: RunContext) -> str:
+        """Read what the learner has on screen: the page title, the visible text, and the links and
+        buttons you can open for them."""
+        r = await self.screen("screen.read")
+        return json.dumps(r, ensure_ascii=False)[:6000]
+
+    @function_tool
+    async def scroll_page(self, context: RunContext, direction: str = "down") -> str:
+        """Scroll the learner's page.
+
+        Args:
+            direction: "down", "up", "top" or "bottom".
+        """
+        r = await self.screen("screen.scroll", {"direction": direction})
+        return json.dumps(r, ensure_ascii=False)[:3000]
+
+    @function_tool
+    async def click_on_screen(self, context: RunContext, label: str) -> str:
+        """Open a link, tab or button on the learner's page, by its label from read_screen.
+        Quiz answers and submit buttons are refused.
+
+        Args:
+            label: The text of the link or button, e.g. "Next" or "Week 2".
+        """
+        r = await self.screen("screen.click", {"label": label})
+        return json.dumps(r, ensure_ascii=False)[:3000]
+
+
 def wire_transcript(session, coach: CourseCoach) -> None:
     """Send every finished line of the conversation to the browser for the transcript."""
 
@@ -199,6 +254,27 @@ def wire_transcript(session, coach: CourseCoach) -> None:
         text = (getattr(item, "text_content", None) or "").strip()
         if role in ("user", "assistant") and text and not text.startswith("Course passages"):
             asyncio.create_task(coach.emit({"type": "turn", "role": "user" if role == "user" else "coach", "text": text}))
+
+
+def browser_identity(room) -> str | None:
+    """The learner's participant in the room (anyone who isn't an agent)."""
+    from livekit import rtc
+    for p in room.remote_participants.values():
+        if p.kind != rtc.ParticipantKind.PARTICIPANT_KIND_AGENT:
+            return p.identity
+    return None
+
+
+def screen_caller(room):
+    """Calls the screen actions the browser registers as LiveKit RPC methods (Coach.jsx)."""
+    async def call(method: str, args: dict) -> dict:
+        who = browser_identity(room)
+        if not who:
+            return {"error": "The learner isn't in the call."}
+        raw = await room.local_participant.perform_rpc(destination_identity=who, method=method,
+                                                       payload=json.dumps(args), response_timeout=8)
+        return json.loads(raw or "{}")
+    return call
 
 
 def sender(room):

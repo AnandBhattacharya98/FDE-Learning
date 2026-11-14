@@ -705,6 +705,41 @@
           }
         ]
       }
+    },
+    {
+      "id": "coach-chooser-screen-actions",
+      "date": "2026-11-14",
+      "title": "Coach: chat-or-voice chooser, screen actions, Sarvam voices",
+      "pr": 26,
+      "assignments": [],
+      "where": [
+        "frontend/src/components/Coach.jsx",
+        "frontend/src/components/screenAgent.js",
+        "voice_agent/coach_voice.py",
+        "docs/coach.md"
+      ],
+      "how": [
+        "Ask the coach opens on a choice: Chat or Talk; Talk shows language chips.",
+        "The voice coach reads the page, scrolls and opens links/lessons through LiveKit RPC methods the browser registers; quiz answers and submits are refused in the browser.",
+        "Indian languages use Sarvam (LiveKit's recommendation) when SARVAM_API_KEY is set on the worker, else LiveKit Inference + Cartesia."
+      ],
+      "demo": {
+        "title": "Talk to the page",
+        "lines": [
+          {
+            "kind": "note",
+            "text": "Learner: scroll down and open week 2"
+          },
+          {
+            "kind": "out",
+            "text": "screen.scroll {direction: down} → screen.click {label: \"Week 2\"} → note: Opened \"Week 2\""
+          },
+          {
+            "kind": "note",
+            "text": "Learner: answer question 1 for me → Left \"…\" for you to press"
+          }
+        ]
+      }
     }
   ]
 }

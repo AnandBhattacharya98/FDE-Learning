@@ -139,3 +139,40 @@ def test_search_problem_names_the_cause():
     assert "500" in search_problem(err(500))
     assert "waking up" in search_problem(httpx.ReadTimeout("t", request=req))
     assert "API_URL" in search_problem(httpx.ConnectError("no", request=req))
+
+
+def test_screen_tools_call_the_browser():
+    import asyncio
+    from coach_voice import CourseCoach
+    calls = []
+
+    async def screen(method, args):
+        calls.append((method, args))
+        return {"ok": True, "method": method}
+
+    coach = CourseCoach("week-01", 1, "en", screen=screen)
+    assert '"ok": true' in asyncio.run(coach.read_screen._func(coach, None))
+    asyncio.run(coach.scroll_page._func(coach, None, "down"))
+    asyncio.run(coach.click_on_screen._func(coach, None, "Next"))
+    assert calls == [("screen.read", {}), ("screen.scroll", {"direction": "down"}), ("screen.click", {"label": "Next"})]
+
+
+def test_screen_tools_without_a_browser():
+    import asyncio
+    from coach_voice import CourseCoach
+
+    async def broken(method, args):
+        raise TimeoutError
+
+    assert "isn't connected" in asyncio.run(CourseCoach("w", 1).read_screen._func(CourseCoach("w", 1), None))
+    coach = CourseCoach("w", 1, screen=broken)
+    assert "Couldn't reach" in asyncio.run(coach.scroll_page._func(coach, None, "up"))
+
+
+def test_sarvam_is_used_for_indian_languages_when_keyed(monkeypatch):
+    from coach_voice import speech_models
+    assert speech_models("en", "stt", "tts") == ("stt", "tts")
+    monkeypatch.setenv("SARVAM_API_KEY", "x")
+    stt, tts = speech_models("ta", "stt", "tts")
+    assert type(stt).__module__.startswith("livekit.plugins.sarvam")
+    assert type(tts).__module__.startswith("livekit.plugins.sarvam")
