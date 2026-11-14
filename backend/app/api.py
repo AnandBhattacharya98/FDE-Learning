@@ -2,6 +2,7 @@
 from datetime import timedelta
 
 import hmac
+import json
 
 from fastapi import APIRouter, BackgroundTasks, Depends, Header, HTTPException, status
 from pydantic import BaseModel, EmailStr, Field
@@ -219,6 +220,7 @@ def voice_quiz_token(week_id: str, user: User = Depends(current_user)):
     from livekit import api as lk
 
     room = f"fde-quiz-{week_id}-u{user.id}"
+    meta = json.dumps({"week_id": week_id, "user_id": user.id})
     token = (
         lk.AccessToken(s.livekit_api_key, s.livekit_api_secret)
         .with_identity(f"user-{user.id}")
@@ -226,8 +228,8 @@ def voice_quiz_token(week_id: str, user: User = Depends(current_user)):
         .with_ttl(timedelta(minutes=15))
         .with_grants(lk.VideoGrants(room_join=True, room=room))
         .with_room_config(lk.RoomConfiguration(
-            metadata=f'{{"week_id": "{week_id}", "user_id": {user.id}}}',
-            agents=[lk.RoomAgentDispatch(agent_name="fde-voice-quiz")],
+            metadata=meta,
+            agents=[lk.RoomAgentDispatch(agent_name="fde-voice-quiz", metadata=meta)],
         ))
         .to_jwt()
     )

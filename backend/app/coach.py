@@ -247,6 +247,7 @@ def voice_token(body: VoiceIn, user: User = Depends(current_user)):
 
     week_id = body.week_id if body.week_id in load_weeks() else None
     room = f"fde-coach-u{user.id}-{int(datetime.now(timezone.utc).timestamp())}"
+    meta = json.dumps({"mode": "coach", "week_id": week_id, "user_id": user.id})
     token = (
         lk.AccessToken(s.livekit_api_key, s.livekit_api_secret)
         .with_identity(f"user-{user.id}")
@@ -254,8 +255,8 @@ def voice_token(body: VoiceIn, user: User = Depends(current_user)):
         .with_ttl(timedelta(minutes=15))
         .with_grants(lk.VideoGrants(room_join=True, room=room))
         .with_room_config(lk.RoomConfiguration(
-            metadata=json.dumps({"mode": "coach", "week_id": week_id, "user_id": user.id}),
-            agents=[lk.RoomAgentDispatch(agent_name="fde-voice-quiz")],
+            metadata=meta,
+            agents=[lk.RoomAgentDispatch(agent_name="fde-voice-quiz", metadata=meta)],
         ))
         .to_jwt()
     )
