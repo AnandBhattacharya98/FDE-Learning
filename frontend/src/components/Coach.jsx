@@ -120,7 +120,8 @@ function useVoiceCall({ weekId, onAttention, onNavigate }) {
         setSpeaking(speakers.some((p) => p.identity !== room.localParticipant.identity));
       });
       room.on(RoomEvent.Disconnected, () => { setStatus((s) => (s === "failed" ? s : "ended")); setSpeaking(false); });
-      room.registerTextStreamHandler(TOPIC, async (reader) => {
+      // Transcript and references arrive as text streams; the call still works without them.
+      room.registerTextStreamHandler?.(TOPIC, async (reader) => {
         try { onMessage(JSON.parse(await reader.readAll())); } catch { /* ignore a bad message */ }
       });
       await room.connect(url, token);
