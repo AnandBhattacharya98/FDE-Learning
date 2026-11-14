@@ -68,7 +68,9 @@ If the learner asks to open, see, or go to a lesson or reference, call open_refe
 You can also see and move around the page the learner has open. When they ask about "this page",
 what's on screen, or something they're looking at, call read_screen first. To move the page, call
 scroll_page. To open a link, tab or button they name, call click_on_screen with its label as shown by
-read_screen. You can open links and lessons and mark a reading item complete, but you never choose
+read_screen. When you walk the learner through a page section by section, call highlight_section
+with each section's heading just before you talk about it, so it scrolls into view and lights up.
+You can open links and lessons and mark a reading item complete, but you never choose
 quiz answers or submit anything; tell them to do that themselves.
 If a request is unclear (which lesson, which button, what they mean), ask one short question before
 acting. When it helps, end with a short question to check they understood or to offer the next step.
@@ -231,6 +233,17 @@ class CourseCoach(Agent):
         """
         r = await self.screen("screen.scroll", {"direction": direction})
         return json.dumps(r, ensure_ascii=False)[:3000]
+
+    @function_tool
+    async def highlight_section(self, context: RunContext, heading: str) -> str:
+        """Scroll a section of the learner's page into view and highlight it, by its heading from
+        read_screen. Use it for each section as you explain it.
+
+        Args:
+            heading: The section's heading, e.g. "Voice AI basics".
+        """
+        r = await self.screen("screen.highlight", {"text": heading})
+        return json.dumps(r, ensure_ascii=False)[:1000]
 
     @function_tool
     async def click_on_screen(self, context: RunContext, label: str) -> str:

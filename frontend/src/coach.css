@@ -161,3 +161,10 @@ sup.coach-cite { line-height: 1; }
 .coach-lang-chip.on { background: #fff; color: #2a1170; border-color: #fff; font-weight: 600; }
 .coach-lang-chip:focus-within { outline: 2px solid #fff; outline-offset: 2px; }
 .coach-call-stage { overflow-y: auto; }
+
+/* The section the voice coach is talking about. */
+.coach-highlight {
+  outline: 3px solid var(--accent); outline-offset: 4px; border-radius: 12px;
+  box-shadow: 0 0 0 8px var(--accent-soft); transition: outline-color 0.2s ease, box-shadow 0.2s ease;
+  scroll-margin: 80px;
+}

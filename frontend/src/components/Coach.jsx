@@ -5,8 +5,8 @@
 // During a voice call the worker sends JSON on the "fde.coach" text topic (voice_agent/coach_voice.py):
 // finished lines for the transcript, the references behind each answer, and "navigate" when the
 // learner asks to be taken to one. The worker can also read, scroll and click on the page through
-// LiveKit RPC (screenAgent.js); it never answers quizzes or submits forms. The panel shrinks to a call pill 10 seconds after it last
-// needed attention, and opens again when new references arrive or the learner clicks it.
+// LiveKit RPC (screenAgent.js); it never answers quizzes or submits forms. The panel shrinks to a call pill 5 seconds after it last
+// needed attention (a click inside it counts), and opens again when new references arrive or the learner clicks it.
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { api } from "../api.js";
@@ -17,7 +17,7 @@ import "../coach.css";
 const STORE = "fde.coach";
 const LANG_STORE = "fde.coach.lang";
 const TOPIC = "fde.coach";
-const MINIMIZE_AFTER_MS = 10000;
+const MINIMIZE_AFTER_MS = 5000;
 const SUGGESTIONS = [
   "What's the difference between the frontend and the backend?",
   "How do I deploy P1 so it has a public URL?",
@@ -216,11 +216,10 @@ export default function Coach() {
   const listRef = useRef(null);
   const inputRef = useRef(null);
   const timer = useRef(null);
-  const hovering = useRef(false);
 
   const armMinimize = useCallback(() => {
     clearTimeout(timer.current);
-    timer.current = setTimeout(() => { if (!hovering.current) setMini(true); }, MINIMIZE_AFTER_MS);
+    timer.current = setTimeout(() => setMini(true), MINIMIZE_AFTER_MS);
   }, []);
   const attention = useCallback(() => { setOpen(true); setMini(false); armMinimize(); }, [armMinimize]);
   const call = useVoiceCall({
@@ -280,8 +279,7 @@ export default function Coach() {
     <>
       {panelOpen && (
         <section className="coach-panel" role="dialog" aria-label="Ask the coach"
-          onMouseEnter={() => { hovering.current = true; clearTimeout(timer.current); }}
-          onMouseLeave={() => { hovering.current = false; if (call.status === "live") armMinimize(); }}>
+          onPointerDown={() => { if (call.status === "live") armMinimize(); }}>
           <header className="coach-head">
             <AgentAvatar size={38} live={busy || (live && call.speaking)} />
             <div className="coach-head-text">
