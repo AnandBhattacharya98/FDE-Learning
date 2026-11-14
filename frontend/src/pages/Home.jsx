@@ -4,6 +4,8 @@ import { api } from "../api.js";
 import { useAuth } from "../auth.jsx";
 import { AgentStage } from "../components/Agent.jsx";
 import "../course.css";
+import "../teacher.css";
+import { Icon } from "../components/teacher/common.jsx";
 
 function Bar({ done, total, label }) {
   const pct = total ? Math.round((100 * done) / total) : 0;
@@ -40,7 +42,18 @@ export default function Home() {
   const [progress, setProgress] = useState({});
   const [error, setError] = useState("");
 
+  const [news, setNews] = useState([]);
+  const [hidden, setHidden] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("fde.hiddenNews") || "[]"); } catch { return []; }
+  });
+  const hide = (id) => {
+    const next = [...hidden, id];
+    setHidden(next);
+    try { localStorage.setItem("fde.hiddenNews", JSON.stringify(next.slice(-50))); } catch { /* private mode */ }
+  };
+
   useEffect(() => {
+    api("/announcements").then((r) => setNews(r.announcements)).catch(() => {});
     api("/course").then(setCourse).catch((e) => setError(e.message));
     api("/course/progress").then(setProgress).catch(() => {});
   }, []);
@@ -97,6 +110,25 @@ export default function Home() {
       </section>
 
       {error && <p className="notice error" role="alert">{error}</p>}
+
+      {news.filter((a) => !hidden.includes(a.id)).length > 0 && (
+        <section aria-labelledby="news-heading" style={{ marginTop: 32 }}>
+          <h2 id="news-heading" className="visually-hidden">Announcements</h2>
+          <div className="ann-list">
+            {news.filter((a) => !hidden.includes(a.id)).slice(0, 3).map((a) => (
+              <article key={a.id} className="ann">
+                <Icon name="megaphone" />
+                <div>
+                  <h3>{a.pinned && <span className="pill" style={{ marginRight: 6 }}>Pinned</span>}{a.title}</h3>
+                  {a.body && <p className="small">{a.body}</p>}
+                  <span className="small muted">{a.author}{a.week_id ? ` · ${a.week_id.replace("week-0", "Week ").replace("week-", "Week ")}` : ""} · {new Date(a.created_at).toLocaleDateString()}</span>
+                </div>
+                <button type="button" className="btn ghost small-btn" onClick={() => hide(a.id)} aria-label={`Dismiss ${a.title}`}>Dismiss</button>
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
 
       <section aria-labelledby="how-heading">
         <div className="section-head">

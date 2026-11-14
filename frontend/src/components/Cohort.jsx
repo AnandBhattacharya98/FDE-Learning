@@ -79,16 +79,16 @@ function Stat({ label, value, sub, tone }) {
   );
 }
 
-function Detail({ id, onClose }) {
+function Detail({ id, onClose, base }) {
   const [d, setD] = useState(null);
   const [err, setErr] = useState("");
   const [calls, setCalls] = useState([]);
   useEffect(() => {
     setD(null);
     setCalls([]);
-    api(`/admin/learners/${id}`).then(setD).catch((e) => setErr(e.message));
-    api(`/admin/voice-scorecards?user_id=${id}&limit=10`).then((r) => setCalls(r.scorecards || [])).catch(() => setCalls([]));
-  }, [id]);
+    api(`${base}/learners/${id}`).then(setD).catch((e) => setErr(e.message));
+    api(`${base}/voice-scorecards?user_id=${id}&limit=10`).then((r) => setCalls(r.scorecards || [])).catch(() => setCalls([]));
+  }, [id, base]);
   useEffect(() => {
     const onKey = (e) => e.key === "Escape" && onClose();
     window.addEventListener("keydown", onKey);
@@ -213,14 +213,15 @@ function Detail({ id, onClose }) {
   );
 }
 
-export default function Cohort() {
+// base: "/admin" in God mode, "/teacher" in teacher mode (same data, different access check).
+export default function Cohort({ base = "/admin" }) {
   const [data, setData] = useState(null);
   const [error, setError] = useState("");
   const [filter, setFilter] = useState("all");
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(null);
 
-  const load = useCallback(() => api("/admin/learners").then(setData).catch((e) => setError(e.message)), []);
+  const load = useCallback(() => api(`${base}/learners`).then(setData).catch((e) => setError(e.message)), [base]);
   useEffect(() => {
     load();
     const t = setInterval(load, 30000);
@@ -315,7 +316,7 @@ export default function Cohort() {
           <p className="gm-meta">Click a learner to see all their stats.</p>
         </>
       )}
-      {open !== null && <Detail id={open} onClose={close} />}
+      {open !== null && <Detail id={open} onClose={close} base={base} />}
     </section>
   );
 }

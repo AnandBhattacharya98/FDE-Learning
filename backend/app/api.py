@@ -60,12 +60,15 @@ def login(body: LogIn, db: Session = Depends(get_db)):
 
 
 @router.get("/me")
-def me(user: User = Depends(current_user), claims: dict = Depends(token_claims)):
+def me(user: User = Depends(current_user), claims: dict = Depends(token_claims), db: Session = Depends(get_db)):
     from .admin import is_admin
+    from .teacher import is_teacher
 
     out = _user_out(user)
     if is_admin(user, claims):
         out["admin"] = True  # only ever sent to the admin, so others can't tell God mode exists
+    if is_teacher(db, user, claims):
+        out["teacher"] = True  # teachers (and the admin) get the Teach link
     return out
 
 

@@ -12,13 +12,14 @@ export class ApiError extends Error {
   constructor(status, message) { super(message); this.status = status; }
 }
 
-export async function api(path, { method = "GET", body } = {}) {
-  const headers = { "Content-Type": "application/json" };
+export async function api(path, { method = "GET", body, form } = {}) {
+  // form: a FormData (file uploads); the browser sets its multipart Content-Type.
+  const headers = form ? {} : { "Content-Type": "application/json" };
   const token = getToken();
   if (token) headers.Authorization = `Bearer ${token}`;
   let res;
   try {
-    res = await fetch(BASE + path, { method, headers, body: body === undefined ? undefined : JSON.stringify(body) });
+    res = await fetch(BASE + path, { method, headers, body: form || (body === undefined ? undefined : JSON.stringify(body)) });
   } catch {
     throw new ApiError(0, "Can't reach the server. If it's on Render's free plan it may be waking up, so try again in a minute.");
   }

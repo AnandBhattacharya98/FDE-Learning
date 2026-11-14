@@ -6,6 +6,7 @@ import AuthCallback from "./pages/AuthCallback.jsx";
 import Home from "./pages/Home.jsx";
 import Week from "./pages/Week.jsx";
 import GodMode from "./pages/GodMode.jsx";
+import Teach from "./pages/Teach.jsx";
 import Coach from "./components/Coach.jsx";
 
 function RequireAuth({ children }) {
@@ -37,6 +38,7 @@ export default function App() {
           </Link>
           <div className="topbar-actions">
             <ThemeToggle />
+            {user?.teacher && <Link to="/teach" className="btn small-btn teach-link">Teach</Link>}
             {user?.admin && <Link to="/god" className="gm-link-top">GOD MODE</Link>}
             {user && (
               <div className="user-chip">
@@ -56,6 +58,7 @@ export default function App() {
             <Route path="/" element={<RequireAuth><Home /></RequireAuth>} />
             <Route path="/weeks/:weekId/:itemId?" element={<RequireAuth><Week /></RequireAuth>} />
             <Route path="/god" element={<RequireAuth><GodMode /></RequireAuth>} />
+            <Route path="/teach" element={<RequireAuth><Teach /></RequireAuth>} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>

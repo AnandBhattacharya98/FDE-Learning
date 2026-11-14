@@ -65,6 +65,18 @@ class Settings:
             if e.strip().strip("'\"")
         }
 
+        # Teacher mode: comma-separated emails that get the teacher dashboard (/teach). The admin
+        # can also add teachers from God mode. Like the admin, teachers must sign in with Google.
+        self.teacher_emails = {
+            e.strip().strip("'\"").lower()
+            for e in (os.getenv("TEACHER_EMAILS") or "").split(",")
+            if e.strip().strip("'\"")
+        }
+        # Largest file a teacher can upload (slides, short videos). Files are kept in the database,
+        # so long videos belong on YouTube (unlisted), Loom, Vimeo or Google Drive as a link.
+        self.material_max_mb = int(os.getenv("MATERIAL_MAX_MB") or 25)
+        self.quiz_model = (os.getenv("QUIZ_MODEL") or "claude-opus-5-5").strip()
+
         # Who may use the site: comma-separated email domains, e.g. "revrag.ai". Blank = anyone.
         # Addresses in ADMIN_EMAILS are always let in so the admin can't lock themselves out.
         self.allowed_email_domains = {

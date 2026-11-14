@@ -80,3 +80,9 @@ God mode shows whichever is newest: your own click, or the latest update from sh
 The card says which one it is. "Back to automatic" drops your click and keeps your note.
 P1 and P2 follow your course checklist when neither has set them. Only claim what's true:
 site work that practises an assignment is `doing`; `done` means your own deliverable is submitted.
+
+## Teachers
+
+The **Teachers** panel lists who can open teacher mode (`/teach`): emails from `TEACHER_EMAILS`
+on Render and the ones you add here. Type an address and press **Make teacher**; remove them the
+same way. You are always a teacher yourself. See `teacher-mode.md`.

@@ -584,6 +584,57 @@
           }
         ]
       }
+    },
+    {
+      "id": "teacher-mode",
+      "date": "2026-11-14",
+      "title": "Teacher mode: materials, Claude-written quizzes, project reviews",
+      "pr": 18,
+      "assignments": [],
+      "where": [
+        "backend/app/teacher.py (all /teacher routes, learner /weeks/{id}/class, /class-quizzes, /announcements, /admin/teachers)",
+        "backend/app/models_teacher.py (fde_teachers, fde_materials, fde_material_files, fde_teacher_quizzes, fde_teacher_quiz_attempts, fde_grade_reviews, fde_announcements)",
+        "backend/app/grading.py (teacher_review on the learner's grade; overrides feed the cohort grades)",
+        "frontend/src/pages/Teach.jsx + components/teacher/ (Materials, Quizzes, Submissions)",
+        "frontend/src/components/ClassMaterials.jsx (learner week page), TeachersPanel.jsx (God mode), teacher.css",
+        "docs/teacher-mode.md"
+      ],
+      "how": [
+        "Teachers are emails in TEACHER_EMAILS or added from God mode's Teachers panel (the admin always counts). Like God mode, they must sign in with Google; everyone else gets a 404.",
+        "Materials: slides, PDFs, text and short videos upload into the database (MATERIAL_MAX_MB, default 25); long videos go in as YouTube/Loom/Vimeo/Drive links and play embedded. PDF and PPTX text (slides and speaker notes) is extracted for quizzes; for videos the teacher pastes a transcript or notes. Files are served through signed links that expire after 6 hours and support Range, so videos can seek.",
+        "Quizzes: the teacher picks materials (and/or the week's lessons), a count, difficulty and focus. Claude (QUIZ_MODEL, default claude-opus-5-5, structured JSON output) writes the questions in the background; bad ones are dropped. The teacher edits every question and publishes. Learners see answers only after submitting; the teacher sees per-learner results and how often each question was answered right.",
+        "Submissions: every saved GitHub link with the auto-grader's latest run. The teacher can check the repo on GitHub (public? README? last commit), regrade, and approve the score, set their own, or ask for changes with feedback. The learner sees the review on their grade card, and an override replaces the score in the cohort view.",
+        "Also: the cohort view (same as God mode, behind the teacher check), what learners ask the coach, and announcements that show on every learner's home page."
+      ],
+      "demo": {
+        "title": "From slides to a published quiz",
+        "lines": [
+          {
+            "kind": "cmd",
+            "text": "POST /api/fde/teacher/materials  (week-01, m1, kickoff.pptx, published=true)"
+          },
+          {
+            "kind": "out",
+            "text": "201 {\"kind\": \"slides\", \"text_chars\": 4120, \"has_text\": true, \"file_url\": \"/materials/7/file?exp=…&sig=…\"}"
+          },
+          {
+            "kind": "cmd",
+            "text": "POST /api/fde/teacher/quizzes/generate {\"week_id\": \"week-01\", \"material_ids\": [7], \"count\": 8}"
+          },
+          {
+            "kind": "out",
+            "text": "202 {\"status\": \"generating\"} … then {\"status\": \"draft\", \"count\": 8, \"message\": \"Claude wrote 8 questions. Check each one before you publish.\"}"
+          },
+          {
+            "kind": "cmd",
+            "text": "POST /api/fde/teacher/quizzes/3/publish {\"published\": true}"
+          },
+          {
+            "kind": "note",
+            "text": "Learners now see it under \"From your teachers\" on the week page. Reviewing P1: PUT /teacher/submissions/runs/12/review {\"decision\": \"override\", \"score\": 82, \"feedback\": \"…\"}."
+          }
+        ]
+      }
     }
   ]
 }

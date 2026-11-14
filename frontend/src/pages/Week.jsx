@@ -4,6 +4,7 @@ import { api } from "../api.js";
 import { MANUAL, TYPE_LABEL, flatItems } from "../components/courseItems.js";
 import CourseNav from "../components/CourseNav.jsx";
 import ItemView from "../components/ItemView.jsx";
+import ClassMaterials from "../components/ClassMaterials.jsx";
 import "../course.css";
 
 export default function Week() {
@@ -90,6 +91,7 @@ export default function Week() {
           <CourseNav id="course-nav" open={navOpen} week={week} done={done} current={item.id} />
         </div>
 
+        <div style={{ minWidth: 0 }}>
         <article className="card" aria-labelledby="item-title">
           <header className="item-head">
             <div className="item-meta">
@@ -121,6 +123,8 @@ export default function Week() {
             </div>
           </footer>
         </article>
+        <ClassMaterials week={week} moduleId={item.module.id} />
+        </div>
       </div>
     </div>
   );

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { api } from "../api.js";
+import "../teacher.css";
 import "../grader.css";
 
 // The learner's auto-grade for one project. Data: GET /grading/:week/:project.
@@ -76,6 +77,18 @@ export function Review({ review }) {
   );
 }
 
+// A teacher's review of this run (teacher mode): approved, their own score, or changes to make.
+function TeacherNote({ r }) {
+  const head = r.decision === "override" ? `${r.teacher} set your score to ${r.score}/100.`
+    : r.decision === "approved" ? `${r.teacher} reviewed and approved this grade.` : `${r.teacher} asked for changes.`;
+  return (
+    <div className={`teacher-note${r.decision === "changes" ? " changes" : ""}`} role="note">
+      <strong className="small">{head}</strong>
+      {r.feedback && <p className="small">{r.feedback}</p>}
+    </div>
+  );
+}
+
 export default function GradeCard({ weekId, projectId, refreshKey }) {
   const [data, setData] = useState(null);
   const [hidden, setHidden] = useState(false);
@@ -93,6 +106,8 @@ export default function GradeCard({ weekId, projectId, refreshKey }) {
   }, [run, load]);
 
   if (hidden || !data) return null;
+  const tr = data.teacher_review;
+  const shown = tr?.decision === "override" ? tr.score : run?.status === "done" ? run.score : null;
 
   async function again() {
     setBusy(true); setMsg("");
@@ -104,7 +119,7 @@ export default function GradeCard({ weekId, projectId, refreshKey }) {
   return (
     <section className="gr-card" aria-labelledby={`grade-${projectId}`}>
       <header className="gr-head">
-        <ScoreRing score={run?.status === "done" ? run.score : null} passMark={data.rubric.pass_mark} />
+        <ScoreRing score={shown} passMark={data.rubric.pass_mark} />
         <div style={{ flex: 1 }}>
           <h4 id={`grade-${projectId}`} style={{ margin: 0 }}>Automatic review</h4>
           {!run && <p className="small muted" style={{ margin: "4px 0 0" }}>Save your GitHub repo link above and your project is checked automatically: it's cloned, installed, built and tested in a sandbox, then reviewed against the rubric. Pass mark {data.rubric.pass_mark}/100.</p>}
@@ -120,6 +135,7 @@ export default function GradeCard({ weekId, projectId, refreshKey }) {
       {msg && <p className="notice error" role="alert">{msg}</p>}
       {run?.checks?.length > 0 && <Checks checks={run.checks} />}
       {run?.status === "done" && <Review review={run.review} />}
+      {data.teacher_review && <TeacherNote r={data.teacher_review} />}
     </section>
   );
 }
