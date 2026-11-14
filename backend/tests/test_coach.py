@@ -93,3 +93,46 @@ def test_internal_search_needs_the_worker_key(client, auth):
     r = client.post(url, json={"query": "What is a webhook?", "user_id": user["id"]},
                     headers={"x-worker-key": "test-worker-key"})
     assert r.status_code == 200 and r.json()["passages"][0]["text"]
+
+
+def test_published_teacher_materials_are_searchable(client, auth, monkeypatch):
+    import io
+    import uuid
+
+    from app.security import create_token
+
+    r = client.post(f"{API}/auth/signup", json={"email": f"{uuid.uuid4().hex[:8]}@example.com", "name": "T", "password": "correct horse"})
+    uid, email = r.json()["user"]["id"], r.json()["user"]["email"]
+    monkeypatch.setattr(get_settings(), "teacher_emails", {email})
+    teacher = {"Authorization": f"Bearer {create_token(uid, via='google')}"}
+    text = b"Zebracorn retries: every webhook delivery carries an idempotency key so retries are safe."
+    m = client.post(f"{API}/teacher/materials", headers=teacher,
+                    data={"week_id": "week-01", "module_id": "m1", "title": "Zebracorn deck"},
+                    files={"file": ("deck.md", io.BytesIO(text), "text/markdown")}).json()
+    headers, user = auth
+    ask = lambda: client.post(f"{API}/coach/ask", json={"question": "zebracorn retries"}, headers=headers).json()  # noqa: E731
+    assert not any(s["kind"] == "material" for s in ask()["sources"])  # drafts stay out
+
+    client.patch(f"{API}/teacher/materials/{m['id']}", json={"published": True}, headers=teacher)
+    src = ask()["sources"][0]
+    assert src["kind"] == "material" and "Zebracorn deck" in src["title"]
+    assert src["path"] == f"/weeks/week-01/{src['item_id']}#class-h"
+
+    voice = client.post(f"{API}/coach/internal/search", json={"query": "zebracorn idempotency", "user_id": user["id"]},
+                        headers={"x-worker-key": "test-worker-key"}).json()["passages"]
+    assert voice[0]["kind"] == "material" and "idempotency" in voice[0]["text"]
+    client.delete(f"{API}/teacher/materials/{m['id']}", headers=teacher)
+
+
+def test_voice_token_languages_and_ping(client, auth):
+    headers, _ = auth
+    langs = client.get(f"{API}/coach/status", headers=headers).json()["languages"]
+    assert {"en", "hi", "ta", "te", "kn"} <= {lang["code"] for lang in langs}
+    assert client.get(f"{API}/coach/internal/ping").status_code == 401
+    assert client.get(f"{API}/coach/internal/ping", headers={"x-worker-key": "test-worker-key"}).json() == {"ok": True}
+
+
+def test_unicode_tokens():
+    from app.coach import _tokens
+
+    assert "वेबहुक" in _tokens("वेबहुक क्या है")

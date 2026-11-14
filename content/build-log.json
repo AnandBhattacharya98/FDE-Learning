@@ -668,6 +668,43 @@
           }
         ]
       }
+    },
+    {
+      "id": "voice-coach-references",
+      "date": "2026-11-14",
+      "title": "Voice coach: course answers, live transcript with references, Indian languages",
+      "pr": 0,
+      "assignments": [],
+      "where": [
+        "voice_agent/coach_voice.py",
+        "voice_agent/agent.py",
+        "backend/app/coach.py",
+        "frontend/src/components/Coach.jsx",
+        "frontend/src/coach.css"
+      ],
+      "how": [
+        "Each English question is looked up in the course index before the voice LLM answers (for other languages the LLM calls search_course in English); the index now also holds teachers' published materials.",
+        "The worker sends the transcript, the references and \"take me there\" navigation to the browser over a LiveKit text stream (topic fde.coach).",
+        "The call panel shows the transcript with source chips, the mute button really mutes the mic, and the panel shrinks to a pill 10 seconds into a call, reopening when references arrive or the pill is clicked.",
+        "Learners pick a language before the call: English, Hindi, Tamil, Telugu, Kannada, Malayalam, Marathi, Bengali or Gujarati (Cartesia Sonic 3 voice, auto speech-to-text)."
+      ],
+      "demo": {
+        "title": "Ask by voice",
+        "lines": [
+          {
+            "kind": "note",
+            "text": "Learner (Hindi): webhook kya hota hai?"
+          },
+          {
+            "kind": "out",
+            "text": "refs → [1] Week 1 · Webhooks 101  ·  coach answers in Hindi"
+          },
+          {
+            "kind": "note",
+            "text": "Learner: open the first one → navigate /weeks/week-01/…"
+          }
+        ]
+      }
     }
   ]
 }
