@@ -51,7 +51,7 @@ class Settings:
         self.frontend_url = ((os.getenv("FRONTEND_URL") or "").strip().rstrip("/")
                              or (self.cors_origins[0] if self.cors_origins else "http://localhost:5173"))
         # Shared secret the voice-quiz worker sends when it reports a score.
-        self.voice_worker_key = os.getenv("VOICE_WORKER_KEY") or ""
+        self.voice_worker_key = (os.getenv("VOICE_WORKER_KEY") or "").strip()  # a pasted value often ends in a newline
         # Ask the coach: with an Anthropic key the coach writes answers with Claude; without one it
         # still answers by quoting the best-matching course passages.
         self.anthropic_api_key = (os.getenv("ANTHROPIC_API_KEY") or "").strip()

@@ -110,7 +110,7 @@ class CourseCoach(Agent):
     async def search(self, query: str) -> list[dict] | None:
         """Top course passages for a query, or None if the API can't be reached."""
         api_url = (os.getenv("API_URL") or "").rstrip("/")
-        key = os.getenv("VOICE_WORKER_KEY") or ""
+        key = (os.getenv("VOICE_WORKER_KEY") or "").strip()
         if not api_url or not key:
             log.error("API_URL or VOICE_WORKER_KEY isn't set on the worker; the coach can't search the course")
             await self.emit({"type": "status", "text": "The coach can't reach the course right now."})
@@ -135,7 +135,7 @@ class CourseCoach(Agent):
     async def warm_up(self) -> None:
         """Wake the API (Render's free plan sleeps) so the first question doesn't time out."""
         api_url = (os.getenv("API_URL") or "").rstrip("/")
-        key = os.getenv("VOICE_WORKER_KEY") or ""
+        key = (os.getenv("VOICE_WORKER_KEY") or "").strip()
         if not api_url or not key:
             log.error("API_URL or VOICE_WORKER_KEY isn't set on the worker")
             return

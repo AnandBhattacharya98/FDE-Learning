@@ -249,7 +249,7 @@ def record_voice_result(week_id: str, body: VoiceResult, x_worker_key: str = Hea
     """Called by the voice-quiz worker when a quiz call ends. Not for browsers."""
     _week(week_id)
     expected = get_settings().voice_worker_key
-    if not expected or not hmac.compare_digest(x_worker_key, expected):
+    if not expected or not hmac.compare_digest(x_worker_key.strip(), expected):
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Bad worker key.")
     if db.get(User, body.user_id) is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Unknown user.")
