@@ -200,10 +200,29 @@ def format_passages(passages: list[dict]) -> str:
     return "\n\n".join(f"{p['week']} · {p['title']}: {p['text']}" for p in passages)
 
 
+def call_metadata(*sources: str | None) -> dict:
+    """The call's settings ({"mode", "week_id", "user_id"}). The API puts them on the agent
+    dispatch (job metadata) and on the room; the first non-empty JSON object wins, because
+    room metadata isn't always there yet when the job starts."""
+    for raw in sources:
+        try:
+            data = json.loads(raw or "{}")
+        except ValueError:
+            continue
+        if isinstance(data, dict) and data:
+            return data
+    return {}
+
+
 async def entrypoint(ctx: JobContext):
     await ctx.connect()
     transcript: list[dict] = []
-    meta = json.loads(ctx.room.metadata or "{}")
+    meta = call_metadata(ctx.job.metadata, ctx.job.room.metadata, ctx.room.metadata)
+    log.info("call metadata: %s", meta)
+    if "user_id" not in meta:
+        log.error("no call metadata on job or room; ending the call")
+        ctx.shutdown(reason="missing call metadata")
+        return
     if meta.get("mode") == "coach":
         session = AgentSession(stt=STT_MODEL, llm=LLM_MODEL, tts=TTS_MODEL, vad=silero.VAD.load())
         await session.start(agent=CourseCoach(meta.get("week_id"), int(meta["user_id"])), room=ctx.room)

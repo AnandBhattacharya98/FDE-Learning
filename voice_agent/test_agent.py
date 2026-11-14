@@ -60,3 +60,11 @@ def test_load_week_falls_back_to_the_api(monkeypatch, tmp_path):
     monkeypatch.setenv("API_URL", "https://api.example.com/")
     assert agent.load_week("week-01")["title"] == "From the API"
     assert calls == ["https://api.example.com/api/fde/weeks/week-01"]
+
+
+def test_call_metadata_prefers_the_first_non_empty_source():
+    from agent import call_metadata
+
+    assert call_metadata("", None, '{"mode": "coach", "user_id": 1}') == {"mode": "coach", "user_id": 1}
+    assert call_metadata('{"week_id": "week-01", "user_id": 2}', "{}", "") == {"week_id": "week-01", "user_id": 2}
+    assert call_metadata("not json", "", None) == {}
