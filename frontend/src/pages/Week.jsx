@@ -69,7 +69,7 @@ export default function Week() {
       <nav className="breadcrumb" aria-label="Breadcrumb">
         <Link to="/">Course</Link> <span aria-hidden="true">/</span> Week {week.number}
       </nav>
-      <header className="week-head">
+      <header className="week-head page-band aura soft">
         <div>
           <span className="eyebrow">Week {week.number}{week.due ? ` · due ${week.due}` : ""}</span>
           <h1 className="week-head-title">{week.title}</h1>

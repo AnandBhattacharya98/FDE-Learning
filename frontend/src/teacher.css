@@ -9,7 +9,7 @@
   background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; box-shadow: var(--shadow);
 }
 .tc-tile:hover { border-color: var(--border-strong); background: var(--bg-soft); }
-.tc-tile strong { display: block; font-size: var(--fs-2xl); font-weight: 600; letter-spacing: -0.02em; line-height: 1.25; margin: 2px 0; font-variant-numeric: tabular-nums; }
+.tc-tile strong { display: block; font-family: var(--display); font-size: 2rem; font-weight: 400; letter-spacing: -0.02em; line-height: 1.25; margin: 2px 0; font-variant-numeric: tabular-nums; }
 .tc-tile span { display: block; font-size: var(--fs-sm); color: var(--muted); }
 .tc-tile.alert strong { color: var(--accent); }
 
@@ -25,7 +25,7 @@
 .tc-grid { display: grid; gap: 16px; grid-template-columns: 1fr; align-items: start; }
 @media (min-width: 900px) { .tc-grid { grid-template-columns: 380px 1fr; } }
 .tc-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: var(--sp-5); box-shadow: var(--shadow); }
-.tc-card h2 { font-size: var(--fs-md); margin-bottom: 4px; }
+.tc-card h2 { font-size: var(--fs-lg); margin-bottom: 4px; }
 .tc-card > p.muted { margin-bottom: 14px; }
 .tc-form { display: grid; gap: 12px; }
 .tc-form label { margin-bottom: 4px; }

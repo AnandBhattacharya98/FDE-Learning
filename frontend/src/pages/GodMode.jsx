@@ -442,7 +442,7 @@ export default function GodMode() {
   return (
     <div className="gm">
 
-      <section className="gm-head">
+      <section className="gm-head page-band aura soft">
         <div>
           <p className="eyebrow">Admin · {data ? data.admin.name : "…"}</p>
           <h1 className="gm-title">God mode</h1>

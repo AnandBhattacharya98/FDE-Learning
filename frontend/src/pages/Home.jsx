@@ -13,10 +13,20 @@ function Bar({ done, total, label }) {
       <div className="progress-bar" role="progressbar" aria-label={label} aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct}>
         <div style={{ width: `${pct}%` }} />
       </div>
-      <p className="small muted" style={{ margin: "6px 0 0" }}>{done} of {total} items done</p>
+      <p className="small muted" style={{ margin: "6px 0 0" }}>{done} of {total} done</p>
     </div>
   );
 }
+
+// Cover art per week: base colour plus three washes (violet, coral, periwinkle family).
+const COVERS = [
+  { "--c1": "#2a1170", "--c2": "#7c5cff", "--c3": "#ff8a5c", "--c4": "#a9b4ff" },
+  { "--c1": "#1b1650", "--c2": "#4f46e5", "--c3": "#ec4899", "--c4": "#7dd3fc" },
+  { "--c1": "#3b0a2a", "--c2": "#be185d", "--c3": "#f97316", "--c4": "#c4b5fd" },
+  { "--c1": "#0b2e2a", "--c2": "#0f766e", "--c3": "#a3e635", "--c4": "#6645eb" },
+  { "--c1": "#14213d", "--c2": "#2563eb", "--c3": "#f59e0b", "--c4": "#22d3ee" },
+  { "--c1": "#2b1408", "--c2": "#c2410c", "--c3": "#fde68a", "--c4": "#7c5cff" },
+];
 
 const HOW = [
   { icon: "M4 5h16v11H8l-4 4z", title: "Learn the ideas", text: "Short lessons with diagrams, from how an app works to how a voice agent hears, thinks and speaks." },
@@ -56,41 +66,45 @@ export default function Home() {
 
   return (
     <div className="stack-lg">
-      <section className="home-hero">
-        <div className="home-hero-text">
-          <span className="eyebrow">{course?.title || "FDE Training"} · {course?.weeks.length || 6} weeks</span>
+      <section>
+        <div className="home-hero aura">
+          <svg className="ornament" viewBox="0 0 120 28" aria-hidden="true">
+            <path d="M8 14h14M98 14h14M30 14c4-10 8-10 10 0s6 10 10 0 6-10 10 0 6 10 10 0 6-10 10 0" />
+          </svg>
+          <span className="kicker">{course?.title || "FDE Training"} · {course?.weeks.length || 6} weeks</span>
           <h1 className="display">Welcome back, {first}.</h1>
           <p className="lead">{course?.subtitle || "Six weeks from how apps work to scoping a client's solution."}</p>
           <div className="hero-actions">
             {nextWeek && (
               <Link className="btn primary" to={`/weeks/${nextWeek.id}`}>
                 {totals.done ? "Continue learning" : "Start week " + nextWeek.number}
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
               </Link>
             )}
             <a className="btn" href="#syllabus">View syllabus</a>
           </div>
         </div>
-        <aside className="card progress-panel" aria-labelledby="progress-heading">
-          <h2 id="progress-heading">Your progress</h2>
-          <div className="progress-big">
-            <strong>{pct}%</strong><span className="muted small">of the course</span>
+        <div className="hero-frame" aria-label="Your progress">
+          <div className="hero-frame-inner">
+            <div className="metric">
+              <span>Course complete</span><strong>{pct}%</strong>
+              <div className="progress-bar" role="progressbar" aria-label="Course progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct}>
+                <div style={{ width: `${pct}%` }} />
+              </div>
+            </div>
+            <div className="metric"><span>Items done</span><strong>{totals.done}<small className="muted small"> / {totals.total}</small></strong></div>
+            <div className="metric"><span>Weeks open</span><strong>{openWeeks.length}<small className="muted small"> / {course?.weeks.length || 6}</small></strong></div>
+            {nextWeek && (
+              <Link className="next-up" to={`/weeks/${nextWeek.id}`}>
+                <div>
+                  <small>Up next · Week {nextWeek.number}</small>
+                  <strong>{nextWeek.title}</strong>
+                  {nextWeekProgress && <span className="small muted">{nextWeekProgress.done} of {nextWeekProgress.total} items done</span>}
+                </div>
+                <span className="go" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6" /></svg></span>
+              </Link>
+            )}
           </div>
-          <div className="progress-bar" role="progressbar" aria-label="Course progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct}>
-            <div style={{ width: `${pct}%` }} />
-          </div>
-          <dl className="kv">
-            <dt>Items done</dt><dd>{totals.done} of {totals.total}</dd>
-            <dt>Weeks open</dt><dd>{openWeeks.length} of {course?.weeks.length || 6}</dd>
-          </dl>
-          {nextWeek && (
-            <Link className="next-up" to={`/weeks/${nextWeek.id}`}>
-              <span>Up next · Week {nextWeek.number}</span>
-              <strong>{nextWeek.title}</strong>
-              {nextWeekProgress && <span>{nextWeekProgress.done} of {nextWeekProgress.total} items done</span>}
-            </Link>
-          )}
-        </aside>
+        </div>
       </section>
 
       {error && <p className="notice error" role="alert">{error}</p>}
@@ -114,68 +128,69 @@ export default function Home() {
         </section>
       )}
 
+      <section id="syllabus" aria-labelledby="syllabus-heading">
+        <div className="section-head">
+          <div>
+            <span className="eyebrow">Syllabus</span>
+            <h2 id="syllabus-heading" className="section-title">Six weeks, six builds</h2>
+          </div>
+          <span className="small muted">{openWeeks.length} of {course?.weeks.length || 6} weeks open</span>
+        </div>
+        {!course && !error && <p className="muted">Loading the syllabus…</p>}
+        <div className="tiles">
+          {course?.weeks.map((w, idx) => {
+            const p = progress[w.id];
+            const started = p && p.done > 0;
+            const finished = p && p.total && p.done === p.total;
+            const Tag = w.open ? Link : "article";
+            return (
+              <Tag key={w.number} className={`tile${w.open ? "" : " locked"}`} aria-labelledby={`wk-${w.number}`}
+                   {...(w.open ? { to: `/weeks/${w.id}` } : {})}>
+                <div className="cover" style={COVERS[idx % COVERS.length]} aria-hidden="true">
+                  <div className="cover-top">
+                    <span className={`cover-chip${finished ? " done" : ""}`}>
+                      {finished ? "Completed" : w.open ? (started ? "In progress" : "Open") : "Opens at kickoff"}
+                    </span>
+                  </div>
+                  <div className="cover-num"><small>Week</small>{String(w.number).padStart(2, "0")}</div>
+                </div>
+                <div className="tile-body">
+                  <h3 id={`wk-${w.number}`} className="tile-title">{w.title}</h3>
+                  <p className="tile-focus">{w.focus}</p>
+                  <p className="tile-build"><b>Build:</b> {w.build}{w.due ? ` · due ${w.due}` : ""}</p>
+                  {w.open && (
+                    <div className="tile-foot">
+                      {p && <Bar {...p} label={`Week ${w.number} progress`} />}
+                      <span className="tile-cta">
+                        {finished ? "Review" : started ? "Continue" : "Start"}
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </Tag>
+            );
+          })}
+        </div>
+      </section>
+
       <section aria-labelledby="how-heading">
         <div className="section-head">
-          <h2 id="how-heading" className="section-title">How each week works</h2>
+          <div>
+            <span className="eyebrow">How it works</span>
+            <h2 id="how-heading" className="section-title">One loop, every week</h2>
+          </div>
         </div>
         <div className="loop">
           {HOW.map((h) => (
             <div key={h.title} className="loop-item">
-              <span className="feature-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d={h.icon} /></svg></span>
-              <div>
+              <div className="loop-art aura soft" aria-hidden="true"><svg viewBox="0 0 24 24"><path d={h.icon} /></svg></div>
+              <div className="loop-body">
                 <h3>{h.title}</h3>
                 <p>{h.text}</p>
               </div>
             </div>
           ))}
-        </div>
-      </section>
-
-      <section id="syllabus" aria-labelledby="syllabus-heading">
-        <div className="section-head">
-          <h2 id="syllabus-heading" className="section-title">Syllabus</h2>
-          <span className="small muted">{openWeeks.length} of {course?.weeks.length || 6} weeks open</span>
-        </div>
-        {!course && !error && <p className="muted">Loading the syllabus…</p>}
-        <div className="syllabus">
-          {course?.weeks.map((w) => {
-            const p = progress[w.id];
-            const started = p && p.done > 0;
-            const finished = p && p.total && p.done === p.total;
-            return (
-              <article key={w.number} className={`syllabus-week${w.open ? "" : " locked"}`} aria-labelledby={`wk-${w.number}`}>
-                <div className={`week-badge${finished ? " done" : w.id === nextWeek?.id ? " current" : ""}`} aria-hidden="true">
-                  {finished ? <svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg> : w.number}
-                </div>
-                <div>
-                  <div className="week-label">Week {w.number}{finished ? " · completed" : ""}</div>
-                  <h3 id={`wk-${w.number}`} className="week-title">{w.title}</h3>
-                  <p className="week-focus">{w.focus}</p>
-                  <p className="week-build">
-                    <span className="build-tag">Build</span> {w.build}{w.due ? ` · due ${w.due}` : ""}
-                  </p>
-                  {w.modules && (
-                    <ul className="module-list">
-                      {w.modules.map((m) => <li key={m.id}>{m.title}</li>)}
-                    </ul>
-                  )}
-                  {p && <div style={{ marginTop: 12, maxWidth: 320 }}><Bar {...p} label={`Week ${w.number} progress`} /></div>}
-                </div>
-                <div className="week-action">
-                  {w.open ? (
-                    <Link className={`btn small-btn${finished || w.id !== nextWeek?.id ? "" : " primary"}`} to={`/weeks/${w.id}`} aria-label={`${finished ? "Review" : started ? "Continue" : "Start"} week ${w.number}`}>
-                      {finished ? "Review" : started ? "Continue" : "Start"}
-                    </Link>
-                  ) : (
-                    <span className="small muted lock-note">
-                      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2" /><path d="M8 11V8a4 4 0 0 1 8 0v3" /></svg>
-                      Opens at the week {w.number} kickoff
-                    </span>
-                  )}
-                </div>
-              </article>
-            );
-          })}
         </div>
       </section>
     </div>

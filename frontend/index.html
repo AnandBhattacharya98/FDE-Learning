@@ -5,19 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>FDE Learning</title>
     <meta name="theme-color" content="#ffffff" />
-    <script>
-      // Light by default; apply a saved choice before first paint.
-      (function () {
-        var t = null;
-        try { t = localStorage.getItem("fde.theme"); } catch (e) {}
-        var theme = t === "dark" ? "dark" : "light";
-        document.documentElement.dataset.theme = theme;
-        if (theme === "dark") document.querySelector('meta[name="theme-color"]').setAttribute("content", "#0c0c10");
-      })();
-    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,300..800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
   </head>
   <body>
     <div id="root"></div>

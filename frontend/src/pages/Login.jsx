@@ -103,6 +103,10 @@ export default function Login() {
           ))}
         </ul>
       </div>
+      <div className="auth-art aura violet" aria-hidden="true">
+        <blockquote>Learn to build agents that talk.</blockquote>
+        <p>RevRag's six-week training for Forward Deployed Engineers.</p>
+      </div>
     </div>
   );
 }
