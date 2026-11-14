@@ -640,7 +640,7 @@
       "id": "auto-deploy-voice-worker",
       "date": "2026-11-14",
       "title": "Voice worker redeploys itself from GitHub",
-      "pr": null,
+      "pr": 20,
       "assignments": [],
       "where": [
         ".github/workflows/deploy-voice-worker.yml",
