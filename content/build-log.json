@@ -848,7 +848,7 @@
       "id": "week-1-2-crud-api-db-guide",
       "date": "2026-11-17",
       "title": "Weeks 1–2 guide: CRUD, APIs, the database, and a dictionary",
-      "pr": null,
+      "pr": 31,
       "assignments": [
         "w12-p1",
         "w12-p2"
