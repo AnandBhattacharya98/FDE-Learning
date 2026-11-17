@@ -13,7 +13,7 @@ from .grading import load_grading, router as grading_router
 from .teacher import router as teacher_router
 from .voice import router as voice_router
 from .config import get_settings
-from .content import load_course, load_weeks
+from .content import load_course, load_glossary, load_weeks
 from .db import init_db
 
 API_PREFIX = "/api/fde"
@@ -23,6 +23,7 @@ API_PREFIX = "/api/fde"
 async def lifespan(_: FastAPI):
     load_weeks()  # fail fast if a content file is invalid
     load_course()
+    load_glossary()
     load_assignments()
     load_build_log()
     load_grading()

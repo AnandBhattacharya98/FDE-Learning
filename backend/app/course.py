@@ -5,7 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from .api import get_progress
-from .content import Week, load_course, load_weeks
+from .content import Week, load_course, load_glossary, load_weeks
 from .db import get_db
 from .models import QuizAttempt, StepProgress, User
 from .models_course import ItemProgress
@@ -41,6 +41,11 @@ def _done_items(db: Session, user_id: int, week: Week) -> set[str]:
         elif item.type == "voice" and voice_tries:
             done.add(item.id)
     return done & {i.id for i in week.items()}
+
+
+@router.get("/glossary")
+def glossary():
+    return {"terms": [t.model_dump() for t in load_glossary()]}
 
 
 @router.get("/course")

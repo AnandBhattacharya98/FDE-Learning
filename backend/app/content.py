@@ -164,6 +164,24 @@ class Course(BaseModel):
     weeks: list[OutlineWeek]
 
 
+class GlossaryTerm(BaseModel):
+    term: str
+    meaning: str
+    topic: str
+    week: int = Field(ge=1)
+
+
+@lru_cache
+def load_glossary() -> list[GlossaryTerm]:
+    """The course-wide dictionary (content/glossary.json), A-Z."""
+    raw = json.loads((get_settings().content_dir / "glossary.json").read_text(encoding="utf-8"))
+    terms = [GlossaryTerm.model_validate(t) for t in raw["terms"]]
+    names = [t.term.lower() for t in terms]
+    if len(names) != len(set(names)):
+        raise ValueError("glossary.json has a duplicate term")
+    return sorted(terms, key=lambda t: t.term.lower())
+
+
 @lru_cache
 def load_course() -> Course:
     path = get_settings().content_dir / "course.json"

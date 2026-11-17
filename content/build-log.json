@@ -908,6 +908,42 @@
           }
         ]
       }
+    },
+    {
+      "id": "dictionary-page",
+      "date": "2026-11-17",
+      "title": "Course-wide Dictionary page: search, A-Z, filters",
+      "pr": null,
+      "assignments": [],
+      "where": [
+        "content/glossary.json",
+        "backend/app/content.py (load_glossary)",
+        "backend/app/course.py (GET /glossary)",
+        "frontend/src/pages/Dictionary.jsx",
+        "frontend/src/dictionary.css"
+      ],
+      "how": [
+        "The dictionary moved out of the Week 1 lesson into content/glossary.json: one entry per term with topic and week, so every week can add words.",
+        "GET /api/fde/glossary returns it A-Z; the API checks the file at start-up (no duplicate terms).",
+        "The page filters as you type (term or meaning), by topic chips and by week, and an A-Z bar jumps to each letter (greyed when nothing matches)."
+      ],
+      "demo": {
+        "title": "Read the dictionary from the API",
+        "lines": [
+          {
+            "kind": "cmd",
+            "text": "curl https://fde-learnings.onrender.com/api/fde/glossary"
+          },
+          {
+            "kind": "out",
+            "text": "{\"terms\":[{\"term\":\"201 Created / 200 OK\",...},{\"term\":\"API\",\"meaning\":\"...\",\"topic\":\"APIs and HTTP\",\"week\":1},...]}"
+          },
+          {
+            "kind": "note",
+            "text": "Add a word: append an entry to content/glossary.json and push."
+          }
+        ]
+      }
     }
   ]
 }
