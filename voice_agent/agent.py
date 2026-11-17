@@ -30,9 +30,67 @@ log = logging.getLogger("fde-voice-quiz")
 CONTENT_DIR = Path(os.getenv("CONTENT_DIR") or Path(__file__).resolve().parents[1] / "content")
 QUESTIONS_PER_CALL = 3
 
+# Models run through LiveKit Inference (billed to the LiveKit project, no extra keys).
+# To switch, swap the string below for one of the commented samples (or set the env var), push to
+# main, and the deploy action ships it. Lists are every model livekit-agents 1.8 accepts.
+
+# ---- STT, the ears (speech-to-text). Format "provider/model:language"; ":en" = English. ----
 STT_MODEL = os.getenv("STT_MODEL") or "assemblyai/universal-streaming:en"
+# "assemblyai/universal-streaming:en"               # AssemblyAI streaming, English (current)
+# "assemblyai/universal-streaming-multilingual"     # AssemblyAI, several languages
+# "assemblyai/u3-rt-pro:en"                         # AssemblyAI Universal-3 realtime pro
+# "assemblyai/universal-3-5-pro:en"                 # AssemblyAI Universal-3.5 pro
+# "deepgram/nova-3:en"                              # Deepgram Nova-3, fast and accurate
+# "deepgram/nova-3-medical:en"                      # Nova-3 tuned for medical words
+# "deepgram/nova-2:en"                              # Deepgram Nova-2, older
+# "deepgram/nova-2-phonecall:en"                    # Nova-2 tuned for phone audio
+# "deepgram/nova-2-conversationalai:en"             # Nova-2 tuned for voice bots
+# "deepgram/flux-general-en"                        # Deepgram Flux: also detects end of turn
+# "deepgram/flux-general-multi"                     # Flux, several languages
+# "cartesia/ink-whisper:en"                         # Cartesia Ink (Whisper-based)
+# "cartesia/ink-2:en"                               # Cartesia Ink 2
+# "speechmatics/enhanced:en"                        # Speechmatics, higher accuracy
+# "speechmatics/standard:en"                        # Speechmatics, cheaper
+# "inworld/inworld-stt-1:en"                        # Inworld STT
+# "xai/stt-1"                                       # xAI STT
+# "google/gemini-3.5-transcribe-live"               # Google Gemini live transcription
+
+# ---- LLM, the brain (writes each reply). Bigger = smarter but slower; "mini"/"nano"/"flash" = faster. ----
 LLM_MODEL = os.getenv("LLM_MODEL") or "openai/gpt-4.1-mini"
+# "openai/gpt-4.1-mini"                             # OpenAI, fast and cheap (current)
+# "openai/gpt-4.1-nano"                             # OpenAI, fastest, simplest answers
+# "openai/gpt-4.1"                                  # OpenAI, smarter, slower
+# "openai/gpt-4o" / "openai/gpt-4o-mini"            # OpenAI GPT-4o family
+# "openai/gpt-5-mini" / "openai/gpt-5-nano"         # OpenAI GPT-5 small models
+# "openai/gpt-5.4-mini" / "openai/gpt-5.4-nano"     # OpenAI GPT-5.4 small models
+# "openai/gpt-5.5"                                  # OpenAI, newest large model
+# "openai/gpt-oss-120b"                             # OpenAI open-weights model
+# "google/gemini-3-flash"                           # Google, fast
+# "google/gemini-3.1-flash-lite"                    # Google, fastest
+# "google/gemini-3.1-pro"                           # Google, smartest, slower
+# "google/gemini-2.5-flash"                         # Google, older fast model
+# "deepseek-ai/deepseek-v3.2"                       # DeepSeek
+# "moonshotai/kimi-k2.6"                            # Moonshot Kimi
+# "zai/glm-5.1"                                     # Z.ai GLM
+# "xai/grok-4-1-fast-non-reasoning"                 # xAI Grok, fast
+# "xai/grok-4.5"                                    # xAI Grok, newest
+
+# ---- TTS, the mouth (the voice). Format "provider/model:voice". Voice names: LiveKit dashboard > Voices. ----
 TTS_MODEL = os.getenv("TTS_MODEL") or "inworld/inworld-tts-1.5-max:Manoj"
+# "inworld/inworld-tts-1.5-max:Manoj"               # Inworld, Hindi (India) male voice (current)
+# "inworld/inworld-tts-1.5-max:Riya"                # Inworld, Hindi (India) voice
+# "inworld/inworld-tts-1.5-mini:Manoj"              # Inworld mini: starts speaking faster
+# "inworld/inworld-tts-2:Manoj"                     # Inworld newest model
+# "rime/mistv3:Nadi"                                # Rime, Hindi (India) female voice
+# "rime/mistv3:Taru"                                # Rime, Hindi (India) male voice
+# "rime/coda:<voice>"                               # Rime Coda
+# "cartesia/sonic-2"                                # Cartesia default voice (the original)
+# "cartesia/sonic-3:<voice id>"                     # Cartesia Sonic 3 (ids at play.cartesia.ai)
+# "cartesia/sonic-3.5:<voice id>"                   # Cartesia newest
+# "cartesia/sonic-turbo:<voice id>"                 # Cartesia, lowest delay
+# "deepgram/aura-2:<voice>"                         # Deepgram Aura 2
+# "fishaudio/s2.1-pro:<voice>"                      # Fish Audio
+# "xai/tts-1:<voice>"                               # xAI
 
 
 def load_week(week_id: str) -> dict:
