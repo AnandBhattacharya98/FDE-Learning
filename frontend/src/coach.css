@@ -168,3 +168,12 @@ sup.coach-cite { line-height: 1; }
   box-shadow: 0 0 0 8px var(--accent-soft); transition: outline-color 0.2s ease, box-shadow 0.2s ease;
   scroll-margin: 80px;
 }
+
+/* Dictionary-first answer (DictionaryCard in components/Coach.jsx) */
+.coach-dict-label { font-size: var(--fs-xs); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--accent-strong); margin: 0 0 6px; }
+.coach-dict-entry { padding: 8px 0; border-top: 1px solid var(--border); }
+.coach-dict-entry:first-of-type { border-top: none; padding-top: 0; }
+.coach-dict-entry p { margin: 2px 0 4px; }
+.coach-dict-ask { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
+.coach-dict-ask p { margin: 0 0 8px; font-weight: 500; }
+.coach-dict-links { display: flex; flex-wrap: wrap; gap: 4px 12px; }

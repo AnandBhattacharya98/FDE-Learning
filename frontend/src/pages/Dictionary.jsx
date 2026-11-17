@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import { api } from "../api.js";
 import "../dictionary.css";
 
@@ -11,10 +12,12 @@ const letterOf = (term) => (/[a-z]/i.test(term[0]) ? term[0].toUpperCase() : "#"
 export default function Dictionary() {
   const [terms, setTerms] = useState(null);
   const [error, setError] = useState("");
-  const [q, setQ] = useState("");
+  const [params] = useSearchParams();
+  const [q, setQ] = useState(params.get("q") || "");  // the coach links here with ?q=term
   const [topic, setTopic] = useState("");
   const [week, setWeek] = useState("");
 
+  useEffect(() => { const v = params.get("q"); if (v !== null) setQ(v); }, [params]);
   useEffect(() => { api("/glossary").then((r) => setTerms(r.terms)).catch((e) => setError(e.message)); }, []);
 
   const topics = useMemo(() => [...new Set((terms || []).map((t) => t.topic))].sort(), [terms]);
@@ -81,7 +84,9 @@ export default function Dictionary() {
                 <dt>{t.term}</dt>
                 <dd>
                   {t.meaning}
-                  <span className="dict-meta">{t.topic} · Week {t.week}</span>
+                  <span className="dict-meta">
+                    {t.topic} · Week {t.week} · <Link to={t.link}>Read the lesson: {t.lesson_title} →</Link>
+                  </span>
                 </dd>
               </div>
             ))}

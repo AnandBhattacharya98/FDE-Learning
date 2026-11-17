@@ -36,7 +36,7 @@ def test_ask_needs_sign_in(client):
 def test_ask_without_a_key_answers_from_the_course(client, auth):
     headers, _ = auth
     assert client.get(f"{API}/coach/status", headers=headers).json()["ai"] is False
-    r = client.post(f"{API}/coach/ask", json={"question": "What is an API?", "week_id": "week-01"}, headers=headers)
+    r = client.post(f"{API}/coach/ask", json={"question": "What is an API?", "week_id": "week-01", "course": True}, headers=headers)
     assert r.status_code == 200
     body = r.json()
     assert body["mode"] == "search" and body["sources"] and "[1]" in body["answer"]
@@ -54,7 +54,7 @@ def test_ask_with_a_key_uses_claude_with_course_passages(client, auth, monkeypat
     monkeypatch.setattr(s, "anthropic_api_key", "test-key")
     monkeypatch.setattr(coach, "_ask_claude", fake)
     r = client.post(f"{API}/coach/ask", headers=headers, json={
-        "question": "and what about the kitchen?",
+        "question": "and what about the kitchen?", "course": True,
         "history": [{"role": "user", "content": "What is an API?"}, {"role": "assistant", "content": "The waiter."}],
     }).json()
     assert r == {"answer": "An API is the waiter [1].", "mode": "ai", "sources": r["sources"]}
@@ -69,7 +69,7 @@ def test_ask_falls_back_to_search_when_claude_fails(client, auth, monkeypatch):
 
     monkeypatch.setattr(get_settings(), "anthropic_api_key", "test-key")
     monkeypatch.setattr(coach, "_ask_claude", broken)
-    r = client.post(f"{API}/coach/ask", json={"question": "What is a database?"}, headers=headers).json()
+    r = client.post(f"{API}/coach/ask", json={"question": "What is a database?", "course": True}, headers=headers).json()
     assert r["mode"] == "search" and r["sources"]
 
 
@@ -79,6 +79,18 @@ def test_hourly_limit(client, auth, monkeypatch):
     for _ in range(2):
         assert client.post(f"{API}/coach/ask", json={"question": "What is JSON?"}, headers=headers).status_code == 200
     assert client.post(f"{API}/coach/ask", json={"question": "What is JSON?"}, headers=headers).status_code == 429
+
+
+def test_ask_shows_the_dictionary_first(client, auth):
+    headers, _ = auth
+    r = client.post(f"{API}/coach/ask", json={"question": "What is CRUD and what is a query parameter?"}, headers=headers).json()
+    assert r["mode"] == "dictionary" and r["answer"] is None
+    assert [t["term"] for t in r["dictionary"]] == ["Query parameter", "CRUD"]
+    # "Authorization header" wins over "Authorization" inside it; "endpointing" finds the slashed term.
+    assert [t["term"] for t in coach.dictionary_hits("explain the authorization header")] == ["Authorization header"]
+    assert [t["term"] for t in coach.dictionary_hits("what is endpointing?")] == ["Turn detection / endpointing"]
+    assert coach.dictionary_hits("how do I deploy P1 so it has a public URL")[0]["term"] in {"Deploy", "URL"}
+    assert coach.dictionary_hits("and what about the kitchen?") == []
 
 
 def test_voice_token_needs_livekit(client, auth):

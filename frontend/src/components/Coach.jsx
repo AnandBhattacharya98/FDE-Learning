@@ -67,6 +67,31 @@ function Sources({ sources, onOpen }) {
   );
 }
 
+/** The dictionary entries for a question, then the offer to see the topic in the course. */
+function DictionaryCard({ msg, onCourse, last, busy }) {
+  return (
+    <div className="coach-bubble agent coach-dict">
+      <p className="coach-dict-label">From the dictionary</p>
+      {msg.dictionary.map((d) => (
+        <div key={d.term} className="coach-dict-entry">
+          <strong>{d.term}</strong>
+          <p>{d.meaning}</p>
+          <span className="coach-dict-links small">
+            <Link to={d.link}>Read the lesson: {d.lesson_title}</Link>
+            <Link to={`/dictionary?q=${encodeURIComponent(d.term)}`}>Open in the dictionary</Link>
+          </span>
+        </div>
+      ))}
+      {last && (
+        <div className="coach-dict-ask">
+          <p>Do you want to see it in the course as well?</p>
+          <button type="button" className="btn small-btn primary" onClick={onCourse} disabled={busy}>Yes, show me in the course</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 const MicIcon = ({ off }) => (
   <svg viewBox="0 0 24 24" aria-hidden="true">
     <rect x="9" y="3" width="6" height="11" rx="3" /><path d="M5 11a7 7 0 0 0 14 0M12 18v3" />
@@ -244,16 +269,21 @@ export default function Coach() {
     return () => window.removeEventListener("keydown", onKey);
   }, [open, info, mode, live]);
 
-  async function ask(text) {
+  // A question that names a dictionary term gets the dictionary entry first; "Show me in the course"
+  // then asks again with course: true for the usual answer from the lessons.
+  async function ask(text, { course = false, shown = text } = {}) {
     const question = text.trim();
     if (!question || busy) return;
     const history = messages.filter((m) => !m.error).slice(-6).map(({ role, content }) => ({ role, content }));
-    setMessages((m) => [...m, { role: "user", content: question }]);
+    setMessages((m) => [...m, { role: "user", content: shown.trim() }]);
     setDraft("");
     setBusy(true);
     try {
-      const r = await api("/coach/ask", { method: "POST", body: { question, week_id: weekId, history } });
-      setMessages((m) => [...m, { role: "assistant", content: r.answer, sources: r.sources, mode: r.mode }]);
+      const r = await api("/coach/ask", { method: "POST", body: { question, week_id: weekId, history, course } });
+      const content = r.dictionary
+        ? r.dictionary.map((d) => `${d.term}: ${d.meaning}`).join("\n\n")
+        : r.answer;
+      setMessages((m) => [...m, { role: "assistant", content, sources: r.sources, mode: r.mode, dictionary: r.dictionary, question }]);
     } catch (e) {
       setMessages((m) => [...m, { role: "assistant", content: e.message, error: true }]);
     } finally {
@@ -371,9 +401,14 @@ export default function Coach() {
                 )}
                 {messages.map((m, i) => (
                   <div key={i} className={`coach-msg ${m.role}`}>
-                    <div className={`coach-bubble ${m.role === "user" ? "user" : "agent"}${m.error ? " error" : ""}`}>
-                      {m.role === "user" ? m.content : <Answer text={m.content} />}
-                    </div>
+                    {m.dictionary ? (
+                      <DictionaryCard msg={m} onCourse={() => ask(m.question, { course: true, shown: "Yes, show me in the course" })}
+                                      last={i === messages.length - 1} busy={busy} />
+                    ) : (
+                      <div className={`coach-bubble ${m.role === "user" ? "user" : "agent"}${m.error ? " error" : ""}`}>
+                        {m.role === "user" ? m.content : <Answer text={m.content} />}
+                      </div>
+                    )}
                     {m.role === "assistant" && <Sources sources={m.sources} />}
                   </div>
                 ))}

@@ -65,3 +65,5 @@ def test_glossary_is_sorted_and_public(client):
     names = [t["term"].lower() for t in terms]
     assert len(terms) > 50 and names == sorted(names)
     assert {"term", "meaning", "topic", "week"} <= set(terms[0])
+    crud = next(t for t in terms if t["term"] == "CRUD")  # every term links to the lesson that explains it
+    assert crud["link"] == "/weeks/week-01/lesson-crud" and crud["lesson_title"].startswith("CRUD")
