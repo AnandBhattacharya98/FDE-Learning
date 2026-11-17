@@ -32,7 +32,7 @@ QUESTIONS_PER_CALL = 3
 
 STT_MODEL = os.getenv("STT_MODEL") or "assemblyai/universal-streaming:en"
 LLM_MODEL = os.getenv("LLM_MODEL") or "openai/gpt-4.1-mini"
-TTS_MODEL = os.getenv("TTS_MODEL") or "cartesia/sonic-2"
+TTS_MODEL = os.getenv("TTS_MODEL") or "inworld/inworld-tts-1.5-max:Manoj"
 
 
 def load_week(week_id: str) -> dict:
@@ -193,6 +193,10 @@ async def entrypoint(ctx: JobContext):
         llm=LLM_MODEL,
         tts=TTS_MODEL,
         vad=silero.VAD.load(),
+        turn_handling={
+            "endpointing": {"min_delay": 0.5, "max_delay": 3.0},   # turn detection: seconds of silence before it replies
+            "interruption": {"enabled": True},                     # interruption: can the caller talk over the bot?
+        },
     )
     coach = QuizCoach(week, int(meta["user_id"]), prompts, call_id=ctx.job.id, transcript=transcript)
 
