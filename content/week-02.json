@@ -102,6 +102,19 @@
         "Learn the pattern on your own projects first, then do it for real clients."
       ],
       "illustration": "webhook-preview"
+    },
+    {
+      "id": "p2-check",
+      "part": "Inside this site",
+      "title": "Check P2: a 2-minute call and 3 setting changes",
+      "summary": "Where a voice bot's settings live, using this site's own voice-quiz bot as the example.",
+      "body": [
+        "Hear a working bot first: open Week 2, then Voice quiz, and press Start call. That bot is voice_agent/agent.py, running on LiveKit Cloud.",
+        "Its ears, brain and mouth are three settings at the top of voice_agent/agent.py: STT_MODEL, LLM_MODEL and TTS_MODEL. Each can be changed with an environment variable of the same name.",
+        "Turn detection and interruptions are set where the AgentSession is created. With livekit-agents 1.8 you pass turn_handling, for example {\"endpointing\": {\"min_delay\": 1.0}} to wait longer before replying, or {\"interruption\": {\"enabled\": False}} to stop the caller cutting in.",
+        "Three good experiments for your notes: change the voice (TTS_MODEL), change the wait before the bot replies (endpointing min_delay 0.5 to 1.0), turn interruptions off. For each write: what you changed, what you expected, what happened.",
+        "Done when: you can talk to your own bot for 2 minutes, and your notes cover 3 changes. Submit the repo, a screen recording link and the notes on the P2 page; the auto-grader checks the recording link opens and scores the notes."
+      ]
     }
   ],
   "resources": [
@@ -572,6 +585,19 @@
             "q30",
             "q31"
           ]
+        }
+      ]
+    },
+    {
+      "id": "m4",
+      "title": "Checking your P2",
+      "summary": "Where a voice bot's settings live, and how to show P2 is done.",
+      "items": [
+        {
+          "id": "lesson-p2-check",
+          "type": "lesson",
+          "title": "Check P2: a 2-minute call and 3 setting changes",
+          "ref": "p2-check"
         }
       ]
     },

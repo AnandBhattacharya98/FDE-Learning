@@ -132,6 +132,155 @@
         "Works locally but broken online? Check for a missing key or an address still pointing at localhost. Render's free plan sleeps, so the first request can take up to a minute."
       ],
       "illustration": "local-vs-deployed"
+    },
+    {
+      "id": "crud",
+      "part": "Inside this site",
+      "title": "CRUD: the four things you do with data",
+      "summary": "Create, Read, Update, Delete. Each one is an HTTP method on the API and a SQL command in the database.",
+      "body": [
+        "Create = POST = SQL INSERT. Read = GET = SQL SELECT. Update = PUT or PATCH = SQL UPDATE. Delete = DELETE = SQL DELETE.",
+        "This site's announcements do all four, in backend/app/teacher.py: GET /announcements reads, POST /teacher/announcements creates, PATCH /teacher/announcements/{id} updates, DELETE /teacher/announcements/{id} deletes.",
+        "Each announcement is one row in the table fde_announcements, defined in backend/app/models_teacher.py (class Announcement). Its columns: id, title, body, week_id, pinned, created_by, author_name, created_at.",
+        "Your P1 does the same with a calls table: POST /calls creates a row, GET /calls reads them all."
+      ]
+    },
+    {
+      "id": "request-parts",
+      "part": "Inside this site",
+      "title": "Every part of a request, with real examples",
+      "summary": "Method, URL (path, path parameters, query parameters), headers and body go out. A status code, headers and a body come back.",
+      "body": [
+        "Method: the verb. GET https://fde-learnings.onrender.com/api/fde/weeks reads the list of weeks.",
+        "Base URL + path: https://fde-learnings.onrender.com/api/fde is the base URL, /weeks/week-01 is the path.",
+        "Path parameter: week-01 in /weeks/{week_id}. It says which week you mean.",
+        "Query parameter: after a ?, for options. GET https://fde-learnings.onrender.com/api/fde/voice-quiz/leaderboard?week_id=week-02 filters the leaderboard to week 2. Leave it off and you get the whole course.",
+        "Headers: Content-Type: application/json says the body is JSON. Authorization: Bearer <token> says who you are.",
+        "Body: the data, in JSON. POST /teacher/announcements takes {\"title\": \"Hello\", \"body\": \"...\", \"week_id\": \"week-01\", \"pinned\": false}.",
+        "Reply: a status code (201 Created), then a body: the saved row with its new id.",
+        "See it live: open the site, press F12, open the Network tab and click around. Every row there is one API call with all these parts."
+      ]
+    },
+    {
+      "id": "api-to-db",
+      "part": "Inside this site",
+      "title": "How one API call changes the database",
+      "summary": "Follow POST /teacher/announcements from curl to a new row on the home page.",
+      "body": [
+        "1. You send POST /api/fde/teacher/announcements with a token and a JSON body.",
+        "2. Render passes it to Uvicorn, which hands it to FastAPI. The router finds the function post_announcement in backend/app/teacher.py.",
+        "3. Pydantic checks the body against AnnouncementIn: title must be 1 to 200 characters. A missing title stops here with 422.",
+        "4. require_teacher reads the token. No token: 401. Not a teacher: 404.",
+        "5. get_db() in backend/app/db.py opens a database session. db.add(a) stages a new Announcement; db.commit() makes SQLAlchemy send INSERT INTO fde_announcements ... to Postgres on Neon.",
+        "6. Postgres saves the row and gives it the next id. The API replies 201 Created with the row as JSON.",
+        "7. The home page (frontend/src/pages/Home.jsx) calls GET /announcements when it loads, which runs SELECT ... FROM fde_announcements, so the new row shows up after a refresh."
+      ]
+    },
+    {
+      "id": "server-service",
+      "part": "Inside this site",
+      "title": "Server, service and service layer",
+      "summary": "A server answers requests. A service is a running program that does a job for others. A service layer is where business rules live in bigger code.",
+      "body": [
+        "Server: the computer and program that waits for requests. Render's computer runs Uvicorn, which runs the FastAPI app.",
+        "Service: one running program with one job. On Render this API is a 'web service'; Neon is a database service; LiveKit is a voice service.",
+        "Service layer: in bigger apps, routes stay thin and call service functions that hold the rules (for example create_announcement), which then call the database.",
+        "This site is small, so most routes do the work themselves: check, add the row, commit. A few shared helpers act like a service layer, such as queue_for_submission in backend/app/grading.py."
+      ]
+    },
+    {
+      "id": "see-it-yourself",
+      "part": "Inside this site",
+      "title": "Try it: a curl POST that shows up on the page",
+      "summary": "P1's 'Done when', done on this site: add a row with curl and see it on the home page.",
+      "body": [
+        "No sign-in needed: curl https://fde-learnings.onrender.com/api/fde/weeks returns the weeks as JSON (GET, 200 OK). The first call can take a minute while Render wakes up.",
+        "Teachers and the admin: sign in on the site, press F12, open Console and run localStorage.getItem(\"fde.token\"). That is your token. Keep it private.",
+        "Create: curl -X POST https://fde-learnings.onrender.com/api/fde/teacher/announcements -H \"Authorization: Bearer $TOKEN\" -H \"Content-Type: application/json\" -d '{\"title\": \"Hello from curl\"}'. The reply is 201 Created with the new id.",
+        "Refresh the home page: the announcement is there. That is a row your curl added, read back by the page.",
+        "Delete it again: curl -X DELETE https://fde-learnings.onrender.com/api/fde/teacher/announcements/<id> -H \"Authorization: Bearer $TOKEN\".",
+        "Learners can try the same on their own P1: curl -X POST <your API>/calls with a JSON body, then refresh their React page."
+      ]
+    },
+    {
+      "id": "glossary",
+      "part": "Inside this site",
+      "title": "Dictionary: every technical word, in one line",
+      "summary": "Every term used in weeks 1 and 2, in plain words.",
+      "body": [
+        "API: Application Programming Interface: a list of doors (addresses) a program opens so other programs can ask it for things. This site's API lives at fde-learnings.onrender.com/api/fde.",
+        "Authentication: Proving who you are, for example signing in with Google.",
+        "Authorization: What you are allowed to do once you are known. A learner can read announcements; only a teacher can add one.",
+        "Authorization header: The header that carries your token: Authorization: Bearer <token>.",
+        "Backend: The part of an app that runs on a server: it checks requests, does the work and talks to the database. Here: the FastAPI code in backend/.",
+        "Base URL: The start of every address an API uses, such as https://fde-learnings.onrender.com/api/fde. Each route adds its own path after it.",
+        "Bearer token: A token you send in the Authorization header. Whoever holds (bears) it is treated as you, so keep it private.",
+        "Body: The data sent with a request or a reply, usually JSON. POST, PUT and PATCH carry a body; GET and DELETE usually don't.",
+        "Client: Whoever sends the request: a browser, curl, Postman or another server.",
+        "Column: One kind of fact in a table, such as title or created_at. Every row has a value for each column.",
+        "Commit (database): The moment changes are saved for good. Until db.commit() runs, nothing is really written.",
+        "CORS: A browser rule: a page may only call an API that lists the page's address as allowed. Set by CORS_ORIGINS on the API.",
+        "CRUD: Create, Read, Update, Delete: the four things you can do with stored data. They map to POST, GET, PUT or PATCH, and DELETE.",
+        "curl: A command-line tool that sends one HTTP request and prints the reply. Same job as Postman, but typed.",
+        "Database (DB): A program that stores data safely and lets you search it. Here: Postgres on Neon online, a SQLite file on your laptop.",
+        "DELETE: HTTP method that removes something. The D in CRUD.",
+        "Deploy: Putting your code on a host so it runs on a public address instead of only your laptop.",
+        "DevTools: The browser's built-in tools (right-click, Inspect). The Network tab shows every API call the page makes.",
+        "Endpoint / route: One door of an API: a method plus a path, such as POST /teacher/announcements.",
+        "Environment variable (env var): A setting given to a program from outside its code, such as DATABASE_URL. Keys live here, never in code.",
+        "FastAPI: The Python framework this site's backend is written in. You write a function and mark it with @router.get or @router.post.",
+        "Foreign key: A column that points at a row in another table, such as created_by pointing at fde_users.id.",
+        "Frontend: What people see and click: the React page, served by Vercel.",
+        "GET: HTTP method that reads. It should never change data. The R in CRUD.",
+        "Header: A small labelled detail sent with a request or reply, such as Content-Type: application/json or Authorization.",
+        "Host: A company whose computers run your code: Render (API), Vercel (page), Neon (database), LiveKit Cloud (voice bot).",
+        "HTTP: The language browsers and servers use to talk: a request goes out, a reply comes back. HTTPS is the same, encrypted.",
+        "HTTP method: The verb of a request: GET, POST, PUT, PATCH or DELETE.",
+        "id / primary key: A column whose value is unique for each row, so one row can be found exactly. The database picks it on insert.",
+        "INSERT, SELECT, UPDATE, DELETE (SQL): The four SQL commands behind CRUD. SQLAlchemy writes them for you.",
+        "JSON: A plain-text way to write data: {\"title\": \"Hello\", \"pinned\": false}. APIs send and receive it.",
+        "JWT: JSON Web Token: the signed token this site gives you when you sign in. The API checks the signature on every request.",
+        "LLM: Large Language Model: the brain of a voice bot that writes the reply text.",
+        "localhost: Your own computer. http://localhost:8000 only works on your laptop.",
+        "localStorage: A small store inside the browser. This site keeps your token there under the key fde.token.",
+        "ORM: Object-Relational Mapper: lets you work with rows as Python objects. This site uses SQLAlchemy.",
+        "PATCH: HTTP method that changes part of something that already exists. The U in CRUD.",
+        "Path: The part of the URL after the host, such as /api/fde/weeks/week-01.",
+        "Path parameter: A value written inside the path, such as week-01 in /weeks/{week_id}. It picks which thing you mean.",
+        "Payload: Another word for the body.",
+        "POST: HTTP method that creates something new. The C in CRUD. A good API replies 201 Created.",
+        "Postgres: A popular SQL database. Neon runs it for this site.",
+        "Postman: An app for sending API requests with buttons instead of typing curl.",
+        "PUT: HTTP method that sets something to a given value, creating it if missing. The U in CRUD.",
+        "Pydantic: The Python library FastAPI uses to check a request body. A missing or wrong field gets a 422 reply.",
+        "Query parameter: Extra options after a ? in the URL, such as ?week_id=week-02. Used to filter or sort, mostly with GET.",
+        "Request: What the client sends: method, URL, headers and maybe a body.",
+        "Response / reply: What the server sends back: a status code, headers and usually a body.",
+        "REST: A common style of API: things are nouns in the path (/announcements) and the method says what to do with them.",
+        "Router: The part of FastAPI that matches a method and path to the Python function that handles it.",
+        "Row: One record in a table, such as one announcement.",
+        "Schema: The shape data must have: which fields, which types, which are required.",
+        "Server: A computer (or program) that waits for requests and answers them. Uvicorn is the server program here; Render's computer runs it.",
+        "Service: A running program that does one job for others. On Render, this API is a 'web service'. LiveKit is a voice service.",
+        "Service layer: In bigger apps, the code between the route and the database that holds the business rules. This site is small, so most routes talk to the database themselves.",
+        "Session (database): One conversation with the database inside one request. get_db() opens it and closes it after the reply.",
+        "SQL: Structured Query Language: the language databases understand, such as SELECT * FROM fde_announcements.",
+        "SQLAlchemy: The Python library (an ORM) this site uses to talk to the database.",
+        "SQLite: A database that is a single file. Used on your laptop when DATABASE_URL is blank.",
+        "Status code: The 3-digit number at the top of a reply. 2xx worked, 4xx your request is wrong, 5xx the server broke.",
+        "STT: Speech-to-text: the ears of a voice bot.",
+        "Table: A grid of rows and columns, like one sheet in Excel. This site's tables start with fde_, such as fde_announcements.",
+        "Token: A string that proves you are signed in. Send it in the Authorization header.",
+        "TTS: Text-to-speech: the mouth of a voice bot.",
+        "Turn detection / endpointing: How a voice bot decides you have finished speaking. Wait too little and it cuts you off; too long and it feels slow.",
+        "Interruption (barge-in): When the caller speaks over the bot. With interruptions on, the bot stops talking and listens.",
+        "URL: A full web address: https:// + host + path + optional ?query.",
+        "Uvicorn: The program that runs the FastAPI app and listens for HTTP requests.",
+        "VAD: Voice Activity Detection: spots when someone is speaking at all. This site's bot uses Silero VAD.",
+        "Webhook: An API call one server makes to another when something happens, such as 'the call ended'. Week 3 joins P1 and P2 this way.",
+        "201 Created / 200 OK: Success codes. 201 means a new row was saved; 200 means it worked.",
+        "401 / 403 / 404 / 422: 401 no or bad token; 403 signed in but not allowed; 404 no such thing (this site also says 404 to hide teacher pages); 422 the body failed the check."
+      ]
     }
   ],
   "resources": [
@@ -696,6 +845,49 @@
             "q17",
             "q18"
           ]
+        }
+      ]
+    },
+    {
+      "id": "m4",
+      "title": "Inside this site: CRUD, APIs and the database",
+      "summary": "The same ideas, traced through this site's real code, plus a dictionary of every term.",
+      "items": [
+        {
+          "id": "lesson-crud",
+          "type": "lesson",
+          "title": "CRUD: the four things you do with data",
+          "ref": "crud"
+        },
+        {
+          "id": "lesson-request-parts",
+          "type": "lesson",
+          "title": "Every part of a request, with real examples",
+          "ref": "request-parts"
+        },
+        {
+          "id": "lesson-api-to-db",
+          "type": "lesson",
+          "title": "How one API call changes the database",
+          "ref": "api-to-db"
+        },
+        {
+          "id": "lesson-server-service",
+          "type": "lesson",
+          "title": "Server, service and service layer",
+          "ref": "server-service"
+        },
+        {
+          "id": "lesson-see-it-yourself",
+          "type": "lesson",
+          "title": "Try it: a curl POST that shows up on the page",
+          "ref": "see-it-yourself"
+        },
+        {
+          "id": "lesson-glossary",
+          "type": "lesson",
+          "title": "Dictionary: every technical word, in one line",
+          "ref": "glossary"
         }
       ]
     },

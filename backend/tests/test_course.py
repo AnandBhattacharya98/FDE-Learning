@@ -57,4 +57,4 @@ def test_project_item_completes_when_all_steps_ticked(client, auth):
     p = client.get(f"{W}/items/progress", headers=headers).json()
     assert "project-p1" in p["items_done"]
     totals = client.get(f"{API}/course/progress", headers=headers).json()
-    assert totals["week-01"]["done"] == 1 and totals["week-01"]["total"] == 18
+    assert totals["week-01"]["done"] == 1 and totals["week-01"]["total"] == 24
