@@ -843,6 +843,44 @@
           }
         ]
       }
+    },
+    {
+      "id": "week-1-2-crud-api-db-guide",
+      "date": "2026-11-17",
+      "title": "Weeks 1–2 guide: CRUD, APIs, the database, and a dictionary",
+      "pr": null,
+      "assignments": [
+        "w12-p1",
+        "w12-p2"
+      ],
+      "where": [
+        "docs/week-01-02.md",
+        "content/week-01.json (module m4)",
+        "content/week-02.json (module m4)"
+      ],
+      "how": [
+        "New Week 1 module 'Inside this site' traces CRUD, every part of a request, and one POST all the way to a database row, using the site's own announcements routes.",
+        "A 'Dictionary' lesson explains every technical term in one line; the coach can answer from it too.",
+        "docs/week-01-02.md maps both 'Done when' checks (P1 curl POST, P2 2-minute call + 3 settings) to files and lines, with curl steps for the live API.",
+        "Week 2 gets 'Checking your P2': where STT/LLM/TTS, turn detection and interruptions are set."
+      ],
+      "demo": {
+        "title": "A curl POST that shows up on the home page",
+        "lines": [
+          {
+            "kind": "cmd",
+            "text": "curl -X POST https://fde-learnings.onrender.com/api/fde/teacher/announcements -H \"Authorization: Bearer $TOKEN\" -H \"Content-Type: application/json\" -d '{\"title\": \"Hello from curl\"}'"
+          },
+          {
+            "kind": "out",
+            "text": "201 Created {\"id\":1,\"title\":\"Hello from curl\",...}"
+          },
+          {
+            "kind": "note",
+            "text": "Refresh the home page: the new row is there. Delete it with curl -X DELETE .../teacher/announcements/1."
+          }
+        ]
+      }
     }
   ]
 }
