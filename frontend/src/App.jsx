@@ -36,6 +36,12 @@ export default function App() {
             <span className="brand-tag">RevRag</span>
           </Link>
           <div className="topbar-actions">
+            {user && (
+              <NavLink to="/weeks/week-01/lesson-glossary" className={({ isActive }) => `nav-link${isActive ? " active" : ""}`} title="Dictionary of every technical term">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h11a3 3 0 013 3v13H8a3 3 0 01-3-3V4zM5 17a3 3 0 013-3h11M9 8h6" /></svg>
+                <span>Dictionary</span>
+              </NavLink>
+            )}
             {user?.teacher && (
               <NavLink to="/teach" className={({ isActive }) => `nav-link${isActive ? " active" : ""}`} title="Teacher mode">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9l9-5 9 5-9 5-9-5zM7 11.5V16c0 1.5 2.2 3 5 3s5-1.5 5-3v-4.5" /></svg>
