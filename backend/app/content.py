@@ -169,6 +169,9 @@ class GlossaryTerm(BaseModel):
     meaning: str
     topic: str
     week: int = Field(ge=1)
+    lesson: str  # id of the lesson in that week that explains the term
+    link: str = ""  # filled by load_glossary: /weeks/<week id>/<lesson>
+    lesson_title: str = ""  # filled by load_glossary
 
 
 @lru_cache
@@ -179,6 +182,13 @@ def load_glossary() -> list[GlossaryTerm]:
     names = [t.term.lower() for t in terms]
     if len(names) != len(set(names)):
         raise ValueError("glossary.json has a duplicate term")
+    weeks = {w.number: w for w in load_weeks().values()}
+    for t in terms:
+        week = weeks.get(t.week)
+        item = next((i for m in week.modules for i in m.items if i.id == t.lesson), None) if week else None
+        if not item:
+            raise ValueError(f"glossary.json: {t.term!r} points to a lesson that week {t.week} does not have")
+        t.link, t.lesson_title = f"/weeks/{week.id}/{t.lesson}", item.title
     return sorted(terms, key=lambda t: t.term.lower())
 
 

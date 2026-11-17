@@ -30,7 +30,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from .config import get_settings
-from .content import Week, load_weeks
+from .content import Week, load_glossary, load_weeks
 from .db import get_db
 from .models import User
 from .models_coach import CoachQuestion
@@ -257,6 +257,22 @@ class AskIn(BaseModel):
     question: str = Field(min_length=2, max_length=1000)
     week_id: str | None = None
     history: list[Turn] = Field(default=[], max_length=20)
+    course: bool = False  # False: answer from the dictionary first when the question names a term
+
+
+def dictionary_hits(question: str, limit: int = 3) -> list[dict]:
+    """Dictionary terms named in the question, longest first, skipping ones inside a longer match.
+    "Turn detection / endpointing" matches on either name; "(barge-in)" style asides are ignored."""
+    q = question.lower()
+    found, taken = [], []
+    names = [(n, t) for t in load_glossary() for n in re.split(r"\s*/\s*", re.sub(r"\s*\(.*?\)", "", t.term)) if n]
+    for name, term in sorted(names, key=lambda x: -len(x[0])):
+        m = re.search(rf"(?<![\w-]){re.escape(name.lower())}s?(?![\w-])", q)
+        if not m or any(a <= m.start() < b for a, b in taken) or term in found:
+            continue
+        taken.append(m.span())
+        found.append(term)
+    return [t.model_dump() for t in found[:limit]]
 
 
 @router.get("/status")
@@ -277,6 +293,11 @@ def ask(body: AskIn, user: User = Depends(current_user), db: Session = Depends(g
 
     question = body.question.strip()
     week_id = body.week_id if body.week_id in load_weeks() else None
+    terms = [] if body.course else dictionary_hits(question)
+    if terms:  # the dictionary first; the learner can then ask for the course answer (course=true)
+        db.add(CoachQuestion(user_id=user.id, week_id=week_id, question=question[:1000], mode="dictionary"))
+        db.commit()
+        return {"answer": None, "mode": "dictionary", "sources": [], "dictionary": terms}
     # Search with the last question too, so follow-ups like "and in P2?" keep their topic.
     last_user = next((t.content for t in reversed(body.history) if t.role == "user"), "")
     hits = get_index(db).search(f"{question} {last_user}", week_id)

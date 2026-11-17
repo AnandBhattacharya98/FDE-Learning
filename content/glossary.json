@@ -1,437 +1,509 @@
 {
-  "_how_to_add": "One entry per term, any week. Fields: term, meaning (one plain sentence or two), topic (reuse an existing one if it fits), week (the week the term is first taught). The site sorts A-Z itself.",
+  "_how_to_add": "One entry per term, any week. Fields: term, meaning (one plain sentence or two), topic (reuse an existing one if it fits), week (the week the term is first taught). The site sorts A-Z itself. Set lesson to the id of the course lesson that explains the word (an item id in that week's content file).",
   "terms": [
     {
       "term": "201 Created / 200 OK",
       "meaning": "Success codes. 201 means a new row was saved; 200 means it worked.",
       "topic": "APIs and HTTP",
-      "week": 1
+      "week": 1,
+      "lesson": "lesson-status-codes"
     },
     {
       "term": "401 / 403 / 404 / 422",
       "meaning": "401 no or bad token; 403 signed in but not allowed; 404 no such thing (this site also says 404 to hide teacher pages); 422 the body failed the check.",
       "topic": "APIs and HTTP",
-      "week": 1
+      "week": 1,
+      "lesson": "lesson-status-codes"
     },
     {
       "term": "API",
       "meaning": "Application Programming Interface: a list of doors (addresses) a program opens so other programs can ask it for things. This site's API lives at fde-learnings.onrender.com/api/fde.",
       "topic": "APIs and HTTP",
-      "week": 1
+      "week": 1,
+      "lesson": "lesson-restaurant"
     },
     {
       "term": "Authentication",
       "meaning": "Proving who you are, for example signing in with Google.",
       "topic": "Security and sign-in",
-      "week": 1
+      "week": 1,
+      "lesson": "lesson-request-parts"
     },
     {
       "term": "Authorization",
       "meaning": "What you are allowed to do once you are known. A learner can read announcements; only a teacher can add one.",
       "topic": "Security and sign-in",
-      "week": 1
+      "week": 1,
+      "lesson": "lesson-request-parts"
     },
     {
       "term": "Authorization header",
       "meaning": "The header that carries your token: Authorization: Bearer <token>.",
       "topic": "APIs and HTTP",
-      "week": 1
+      "week": 1,
+      "lesson": "lesson-request-parts"
     },
     {
       "term": "Backend",
       "meaning": "The part of an app that runs on a server: it checks requests, does the work and talks to the database. Here: the FastAPI code in backend/.",
       "topic": "App building blocks",
-      "week": 1
+      "week": 1,
+      "lesson": "lesson-backend"
     },
     {
       "term": "Base URL",
       "meaning": "The start of every address an API uses, such as https://fde-learnings.onrender.com/api/fde. Each route adds its own path after it.",
       "topic": "APIs and HTTP",
-      "week": 1
+      "week": 1,
+      "lesson": "lesson-request-parts"
     },
     {
       "term": "Bearer token",
       "meaning": "A token you send in the Authorization header. Whoever holds (bears) it is treated as you, so keep it private.",
       "topic": "Security and sign-in",
-      "week": 1
+      "week": 1,
+      "lesson": "lesson-request-parts"
     },
     {
       "term": "Body",
       "meaning": "The data sent with a request or a reply, usually JSON. POST, PUT and PATCH carry a body; GET and DELETE usually don't.",
       "topic": "APIs and HTTP",
-      "week": 1
+      "week": 1,
+      "lesson": "lesson-request-parts"
     },
     {
       "term": "Client",
       "meaning": "Whoever sends the request: a browser, curl, Postman or another server.",
       "topic": "APIs and HTTP",
-      "week": 1
+      "week": 1,
+      "lesson": "lesson-restaurant"
     },
     {
       "term": "Column",
       "meaning": "One kind of fact in a table, such as title or created_at. Every row has a value for each column.",
       "topic": "Databases",
-      "week": 1
+      "week": 1,
+      "lesson": "lesson-database"
     },
     {
       "term": "Commit (database)",
       "meaning": "The moment changes are saved for good. Until db.commit() runs, nothing is really written.",
       "topic": "Databases",
-      "week": 1
+      "week": 1,
+      "lesson": "lesson-api-to-db"
     },
     {
       "term": "CORS",
       "meaning": "A browser rule: a page may only call an API that lists the page's address as allowed. Set by CORS_ORIGINS on the API.",
       "topic": "APIs and HTTP",
-      "week": 1
+      "week": 1,
+      "lesson": "lesson-round-trip"
     },
     {
       "term": "CRUD",
       "meaning": "Create, Read, Update, Delete: the four things you can do with stored data. They map to POST, GET, PUT or PATCH, and DELETE.",
       "topic": "Databases",
-      "week": 1
+      "week": 1,
+      "lesson": "lesson-crud"
     },
     {
       "term": "curl",
       "meaning": "A command-line tool that sends one HTTP request and prints the reply. Same job as Postman, but typed.",
       "topic": "APIs and HTTP",
-      "week": 1
+      "week": 1,
+      "lesson": "lesson-three-ways"
     },
     {
       "term": "Database (DB)",
       "meaning": "A program that stores data safely and lets you search it. Here: Postgres on Neon online, a SQLite file on your laptop.",
       "topic": "Databases",
-      "week": 1
+      "week": 1,
+      "lesson": "lesson-database"
     },
     {
       "term": "DELETE",
       "meaning": "HTTP method that removes something. The D in CRUD.",
       "topic": "APIs and HTTP",
-      "week": 1
+      "week": 1,
+      "lesson": "lesson-crud"
     },
     {
       "term": "Deploy",
       "meaning": "Putting your code on a host so it runs on a public address instead of only your laptop.",
       "topic": "Hosting and deploy",
-      "week": 1
+      "week": 1,
+      "lesson": "lesson-local-vs-deployed"
     },
     {
       "term": "DevTools",
       "meaning": "The browser's built-in tools (right-click, Inspect). The Network tab shows every API call the page makes.",
       "topic": "App building blocks",
-      "week": 1
+      "week": 1,
+      "lesson": "lesson-three-ways"
     },
     {
       "term": "Endpoint / route",
       "meaning": "One door of an API: a method plus a path, such as POST /teacher/announcements.",
       "topic": "APIs and HTTP",
-      "week": 1
+      "week": 1,
+      "lesson": "lesson-request-anatomy"
     },
     {
       "term": "Environment variable (env var)",
       "meaning": "A setting given to a program from outside its code, such as DATABASE_URL. Keys live here, never in code.",
       "topic": "Hosting and deploy",
-      "week": 1
+      "week": 1,
+      "lesson": "lesson-local-vs-deployed"
     },
     {
       "term": "FastAPI",
       "meaning": "The Python framework this site's backend is written in. You write a function and mark it with @router.get or @router.post.",
       "topic": "App building blocks",
-      "week": 1
+      "week": 1,
+      "lesson": "lesson-backend"
     },
     {
       "term": "Foreign key",
       "meaning": "A column that points at a row in another table, such as created_by pointing at fde_users.id.",
       "topic": "Databases",
-      "week": 1
+      "week": 1,
+      "lesson": "lesson-database"
     },
     {
       "term": "Frontend",
       "meaning": "What people see and click: the React page, served by Vercel.",
       "topic": "App building blocks",
-      "week": 1
+      "week": 1,
+      "lesson": "lesson-frontend"
     },
     {
       "term": "GET",
       "meaning": "HTTP method that reads. It should never change data. The R in CRUD.",
       "topic": "APIs and HTTP",
-      "week": 1
+      "week": 1,
+      "lesson": "lesson-status-codes"
     },
     {
       "term": "Header",
       "meaning": "A small labelled detail sent with a request or reply, such as Content-Type: application/json or Authorization.",
       "topic": "APIs and HTTP",
-      "week": 1
+      "week": 1,
+      "lesson": "lesson-request-parts"
     },
     {
       "term": "Host",
       "meaning": "A company whose computers run your code: Render (API), Vercel (page), Neon (database), LiveKit Cloud (voice bot).",
       "topic": "Hosting and deploy",
-      "week": 1
+      "week": 1,
+      "lesson": "lesson-local-vs-deployed"
     },
     {
       "term": "HTTP",
       "meaning": "The language browsers and servers use to talk: a request goes out, a reply comes back. HTTPS is the same, encrypted.",
       "topic": "APIs and HTTP",
-      "week": 1
+      "week": 1,
+      "lesson": "lesson-request-anatomy"
     },
     {
       "term": "HTTP method",
       "meaning": "The verb of a request: GET, POST, PUT, PATCH or DELETE.",
       "topic": "APIs and HTTP",
-      "week": 1
+      "week": 1,
+      "lesson": "lesson-request-anatomy"
     },
     {
       "term": "id / primary key",
       "meaning": "A column whose value is unique for each row, so one row can be found exactly. The database picks it on insert.",
       "topic": "Databases",
-      "week": 1
+      "week": 1,
+      "lesson": "lesson-database"
     },
     {
       "term": "INSERT, SELECT, UPDATE, DELETE (SQL)",
       "meaning": "The four SQL commands behind CRUD. SQLAlchemy writes them for you.",
       "topic": "Databases",
-      "week": 1
+      "week": 1,
+      "lesson": "lesson-crud"
     },
     {
       "term": "Interruption (barge-in)",
       "meaning": "When the caller speaks over the bot. With interruptions on, the bot stops talking and listens.",
       "topic": "Voice AI",
-      "week": 2
+      "week": 2,
+      "lesson": "lesson-interruptions"
     },
     {
       "term": "JSON",
       "meaning": "A plain-text way to write data: {\"title\": \"Hello\", \"pinned\": false}. APIs send and receive it.",
       "topic": "APIs and HTTP",
-      "week": 1
+      "week": 1,
+      "lesson": "lesson-request-anatomy"
     },
     {
       "term": "JWT",
       "meaning": "JSON Web Token: the signed token this site gives you when you sign in. The API checks the signature on every request.",
       "topic": "Security and sign-in",
-      "week": 1
+      "week": 1,
+      "lesson": "lesson-request-parts"
     },
     {
       "term": "LLM",
       "meaning": "Large Language Model: the brain of a voice bot that writes the reply text.",
       "topic": "Voice AI",
-      "week": 2
+      "week": 2,
+      "lesson": "lesson-voice-loop"
     },
     {
       "term": "localhost",
       "meaning": "Your own computer. http://localhost:8000 only works on your laptop.",
       "topic": "Hosting and deploy",
-      "week": 1
+      "week": 1,
+      "lesson": "lesson-local-vs-deployed"
     },
     {
       "term": "localStorage",
       "meaning": "A small store inside the browser. This site keeps your token there under the key fde.token.",
       "topic": "Security and sign-in",
-      "week": 1
+      "week": 1,
+      "lesson": "lesson-round-trip"
     },
     {
       "term": "ORM",
       "meaning": "Object-Relational Mapper: lets you work with rows as Python objects. This site uses SQLAlchemy.",
       "topic": "Databases",
-      "week": 1
+      "week": 1,
+      "lesson": "lesson-api-to-db"
     },
     {
       "term": "PATCH",
       "meaning": "HTTP method that changes part of something that already exists. The U in CRUD.",
       "topic": "APIs and HTTP",
-      "week": 1
+      "week": 1,
+      "lesson": "lesson-crud"
     },
     {
       "term": "Path",
       "meaning": "The part of the URL after the host, such as /api/fde/weeks/week-01.",
       "topic": "APIs and HTTP",
-      "week": 1
+      "week": 1,
+      "lesson": "lesson-request-parts"
     },
     {
       "term": "Path parameter",
       "meaning": "A value written inside the path, such as week-01 in /weeks/{week_id}. It picks which thing you mean.",
       "topic": "APIs and HTTP",
-      "week": 1
+      "week": 1,
+      "lesson": "lesson-request-parts"
     },
     {
       "term": "Payload",
       "meaning": "Another word for the body.",
       "topic": "APIs and HTTP",
-      "week": 1
+      "week": 1,
+      "lesson": "lesson-request-parts"
     },
     {
       "term": "POST",
       "meaning": "HTTP method that creates something new. The C in CRUD. A good API replies 201 Created.",
       "topic": "APIs and HTTP",
-      "week": 1
+      "week": 1,
+      "lesson": "lesson-status-codes"
     },
     {
       "term": "Postgres",
       "meaning": "A popular SQL database. Neon runs it for this site.",
       "topic": "Databases",
-      "week": 1
+      "week": 1,
+      "lesson": "lesson-database"
     },
     {
       "term": "Postman",
       "meaning": "An app for sending API requests with buttons instead of typing curl.",
       "topic": "APIs and HTTP",
-      "week": 1
+      "week": 1,
+      "lesson": "lesson-three-ways"
     },
     {
       "term": "PUT",
       "meaning": "HTTP method that sets something to a given value, creating it if missing. The U in CRUD.",
       "topic": "APIs and HTTP",
-      "week": 1
+      "week": 1,
+      "lesson": "lesson-crud"
     },
     {
       "term": "Pydantic",
       "meaning": "The Python library FastAPI uses to check a request body. A missing or wrong field gets a 422 reply.",
       "topic": "App building blocks",
-      "week": 1
+      "week": 1,
+      "lesson": "lesson-server-service"
     },
     {
       "term": "Query parameter",
       "meaning": "Extra options after a ? in the URL, such as ?week_id=week-02. Used to filter or sort, mostly with GET.",
       "topic": "APIs and HTTP",
-      "week": 1
+      "week": 1,
+      "lesson": "lesson-request-parts"
     },
     {
       "term": "Request",
       "meaning": "What the client sends: method, URL, headers and maybe a body.",
       "topic": "APIs and HTTP",
-      "week": 1
+      "week": 1,
+      "lesson": "lesson-request-anatomy"
     },
     {
       "term": "Response / reply",
       "meaning": "What the server sends back: a status code, headers and usually a body.",
       "topic": "APIs and HTTP",
-      "week": 1
+      "week": 1,
+      "lesson": "lesson-request-anatomy"
     },
     {
       "term": "REST",
       "meaning": "A common style of API: things are nouns in the path (/announcements) and the method says what to do with them.",
       "topic": "APIs and HTTP",
-      "week": 1
+      "week": 1,
+      "lesson": "lesson-crud"
     },
     {
       "term": "Router",
       "meaning": "The part of FastAPI that matches a method and path to the Python function that handles it.",
       "topic": "APIs and HTTP",
-      "week": 1
+      "week": 1,
+      "lesson": "lesson-server-service"
     },
     {
       "term": "Row",
       "meaning": "One record in a table, such as one announcement.",
       "topic": "Databases",
-      "week": 1
+      "week": 1,
+      "lesson": "lesson-database"
     },
     {
       "term": "Schema",
       "meaning": "The shape data must have: which fields, which types, which are required.",
       "topic": "Databases",
-      "week": 1
+      "week": 1,
+      "lesson": "lesson-server-service"
     },
     {
       "term": "Server",
       "meaning": "A computer (or program) that waits for requests and answers them. Uvicorn is the server program here; Render's computer runs it.",
       "topic": "App building blocks",
-      "week": 1
+      "week": 1,
+      "lesson": "lesson-server-service"
     },
     {
       "term": "Service",
       "meaning": "A running program that does one job for others. On Render, this API is a 'web service'. LiveKit is a voice service.",
       "topic": "App building blocks",
-      "week": 1
+      "week": 1,
+      "lesson": "lesson-server-service"
     },
     {
       "term": "Service layer",
       "meaning": "In bigger apps, the code between the route and the database that holds the business rules. This site is small, so most routes talk to the database themselves.",
       "topic": "App building blocks",
-      "week": 1
+      "week": 1,
+      "lesson": "lesson-server-service"
     },
     {
       "term": "Session (database)",
       "meaning": "One conversation with the database inside one request. get_db() opens it and closes it after the reply.",
       "topic": "Databases",
-      "week": 1
+      "week": 1,
+      "lesson": "lesson-api-to-db"
     },
     {
       "term": "SQL",
       "meaning": "Structured Query Language: the language databases understand, such as SELECT * FROM fde_announcements.",
       "topic": "Databases",
-      "week": 1
+      "week": 1,
+      "lesson": "lesson-crud"
     },
     {
       "term": "SQLAlchemy",
       "meaning": "The Python library (an ORM) this site uses to talk to the database.",
       "topic": "Databases",
-      "week": 1
+      "week": 1,
+      "lesson": "lesson-api-to-db"
     },
     {
       "term": "SQLite",
       "meaning": "A database that is a single file. Used on your laptop when DATABASE_URL is blank.",
       "topic": "Databases",
-      "week": 1
+      "week": 1,
+      "lesson": "lesson-local-vs-deployed"
     },
     {
       "term": "Status code",
       "meaning": "The 3-digit number at the top of a reply. 2xx worked, 4xx your request is wrong, 5xx the server broke.",
       "topic": "APIs and HTTP",
-      "week": 1
+      "week": 1,
+      "lesson": "lesson-status-codes"
     },
     {
       "term": "STT",
       "meaning": "Speech-to-text: the ears of a voice bot.",
       "topic": "Voice AI",
-      "week": 2
+      "week": 2,
+      "lesson": "lesson-voice-loop"
     },
     {
       "term": "Table",
       "meaning": "A grid of rows and columns, like one sheet in Excel. This site's tables start with fde_, such as fde_announcements.",
       "topic": "Databases",
-      "week": 1
+      "week": 1,
+      "lesson": "lesson-database"
     },
     {
       "term": "Token",
       "meaning": "A string that proves you are signed in. Send it in the Authorization header.",
       "topic": "Security and sign-in",
-      "week": 1
+      "week": 1,
+      "lesson": "lesson-request-parts"
     },
     {
       "term": "TTS",
       "meaning": "Text-to-speech: the mouth of a voice bot.",
       "topic": "Voice AI",
-      "week": 2
+      "week": 2,
+      "lesson": "lesson-voice-loop"
     },
     {
       "term": "Turn detection / endpointing",
       "meaning": "How a voice bot decides you have finished speaking. Wait too little and it cuts you off; too long and it feels slow.",
       "topic": "Voice AI",
-      "week": 2
+      "week": 2,
+      "lesson": "lesson-turn-taking"
     },
     {
       "term": "URL",
       "meaning": "A full web address: https:// + host + path + optional ?query.",
       "topic": "APIs and HTTP",
-      "week": 1
+      "week": 1,
+      "lesson": "lesson-request-parts"
     },
     {
       "term": "Uvicorn",
       "meaning": "The program that runs the FastAPI app and listens for HTTP requests.",
       "topic": "App building blocks",
-      "week": 1
+      "week": 1,
+      "lesson": "lesson-server-service"
     },
     {
       "term": "VAD",
       "meaning": "Voice Activity Detection: spots when someone is speaking at all. This site's bot uses Silero VAD.",
       "topic": "Voice AI",
-      "week": 2
+      "week": 2,
+      "lesson": "lesson-turn-taking"
     },
     {
       "term": "Webhook",
       "meaning": "An API call one server makes to another when something happens, such as 'the call ended'. Week 3 joins P1 and P2 this way.",
       "topic": "APIs and HTTP",
-      "week": 1
+      "week": 2,
+      "lesson": "lesson-webhooks-preview"
     }
   ]
 }
