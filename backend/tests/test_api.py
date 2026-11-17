@@ -5,7 +5,7 @@ W = "/api/fde/weeks/week-01"
 
 def test_content_loads_and_is_complete():
     w1, w2 = load_weeks()["week-01"], load_weeks()["week-02"]
-    assert len(w1.concepts) + len(w2.concepts) == 23
+    assert len(w1.concepts) + len(w2.concepts) == 22
     assert len(w1.quiz) == 18 and len(w2.quiz) == 14
     assert len(w1.voice_quiz) + len(w2.voice_quiz) == 7
     assert [p.id for p in w1.projects] == ["P1"] and [p.id for p in w2.projects] == ["P2"]

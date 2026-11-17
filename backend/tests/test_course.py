@@ -57,4 +57,11 @@ def test_project_item_completes_when_all_steps_ticked(client, auth):
     p = client.get(f"{W}/items/progress", headers=headers).json()
     assert "project-p1" in p["items_done"]
     totals = client.get(f"{API}/course/progress", headers=headers).json()
-    assert totals["week-01"]["done"] == 1 and totals["week-01"]["total"] == 24
+    assert totals["week-01"]["done"] == 1 and totals["week-01"]["total"] == 23
+
+
+def test_glossary_is_sorted_and_public(client):
+    terms = client.get(f"{API}/glossary").json()["terms"]
+    names = [t["term"].lower() for t in terms]
+    assert len(terms) > 50 and names == sorted(names)
+    assert {"term", "meaning", "topic", "week"} <= set(terms[0])

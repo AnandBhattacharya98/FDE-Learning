@@ -5,6 +5,7 @@ import AuthCallback from "./pages/AuthCallback.jsx";
 import Home from "./pages/Home.jsx";
 import Week from "./pages/Week.jsx";
 import GodMode from "./pages/GodMode.jsx";
+import Dictionary from "./pages/Dictionary.jsx";
 import Teach from "./pages/Teach.jsx";
 import Coach from "./components/Coach.jsx";
 
@@ -37,7 +38,7 @@ export default function App() {
           </Link>
           <div className="topbar-actions">
             {user && (
-              <NavLink to="/weeks/week-01/lesson-glossary" className={({ isActive }) => `nav-link${isActive ? " active" : ""}`} title="Dictionary of every technical term">
+              <NavLink to="/dictionary" className={({ isActive }) => `nav-link${isActive ? " active" : ""}`} title="Dictionary of every technical term">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h11a3 3 0 013 3v13H8a3 3 0 01-3-3V4zM5 17a3 3 0 013-3h11M9 8h6" /></svg>
                 <span>Dictionary</span>
               </NavLink>
@@ -76,6 +77,7 @@ export default function App() {
             <Route path="/" element={<RequireAuth><Home /></RequireAuth>} />
             <Route path="/weeks/:weekId/:itemId?" element={<RequireAuth><Week /></RequireAuth>} />
             <Route path="/god" element={<RequireAuth><GodMode /></RequireAuth>} />
+            <Route path="/dictionary" element={<RequireAuth><Dictionary /></RequireAuth>} />
             <Route path="/teach" element={<RequireAuth><Teach /></RequireAuth>} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
