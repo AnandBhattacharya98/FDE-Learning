@@ -881,6 +881,33 @@
           }
         ]
       }
+    },
+    {
+      "id": "dictionary-top-bar",
+      "date": "2026-11-17",
+      "title": "Dictionary link in the top bar",
+      "pr": null,
+      "assignments": [],
+      "where": [
+        "frontend/src/App.jsx"
+      ],
+      "how": [
+        "A 'Dictionary' NavLink in the top bar, shown to everyone signed in, opens the Week 1 glossary lesson (concept `glossary`).",
+        "It is highlighted while you are on that lesson, like Teach and God mode."
+      ],
+      "demo": {
+        "title": "One link, no new page",
+        "lines": [
+          {
+            "kind": "cmd",
+            "text": "<NavLink to=\"/weeks/week-01/lesson-glossary\">Dictionary</NavLink>"
+          },
+          {
+            "kind": "note",
+            "text": "The dictionary itself stays in content/week-01.json, so there is one copy to edit."
+          }
+        ]
+      }
     }
   ]
 }
