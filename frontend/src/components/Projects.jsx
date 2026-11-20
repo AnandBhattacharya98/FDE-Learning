@@ -12,7 +12,7 @@ function SubmitField({ weekId, projectId, field, saved, onSaved }) {
     setState({ kind: "", msg: "Saving…" });
     try {
       await api(`/weeks/${weekId}/projects/${projectId}/submission/${field.id}`, { method: "PUT", body: { value } });
-      setState({ kind: "ok", msg: field.id === "repo_url" && value ? "Saved. Grading has started below." : "Saved" });
+      setState({ kind: "ok", msg: field.id === "repo_url" && value ? "Saved. Your grade card below shows when grading starts." : "Saved" });
       onSaved?.();
     } catch (e) {
       setState({ kind: "error", msg: e.message });

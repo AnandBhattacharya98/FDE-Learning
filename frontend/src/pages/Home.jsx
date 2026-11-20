@@ -38,6 +38,7 @@ export default function Home() {
   const { user } = useAuth();
   const [course, setCourse] = useState(null);
   const [progress, setProgress] = useState({});
+  const [loaded, setLoaded] = useState(false); // greet only once we know if they've started
   const [error, setError] = useState("");
 
   const [news, setNews] = useState([]);
@@ -53,7 +54,7 @@ export default function Home() {
   useEffect(() => {
     api("/announcements").then((r) => setNews(r.announcements)).catch(() => {});
     api("/course").then(setCourse).catch((e) => setError(e.message));
-    api("/course/progress").then(setProgress).catch(() => {});
+    api("/course/progress").then(setProgress).catch(() => {}).finally(() => setLoaded(true));
   }, []);
 
   const totals = Object.values(progress).reduce((a, p) => ({ done: a.done + p.done, total: a.total + p.total }), { done: 0, total: 0 });
@@ -72,7 +73,7 @@ export default function Home() {
             <path d="M8 14h14M98 14h14M30 14c4-10 8-10 10 0s6 10 10 0 6-10 10 0 6 10 10 0 6-10 10 0" />
           </svg>
           <span className="kicker">{course?.title || "FDE Training"} · {course?.weeks.length || 6} weeks</span>
-          <h1 className="display">{totals.done ? "Welcome back" : "Welcome"}, {first}.</h1>
+          <h1 className="display" style={{ visibility: loaded ? "visible" : "hidden" }}>{totals.done ? "Welcome back" : "Welcome"}, {first}.</h1>
           <p className="lead">{course?.subtitle || "Six weeks from how apps work to scoping a client's solution."}</p>
           <div className="hero-actions">
             {nextWeek && (

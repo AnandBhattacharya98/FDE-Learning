@@ -3,7 +3,9 @@
 People can sign in with their Google (Gmail or Workspace) account as well as with an email and
 password. It uses the same server-side OAuth flow as sunny-side: the API talks to Google, so the
 client secret never reaches the browser. Someone who already has a password account and then uses
-Google with the same address lands in the same account.
+Google with the same address lands in the same account. Their old password then stops working
+(and logs out its sessions): anyone could have set it before the owner arrived, and Google has just
+proved who owns the address. From then on they sign in with Google.
 
 The button only appears once both Google keys are set on the API.
 

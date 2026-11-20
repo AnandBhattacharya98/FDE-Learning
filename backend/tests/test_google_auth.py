@@ -77,8 +77,9 @@ def test_google_links_to_existing_password_account(client, google_on, monkeypatc
     frag = _fragment(_finish(client, monkeypatch, {"email": "both@example.com", "email_verified": True, "name": "B"})
                      .headers["location"])
     assert client.get("/api/fde/me", headers={"Authorization": f"Bearer {frag['token']}"}).json()["id"] == made["user"]["id"]
-    # The password still works too.
-    assert client.post("/api/fde/auth/login", json={"email": "both@example.com", "password": "longenough"}).status_code == 200
+    # Whoever set that password may not own the email, so Google sign-in retires it, and its tokens.
+    assert client.post("/api/fde/auth/login", json={"email": "both@example.com", "password": "longenough"}).status_code == 401
+    assert client.get("/api/fde/me", headers={"Authorization": f"Bearer {made['token']}"}).status_code == 401
 
 
 def test_unverified_email_is_refused(client, google_on, monkeypatch):

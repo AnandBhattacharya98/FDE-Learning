@@ -1,7 +1,8 @@
 import asyncio
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 
@@ -31,7 +32,20 @@ async def lifespan(_: FastAPI):
 
 
 def create_app() -> FastAPI:
-    app = FastAPI(title="FDE Learning", lifespan=lifespan)
+    local = get_settings().database_url.startswith("sqlite")
+    # The API docs are a full route map; keep them to local development.
+    docs = {} if local else {"docs_url": None, "redoc_url": None, "openapi_url": None}
+    app = FastAPI(title="FDE Learning", lifespan=lifespan, **docs)
+    max_body = (get_settings().material_max_mb + 1) * 1024 * 1024
+
+    @app.middleware("http")
+    async def limit_body(request: Request, call_next):
+        # Uploads are parsed before the login check runs, so cap request size up front.
+        size = request.headers.get("content-length")
+        if size and size.isdigit() and int(size) > max_body:
+            return JSONResponse({"detail": "That upload is too big."}, status_code=413)
+        return await call_next(request)
+
     app.add_middleware(GZipMiddleware, minimum_size=1000)
     app.add_middleware(
         CORSMiddleware,

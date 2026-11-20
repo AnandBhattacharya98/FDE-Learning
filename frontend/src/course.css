@@ -132,7 +132,7 @@ a.topic-chip:hover { background: var(--accent); color: var(--accent-text); }
 .board li.you { background: var(--accent-soft); }
 .board-rank { grid-area: rank; font-weight: 700; color: var(--muted); text-align: center; }
 .board li:nth-child(-n+3) .board-rank { color: var(--accent); }
-.board-name { grid-area: name; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.board-name { grid-area: name; font-weight: 500; overflow-wrap: anywhere; min-width: 0; }
 .board-score { grid-area: score; font-weight: 600; font-variant-numeric: tabular-nums; }
 .board-bar { grid-area: bar; height: 6px; border-radius: 999px; background: var(--surface-2); overflow: hidden; }
 .board-bar span { display: block; height: 100%; background: var(--accent); border-radius: inherit; }
@@ -140,7 +140,7 @@ a.topic-chip:hover { background: var(--accent); color: var(--accent-text); }
 @media (max-width: 480px) {
   .voice-stage { padding: 20px 12px; }
   .voice-stage .call-pill .waveform { display: none; }
-  .voice-stage .call-pill-text strong { overflow: hidden; text-overflow: ellipsis; }
+  .voice-stage .call-pill-text strong { white-space: normal; }
   .voice-stage .call-pill { gap: 8px; }
 }
 .lock-note { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }

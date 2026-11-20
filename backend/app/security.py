@@ -1,3 +1,4 @@
+import hashlib
 from datetime import datetime, timedelta, timezone
 
 import bcrypt
@@ -24,12 +25,19 @@ def verify_password(password: str, hashed: str) -> bool:
         return False
 
 
-def create_token(user_id: int, via: str = "password") -> str:
+def password_stamp(password_hash: str) -> str:
+    """Changes whenever the password does, so password-login tokens die with the old password."""
+    return hashlib.sha256(password_hash.encode()).hexdigest()[:16]
+
+
+def create_token(user_id: int, via: str = "password", password_hash: str | None = None) -> str:
     """`via` records how the person signed in ("password" or "google"). God mode only
     accepts "google" tokens, because only Google proves the person owns the email."""
     s = get_settings()
     now = datetime.now(timezone.utc)
     payload = {"sub": str(user_id), "via": via, "iat": now, "exp": now + timedelta(hours=s.jwt_ttl_hours)}
+    if password_hash:
+        payload["pw"] = password_stamp(password_hash)
     return jwt.encode(payload, s.jwt_secret, algorithm="HS256")
 
 
@@ -55,7 +63,7 @@ def current_user(
         user = db.get(User, int(payload["sub"]))
     except (jwt.PyJWTError, KeyError, ValueError):
         raise unauthorized
-    if user is None:
+    if user is None or ("pw" in payload and payload["pw"] != password_stamp(user.password_hash)):
         raise unauthorized
     if not get_settings().email_allowed(user.email):
         raise HTTPException(status.HTTP_403_FORBIDDEN, not_allowed_message())

@@ -141,6 +141,11 @@ def google_callback(request: Request, code: str | None = None, state: str | None
     name = (profile.get("name") or email.split("@")[0]).strip()[:120]
 
     user = db.scalar(select(User).where(User.email == email))
+    if user is not None:
+        # Anyone could have made a password account with this email before its owner arrived.
+        # Google just proved ownership, so a password set by someone else stops working.
+        user.password_hash = hash_password(secrets.token_urlsafe(32))
+        db.commit()
     if user is None:
         # Google-only accounts get a random password nobody knows, as in sunny-side.
         user = User(email=email, name=name, password_hash=hash_password(secrets.token_urlsafe(32)))

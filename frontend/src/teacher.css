@@ -19,6 +19,8 @@
   white-space: nowrap; cursor: pointer; display: inline-flex; gap: 6px; align-items: center;
 }
 .tc-tabs button:hover { color: var(--text); }
+/* On phones the six tabs wrap onto two rows instead of hiding off the edge. */
+@media (max-width: 600px) { .tc-tabs { flex-wrap: wrap; gap: 0 var(--sp-4); overflow-x: visible; } }
 .tc-tabs button[aria-selected="true"] { color: var(--text); border-bottom-color: var(--accent); }
 .tc-badge { font-size: var(--fs-xs); min-width: 18px; padding: 0 6px; border-radius: var(--radius-xs); background: var(--accent); color: var(--accent-text); }
 
@@ -61,8 +63,8 @@
 .tc-rowi { position: relative; }
 .tc-rowi .r { position: relative; z-index: 1; }
 .tc-pill-btn { border: 0; font: inherit; cursor: pointer; min-height: 28px; }
-.tc-rowi .t { font-weight: 500; font-size: var(--fs-ui); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; }
-.tc-rowi .s { font-size: 0.8rem; color: var(--muted); display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tc-rowi .t { font-weight: 500; font-size: var(--fs-ui); overflow-wrap: anywhere; min-width: 0; display: block; }
+.tc-rowi .s { font-size: 0.8rem; color: var(--muted); display: block; overflow-wrap: anywhere; min-width: 0; }
 .tc-rowi .r { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
 .tc-ico {
   width: 32px; height: 32px; border-radius: var(--radius-sm); display: inline-flex; align-items: center; justify-content: center;
