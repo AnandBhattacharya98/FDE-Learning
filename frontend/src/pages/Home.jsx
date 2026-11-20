@@ -72,7 +72,7 @@ export default function Home() {
             <path d="M8 14h14M98 14h14M30 14c4-10 8-10 10 0s6 10 10 0 6-10 10 0 6 10 10 0 6-10 10 0" />
           </svg>
           <span className="kicker">{course?.title || "FDE Training"} · {course?.weeks.length || 6} weeks</span>
-          <h1 className="display">Welcome back, {first}.</h1>
+          <h1 className="display">{totals.done ? "Welcome back" : "Welcome"}, {first}.</h1>
           <p className="lead">{course?.subtitle || "Six weeks from how apps work to scoping a client's solution."}</p>
           <div className="hero-actions">
             {nextWeek && (
