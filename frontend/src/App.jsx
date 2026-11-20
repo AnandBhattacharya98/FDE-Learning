@@ -1,13 +1,16 @@
+import { Suspense, lazy } from "react";
 import { Link, NavLink, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { useAuth } from "./auth.jsx";
 import Login from "./pages/Login.jsx";
 import AuthCallback from "./pages/AuthCallback.jsx";
 import Home from "./pages/Home.jsx";
-import Week from "./pages/Week.jsx";
-import GodMode from "./pages/GodMode.jsx";
-import Dictionary from "./pages/Dictionary.jsx";
-import Teach from "./pages/Teach.jsx";
 import Coach from "./components/Coach.jsx";
+
+// Pages off the landing path download only when first opened.
+const Week = lazy(() => import("./pages/Week.jsx"));
+const GodMode = lazy(() => import("./pages/GodMode.jsx"));
+const Dictionary = lazy(() => import("./pages/Dictionary.jsx"));
+const Teach = lazy(() => import("./pages/Teach.jsx"));
 
 function RequireAuth({ children }) {
   const { user, ready } = useAuth();
@@ -71,6 +74,7 @@ export default function App() {
       </header>
       <div className="shell">
         <main>
+          <Suspense fallback={<p className="muted">Loading…</p>}>
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
@@ -81,6 +85,7 @@ export default function App() {
             <Route path="/teach" element={<RequireAuth><Teach /></RequireAuth>} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
+          </Suspense>
         </main>
       </div>
       {user && <Coach />}

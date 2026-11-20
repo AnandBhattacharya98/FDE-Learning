@@ -1,7 +1,9 @@
+import asyncio
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 
 from .admin import load_assignments, load_build_log, router as admin_router
 from .api import router
@@ -21,19 +23,16 @@ API_PREFIX = "/api/fde"
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
-    load_weeks()  # fail fast if a content file is invalid
-    load_course()
-    load_glossary()
-    load_assignments()
-    load_build_log()
-    load_grading()
-    get_index()
-    init_db()
+    # Independent startup work runs in threads at once; any failure still aborts startup.
+    await asyncio.gather(*(asyncio.to_thread(f) for f in (
+        load_weeks, load_course, load_glossary, load_assignments,
+        load_build_log, load_grading, get_index, init_db)))
     yield
 
 
 def create_app() -> FastAPI:
     app = FastAPI(title="FDE Learning", lifespan=lifespan)
+    app.add_middleware(GZipMiddleware, minimum_size=1000)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=get_settings().cors_origins,
