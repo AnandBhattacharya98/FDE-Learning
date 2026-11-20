@@ -6,7 +6,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from .api import get_progress
-from .content import Week, load_course, load_glossary, load_weeks
+from .content import Week, all_weeks, load_course, load_glossary, load_weeks
 from .db import get_db
 from .models import QuizAttempt, StepProgress, User
 from .models_course import ItemProgress
@@ -50,14 +50,20 @@ def glossary():
 
 
 @router.get("/course")
-def course():
+def course(db: Session = Depends(get_db)):
+    from .models_teacher import Material, TeacherQuiz
+
     c = load_course()
     weeks = load_weeks()
+    # A week whose lessons aren't written yet opens once a teacher publishes something for it.
+    taught = set(db.scalars(select(Material.week_id).where(Material.published.is_(True))).all()) | set(
+        db.scalars(select(TeacherQuiz.week_id).where(TeacherQuiz.status == "published")).all())
     out = []
     for w in c.weeks:
         entry = w.model_dump()
-        week = weeks.get(w.id) if w.id else None
-        entry["open"] = week is not None
+        entry["id"] = w.id or f"week-{w.number:02d}"
+        week = weeks.get(entry["id"])
+        entry["open"] = week is not None or entry["id"] in taught
         if week:
             entry["due"] = week.due
             entry["modules"] = [{"id": m.id, "title": m.title, "items": len(m.items)} for m in week.modules]

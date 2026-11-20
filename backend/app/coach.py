@@ -30,7 +30,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from .config import get_settings
-from .content import Week, load_glossary, load_weeks
+from .content import Week, all_weeks, load_glossary, load_weeks
 from .db import get_db
 from .models import User
 from .models_coach import CoachQuestion
@@ -59,7 +59,7 @@ class Passage:
 
     @property
     def path(self) -> str:
-        return f"/weeks/{self.week_id}/{self.item_id}" + (f"#{self.anchor}" if self.anchor else "")
+        return f"/weeks/{self.week_id}" + (f"/{self.item_id}" if self.item_id else "") + (f"#{self.anchor}" if self.anchor else "")
 
     def source(self) -> dict:
         return {"week_id": self.week_id, "item_id": self.item_id, "kind": self.kind,
@@ -164,14 +164,14 @@ def material_passages(db: Session) -> list[Passage]:
     the module's first page (or the week overview)."""
     from .models_teacher import Material
 
-    weeks = load_weeks()
+    weeks = all_weeks()  # includes weeks whose lessons aren't written yet
     out = []
     for m in db.scalars(select(Material).where(Material.published.is_(True)).order_by(Material.id)).all():
         week = weeks.get(m.week_id)
         if week is None:
             continue
-        module = next((mod for mod in week.modules if mod.id == m.module_id), None) or week.modules[0]
-        item_id = module.items[0].id
+        module = next((mod for mod in week.modules if mod.id == m.module_id), None) or next(iter(week.modules), None)
+        item_id = module.items[0].id if module else None  # None: the week page itself
         title = f"From your teachers: {m.title}"
         head = " ".join(x for x in (m.description, m.notes) if x)
         parts = _chunks(f"{head} {m.text}") or [m.title]

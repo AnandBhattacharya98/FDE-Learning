@@ -38,7 +38,7 @@ from sqlalchemy.orm import Session
 
 from .admin import is_admin, require_admin, staff_emails
 from .config import get_settings
-from .content import Week, load_weeks
+from .content import Week, all_weeks, load_weeks
 from .db import SessionLocal, get_db
 from .models import Submission, User
 from .models_coach import CoachQuestion
@@ -90,7 +90,7 @@ def require_teacher(user: User = Depends(current_user), claims: dict = Depends(t
 
 
 def _week(week_id: str) -> Week:
-    week = load_weeks().get(week_id)
+    week = all_weeks().get(week_id)
     if week is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Unknown week.")
     return week
@@ -948,7 +948,7 @@ def delete_announcement(ann_id: int, teacher: User = Depends(require_teacher), d
 def overview(teacher: User = Depends(require_teacher), claims: dict = Depends(token_claims), db: Session = Depends(get_db)):
     from .cohort import _rows
 
-    weeks = load_weeks()
+    weeks = all_weeks()  # teachers can prepare weeks whose lessons aren't written yet
     staff = staff_emails(db)
     learners = _rows(db, [u for u in db.scalars(select(User)).all() if u.email.lower() not in staff])
     subs = submissions(teacher, db)

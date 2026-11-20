@@ -12,7 +12,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from .config import get_settings
-from .content import Week, load_weeks
+from .content import Week, all_weeks, load_weeks
 from .db import get_db
 from .models import QuizAttempt, StepProgress, Submission, User
 from .security import create_token, current_user, token_claims, hash_password, verify_password, not_allowed_message
@@ -95,7 +95,7 @@ def me(user: User = Depends(current_user), claims: dict = Depends(token_claims),
 # ---------- weeks ----------
 
 def _week(week_id: str) -> Week:
-    week = load_weeks().get(week_id)
+    week = all_weeks().get(week_id)  # a week without lessons yet still shows its teachers' materials
     if week is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "That week isn't available yet.")
     return week
