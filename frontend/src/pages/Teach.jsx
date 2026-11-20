@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import TeachersPanel from "../components/TeachersPanel.jsx";
 import { Navigate, useSearchParams } from "react-router-dom";
 import { api } from "../api.js";
 import { useAuth } from "../auth.jsx";
@@ -14,7 +15,7 @@ import { Icon, ago } from "../components/teacher/common.jsx";
 // admin, all signed in with Google); this page only hides itself from everyone else.
 
 const TABS = [["overview", "Overview"], ["materials", "Materials"], ["quizzes", "Quizzes"], ["submissions", "Submissions"],
-  ["cohort", "Cohort"], ["announcements", "Announcements"]];
+  ["cohort", "Cohort"], ["announcements", "Announcements"], ["teachers", "Teachers"]];
 
 function Overview({ data, go }) {
   const c = data.counts;
@@ -181,6 +182,7 @@ export default function Teach() {
             {tab === "submissions" && <Submissions onChange={load} />}
             {tab === "cohort" && <div className="gm tc-cohort"><Cohort base="/teacher" /></div>}
             {tab === "announcements" && <Announcements weeks={data.weeks} onChange={load} />}
+            {tab === "teachers" && <div className="gm tc-cohort"><TeachersPanel base="/teacher" /></div>}
           </div>
         </>
       )}

@@ -76,7 +76,7 @@ export default function Login() {
           </div>
         )}
         <div className="field">
-          <label htmlFor="email">Work email</label>
+          <label htmlFor="email">Email</label>
           <input id="email" type="email" autoComplete="email" value={form.email} onChange={update("email")} required />
         </div>
         <div className="field">
