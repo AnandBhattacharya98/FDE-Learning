@@ -10,10 +10,10 @@ from typing import Literal
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, status
 from pydantic import BaseModel, Field
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from .admin import require_admin
+from .admin import require_admin, staff_emails
 from .config import get_settings
 from .content import Week, load_weeks
 from .db import get_db
@@ -59,7 +59,7 @@ class CallIn(BaseModel):
 
 def _check_worker(key: str) -> None:
     expected = get_settings().voice_worker_key
-    if not expected or not hmac.compare_digest(key, expected):
+    if not expected or not hmac.compare_digest(key.encode(), expected.encode()):
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Bad worker key.")
 
 
@@ -117,6 +117,8 @@ def record_call(body: CallIn, x_worker_key: str = Header(default=""), db: Sessio
         card.score = sum(1 for q in questions if q["correct"])
         card.weak_topics = list(dict.fromkeys(q["concept_title"] for q in questions if q["correct"] is False))
 
+    if body.complete and not card.complete and not card.questions:
+        raise HTTPException(422, "A finished call needs at least one scored question.")
     if body.complete and not card.complete:
         card.complete = True
         attempt = QuizAttempt(user_id=body.user_id, week_id=body.week_id, kind="voice", score=card.score,
@@ -155,7 +157,8 @@ def my_scorecards(week_id: str, limit: int = Query(default=10, ge=1, le=50),
 def _leaderboard(db: Session, week_ids: list[str], me: int) -> list[dict]:
     rows = db.execute(
         select(VoiceScorecard, User.name).join(User, User.id == VoiceScorecard.user_id)
-        .where(VoiceScorecard.complete.is_(True), VoiceScorecard.week_id.in_(week_ids))
+        .where(VoiceScorecard.complete.is_(True), VoiceScorecard.week_id.in_(week_ids), VoiceScorecard.total > 0,
+               (User.id == me) | func.lower(User.email).not_in(staff_emails(db)))
     ).all()
     # Best call per learner per week; across weeks the bests add up.
     best: dict[tuple[int, str], VoiceScorecard] = {}

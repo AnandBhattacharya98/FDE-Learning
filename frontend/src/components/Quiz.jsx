@@ -39,7 +39,8 @@ export default function Quiz({ week, item, onDone }) {
         <div className={`notice ${!graded || result.passed ? "ok" : "warn"}`} role="status">
           You scored <strong>{result.score} of {result.total}</strong>.{" "}
           {graded ? (result.passed ? "You passed. " : `You need ${result.pass_percent}% to pass. `) : ""}
-          Read the explanations below, then try again whenever you like.{" "}
+          {graded && !result.passed ? "Answers and explanations show once you pass. Revisit the practice quizzes, then " : "Read the explanations below, then "}
+          try again whenever you like.{" "}
           <button type="button" className="btn link" onClick={retry}>Retake the quiz</button>
         </div>
       ) : (

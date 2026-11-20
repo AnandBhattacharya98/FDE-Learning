@@ -41,14 +41,15 @@ New tables (`fde_teachers`, `fde_materials`, `fde_material_files`, `fde_teacher_
 - **Submissions**: every GitHub link learners saved, with the auto-grader's result
   (see `project-grading.md`). Check the repo on GitHub, regrade, then approve the score, set your
   own, or ask for changes. Your feedback appears on the learner's grade card; an override replaces
-  the score in the cohort view.
-- **Cohort**: the same learner list and stats drawer as God mode.
+  the score in the cohort view and is final for the learner (re-saving the link or "Grade again"
+  can't replace it; you can still regrade).
+- **Cohort**: the same learner list and stats drawer as God mode. Teachers and admins aren't counted as learners.
 - **Announcements**: posts shown at the top of every learner's home page (pinned ones first).
 
 ## Where files are kept
 
 Uploads are stored in the database (Neon) in their own table, and served through signed links
-that expire after 6 hours. Neon's free plan holds 0.5 GB, so keep big videos on YouTube (unlisted),
+that expire after 6 hours. A learner's link stops working as soon as the material is unpublished. Neon's free plan holds 0.5 GB, so keep big videos on YouTube (unlisted),
 Loom, Vimeo or Drive and add them as links. If uploads outgrow the database, move
 `fde_material_files` to object storage (S3 or Cloudflare R2); nothing else needs to change.
 

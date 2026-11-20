@@ -40,21 +40,9 @@ def test_short_password_rejected(client):
     assert r.status_code == 422
 
 
-def test_quiz_is_graded_on_server_and_best_score_kept(client, auth):
+def test_old_week_quiz_route_is_gone(client, auth):
     headers, _ = auth
-    week = load_weeks()["week-01"]
-    all_right = {q.id: q.answer for q in week.quiz}
-    one_wrong = dict(all_right, q01=(week.quiz[0].answer + 1) % 4)
-
-    r = client.post(f"{W}/quiz", json={"answers": one_wrong}, headers=headers)
-    assert r.json()["score"] == 17
-    assert r.json()["results"][0]["correct"] is False
-    client.post(f"{W}/quiz", json={"answers": all_right}, headers=headers)
-    client.post(f"{W}/quiz", json={"answers": {}}, headers=headers)
-
-    prog = client.get(f"{W}/progress", headers=headers).json()
-    assert prog["quiz"] == {"best": {"score": 18, "total": 18}, "attempts": 3}
-    assert client.post(f"{W}/quiz", json={"answers": {}}).status_code == 401
+    assert client.post(f"{W}/quiz", json={"answers": {}}, headers=headers).status_code in (404, 405)
 
 
 def test_progress_is_per_user(client, auth):

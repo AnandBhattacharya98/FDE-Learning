@@ -5,7 +5,7 @@ import hmac
 import json
 
 from fastapi import APIRouter, BackgroundTasks, Depends, Header, HTTPException, status
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, field_validator
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -24,7 +24,14 @@ router = APIRouter()
 class SignUp(BaseModel):
     email: EmailStr
     name: str = Field(min_length=1, max_length=120)
-    password: str = Field(min_length=8, max_length=128)
+    password: str = Field(min_length=8, max_length=72)
+
+    @field_validator("password")
+    @classmethod
+    def _fits_bcrypt(cls, v: str) -> str:
+        if len(v.encode()) > 72:
+            raise ValueError("Password is too long (72 bytes at most).")
+        return v
 
 
 class LogIn(BaseModel):
@@ -96,25 +103,6 @@ def get_week(week_id: str):
 
 
 # ---------- multiple-choice quiz ----------
-
-class QuizSubmit(BaseModel):
-    answers: dict[str, int]
-
-
-@router.post("/weeks/{week_id}/quiz")
-def submit_quiz(week_id: str, body: QuizSubmit, user: User = Depends(current_user), db: Session = Depends(get_db)):
-    week = _week(week_id)
-    results = []
-    score = 0
-    for q in week.quiz:
-        chosen = body.answers.get(q.id)
-        correct = chosen == q.answer
-        score += correct
-        results.append({"id": q.id, "chosen": chosen, "answer": q.answer, "correct": correct, "explanation": q.explanation})
-    db.add(QuizAttempt(user_id=user.id, week_id=week_id, kind="mcq", score=score, total=len(week.quiz), answers=body.answers))
-    db.commit()
-    return {"score": score, "total": len(week.quiz), "results": results}
-
 
 def _best(db: Session, user_id: int, week_id: str, kind: str):
     row = db.execute(
@@ -249,7 +237,7 @@ def record_voice_result(week_id: str, body: VoiceResult, x_worker_key: str = Hea
     """Called by the voice-quiz worker when a quiz call ends. Not for browsers."""
     _week(week_id)
     expected = get_settings().voice_worker_key
-    if not expected or not hmac.compare_digest(x_worker_key.strip(), expected):
+    if not expected or not hmac.compare_digest(x_worker_key.strip().encode(), expected.encode()):
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Bad worker key.")
     if db.get(User, body.user_id) is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Unknown user.")

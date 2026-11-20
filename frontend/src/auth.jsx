@@ -11,7 +11,7 @@ export function AuthProvider({ children }) {
     if (!getToken()) { setReady(true); return; }
     api("/me")
       .then(setUser)
-      .catch(() => setToken(null))
+      .catch((e) => { if (e.status === 401) setToken(null); }) // a sleeping server isn't a bad token
       .finally(() => setReady(true));
   }, []);
 

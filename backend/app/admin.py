@@ -107,6 +107,14 @@ def is_admin(user: User, claims: dict) -> bool:
     return bool(admins) and claims.get("via") == "google" and user.email.lower() in admins
 
 
+def staff_emails(db: Session) -> set[str]:
+    """Admins and teachers. They aren't learners, so cohort stats, leaderboards and quiz results skip them."""
+    from .models_teacher import TeacherRole
+
+    s = get_settings()
+    return {e.lower() for e in (*s.admin_emails, *s.teacher_emails, *db.scalars(select(TeacherRole.email)))}
+
+
 def require_admin(user: User = Depends(current_user), claims: dict = Depends(token_claims)) -> User:
     if not is_admin(user, claims):
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Not Found")

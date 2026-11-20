@@ -6,7 +6,7 @@ import { Leaderboard, Scorecard } from "./VoiceScorecard.jsx";
 const POLL_MS = 3000;
 const POLL_TRIES = 30; // the coach saves the card a few seconds after the call; stop looking after ~90s
 
-export default function VoiceQuiz({ week, progress }) {
+export default function VoiceQuiz({ week, progress, onDone }) {
   const [status, setStatus] = useState("idle"); // idle | connecting | live | ended
   const [error, setError] = useState("");
   const roomRef = useRef(null);
@@ -56,6 +56,7 @@ export default function VoiceQuiz({ week, progress }) {
         knownRef.current.add(fresh.id);
         setScoring(false);
         loadBoard(scopeRef.current);
+        onDone?.(); // a scored call completes the voice item
         // One more refresh picks up the goodbye lines of the transcript.
         pollRef.current = setTimeout(() => loadCards().catch(() => {}), POLL_MS * 2);
       } else if (tries > 1) {

@@ -20,6 +20,7 @@ import jwt
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import RedirectResponse
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from .config import get_settings
@@ -144,6 +145,10 @@ def google_callback(request: Request, code: str | None = None, state: str | None
         # Google-only accounts get a random password nobody knows, as in sunny-side.
         user = User(email=email, name=name, password_hash=hash_password(secrets.token_urlsafe(32)))
         db.add(user)
-        db.commit()
+        try:
+            db.commit()
+        except IntegrityError:  # two first sign-ins at once: the other one created the account
+            db.rollback()
+            user = db.scalar(select(User).where(User.email == email))
 
     return _to_site("/auth/callback", token=create_token(user.id, via="google"), next=claims.get("next") or "/")

@@ -39,7 +39,7 @@ def test_only_google_admin_can_list_learners(client, auth, google_admin):
     body = client.get(LEARNERS, headers=google_admin).json()
     assert body["summary"]["learners"] >= 2
     assert all("email" not in r for r in body["learners"])
-    assert sum(r["is_you"] for r in body["learners"]) == 1
+    assert not any(r["is_you"] for r in body["learners"])  # staff aren't learners
 
 
 def test_progress_and_quiz_scores_show_up(client, google_admin):
