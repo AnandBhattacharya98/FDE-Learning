@@ -280,3 +280,19 @@ def test_announcements(client, teacher, learner):
     assert feed[0]["title"] == "Office hours moved" and feed[0]["author"] == "Ms Teacher"
     client.delete(f"{API}/teacher/announcements/{aid}", headers=teacher)
     assert all(a["id"] != aid for a in client.get(f"{API}/announcements", headers=learner[0]).json()["announcements"])
+
+
+def test_materials_for_a_week_without_lessons(client, teacher, learner):
+    h, _ = learner
+    weeks = {w["id"]: w for w in client.get(f"{API}/teacher/overview", headers=teacher).json()["weeks"]}
+    assert "week-03" in weeks and weeks["week-03"]["modules"] == []
+    course = lambda: {w["id"]: w for w in client.get(f"{API}/course").json()["weeks"]}  # noqa: E731
+    assert course()["week-03"]["open"] is False
+    r = client.post(f"{API}/teacher/materials", headers=teacher,
+                    data={"week_id": "week-03", "title": "SIP primer", "url": "https://example.com/sip", "published": "true"})
+    assert r.status_code == 201
+    assert course()["week-03"]["open"] is True
+    assert client.get(f"{API}/weeks/week-03", headers=h).json()["title"]
+    assert [m["title"] for m in client.get(f"{API}/weeks/week-03/class", headers=h).json()["materials"]] == ["SIP primer"]
+    assert client.post(f"{API}/teacher/materials", headers=teacher,
+                       data={"week_id": "week-99", "title": "x", "url": "https://example.com"}).status_code == 404

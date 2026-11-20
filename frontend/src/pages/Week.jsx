@@ -36,6 +36,26 @@ export default function Week() {
   if (error) return <p className="notice error" role="alert">{error}</p>;
   if (!week) return <p className="muted">Loading…</p>;
 
+  // A week whose lessons aren't written yet: only what the teachers have shared.
+  if (!items.length) {
+    return (
+      <div>
+        <nav className="breadcrumb" aria-label="Breadcrumb">
+          <Link to="/">Course</Link> <span aria-hidden="true">/</span> Week {week.number}
+        </nav>
+        <header className="week-head page-band aura soft">
+          <div>
+            <span className="eyebrow">Week {week.number}</span>
+            <h1 className="week-head-title">{week.title}</h1>
+            <p className="muted" style={{ margin: "0 0 4px" }}>{week.goal}</p>
+            <p className="small muted" style={{ margin: 0 }}>The lessons for this week are on their way. Here's what your teachers have shared so far.</p>
+          </div>
+        </header>
+        <ClassMaterials week={week} />
+      </div>
+    );
+  }
+
   if (!itemId) {
     if (!progress) return <p className="muted">Loading…</p>;
     const next = items.find((i) => !done.has(i.id)) || items[0];

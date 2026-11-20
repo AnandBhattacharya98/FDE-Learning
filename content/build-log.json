@@ -1191,6 +1191,43 @@
           }
         ]
       }
+    },
+    {
+      "id": "materials-any-week",
+      "date": "2026-11-20",
+      "title": "Teachers can add materials and quizzes for every course week, even before its lessons exist",
+      "pr": null,
+      "assignments": [],
+      "where": [
+        "backend/app/content.py (all_weeks)",
+        "backend/app/teacher.py",
+        "backend/app/course.py (/course open)",
+        "backend/app/coach.py (material_passages)",
+        "frontend/src/pages/Week.jsx",
+        "frontend/src/pages/Home.jsx"
+      ],
+      "how": [
+        "The Teach page lists all six weeks from course.json; weeks without a content file are empty shells (no modules).",
+        "A week like that opens for learners as soon as a teacher publishes a material or quiz for it; its page shows only the \"From your teachers\" box.",
+        "The coach can answer from those materials too, linking to the week page."
+      ],
+      "demo": {
+        "title": "Open a week by publishing to it",
+        "lines": [
+          {
+            "kind": "note",
+            "text": "Teach > Materials > Week: Week 3, add a link, tick \"Publish to learners now\"."
+          },
+          {
+            "kind": "cmd",
+            "text": "curl https://fde-learnings.onrender.com/api/fde/course"
+          },
+          {
+            "kind": "out",
+            "text": "{...\"id\":\"week-03\",\"title\":\"Telephony agent\",\"open\":true...}"
+          }
+        ]
+      }
     }
   ]
 }

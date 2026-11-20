@@ -210,3 +210,16 @@ def load_weeks() -> dict[str, Week]:
         week = Week.model_validate(json.loads(path.read_text(encoding="utf-8")))
         weeks[week.id] = week
     return weeks
+
+
+@lru_cache
+def all_weeks() -> dict[str, Week]:
+    """Every week in the course outline. Weeks whose lessons aren't written yet are empty shells,
+    so teachers can add materials and quizzes for them ahead of time."""
+    weeks = dict(load_weeks())
+    for w in load_course().weeks:
+        wid = w.id or f"week-{w.number:02d}"
+        if wid not in weeks:
+            weeks[wid] = Week(id=wid, number=w.number, title=w.title, goal=w.focus, due="", modules=[], concepts=[],
+                              resources=[], projects=[], quiz=[], voice_quiz=[], illustrations=[])
+    return dict(sorted(weeks.items(), key=lambda kv: kv[1].number))

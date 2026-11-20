@@ -144,13 +144,14 @@ export default function Home() {
             const started = p && p.done > 0;
             const finished = p && p.total && p.done === p.total;
             const Tag = w.open ? Link : "article";
+            const onlyMaterials = w.open && !w.total_items; // lessons not written yet, teachers' materials only
             return (
               <Tag key={w.number} className={`tile${w.open ? "" : " locked"}`} aria-labelledby={`wk-${w.number}`}
                    {...(w.open ? { to: `/weeks/${w.id}` } : {})}>
                 <div className="cover" style={COVERS[idx % COVERS.length]} aria-hidden="true">
                   <div className="cover-top">
                     <span className={`cover-chip${finished ? " done" : ""}`}>
-                      {finished ? "Completed" : w.open ? (started ? "In progress" : "Open") : "Opens at kickoff"}
+                      {finished ? "Completed" : onlyMaterials ? "Materials" : w.open ? (started ? "In progress" : "Open") : "Opens at kickoff"}
                     </span>
                   </div>
                   <div className="cover-num"><small>Week</small>{String(w.number).padStart(2, "0")}</div>
@@ -163,7 +164,7 @@ export default function Home() {
                     <div className="tile-foot">
                       {p && <Bar {...p} label={`Week ${w.number} progress`} />}
                       <span className="tile-cta">
-                        {finished ? "Review" : started ? "Continue" : "Start"}
+                        {onlyMaterials ? "See materials" : finished ? "Review" : started ? "Continue" : "Start"}
                         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
                       </span>
                     </div>
