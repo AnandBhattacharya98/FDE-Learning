@@ -149,8 +149,8 @@
 .ab-row:hover .ab-chev { color: var(--gm-accent); transform: translateX(2px); }
 .ab-row .gm-status { justify-self: end; }
 .ab-title { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.ab-title strong { font-size: 0.92rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.ab-title .gm-meta { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ab-title strong { font-size: 0.92rem; overflow-wrap: anywhere; min-width: 0; }
+.ab-title .gm-meta { overflow-wrap: anywhere; min-width: 0; }
 .ab-progress { display: flex; align-items: center; gap: 8px; }
 .ab-progress .gm-gauge-bar { flex: 1; margin: 0; }
 .ab-progress .gm-gauge-bar > span { display: block; height: 100%; background: linear-gradient(90deg, var(--gm-accent), var(--gm-accent-2)); }
@@ -204,6 +204,8 @@
 
 .gm-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .gm-seg { display: inline-flex; max-width: 100%; overflow-x: auto; border: 1px solid var(--gm-line); border-radius: 999px; padding: 2px; background: var(--gm-bg); }
+/* On phones the five filters wrap instead of hiding "Finished" off the edge. */
+@media (max-width: 600px) { .gm-seg { flex-wrap: wrap; overflow-x: visible; border-radius: 16px; } }
 .gm-seg button {
   font: 600 0.74rem var(--mono); min-height: 32px; padding: 0 10px; white-space: nowrap; border: 0; border-radius: 999px;
   background: none; color: var(--gm-muted); cursor: pointer;

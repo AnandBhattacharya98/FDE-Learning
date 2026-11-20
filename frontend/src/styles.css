@@ -131,6 +131,12 @@ p { margin: 0 0 var(--sp-3); }
   .topbar-sep { margin: 0 2px; }
 }
 @media (max-width: 420px) { .topbar.authed .brand-name { display: none; } }
+/* Staff get three extra links; on phones show their icons only (each link has a title). */
+@media (max-width: 560px) {
+  .topbar-actions .nav-link > span { display: none; }
+  .topbar-actions .nav-link { padding: 0 8px; }
+  .brand { flex: none; }
+}
 
 /* ---------- Layout ---------- */
 .shell { max-width: 1120px; margin: 0 auto; padding: var(--sp-6) var(--sp-4) 96px; }
@@ -146,6 +152,8 @@ p { margin: 0 0 var(--sp-3); }
   background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
   padding: var(--sp-5); box-shadow: var(--shadow);
 }
+/* A box inside a box doubles the side padding, which squeezes text on phones. */
+@media (max-width: 600px) { .card { padding: var(--sp-4); } .card .card { padding: var(--sp-3); } }
 
 /* ---------- Buttons ---------- */
 .btn {
@@ -202,6 +210,8 @@ input:focus, textarea:focus { outline: none; border-color: var(--accent); box-sh
 .concept li + li { margin-top: 4px; }
 .figure { margin: 4px 0 12px; border-radius: var(--radius-sm); background: var(--bg-soft); padding: 14px; border: 1px solid var(--border); }
 .figure svg { display: block; width: 100%; height: auto; }
+/* On phones a wide diagram would shrink to unreadable text; keep it legible and let it scroll sideways. */
+@media (max-width: 600px) { .figure:not(.placeholder) { overflow-x: auto; } .figure svg { min-width: 560px; } }
 .figure.placeholder { border: 1px dashed var(--border-strong); font-size: var(--fs-ui); color: var(--muted); }
 
 .option {
@@ -375,7 +385,7 @@ a.tile:hover .cover::before { transform: scale(1.08) rotate(2deg); }
 }
 .call-pill-text { display: flex; flex-direction: column; line-height: 1.2; min-width: 0; flex: 1; }
 .call-pill-text strong { font-size: var(--fs-ui); font-weight: 600; white-space: nowrap; }
-.call-pill-text span { font-size: var(--fs-xs); opacity: 0.75; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.call-pill-text span { font-size: var(--fs-xs); opacity: 0.75; overflow-wrap: anywhere; }
 .call-btn {
   flex: none; width: 36px; height: 36px; border-radius: 50%; border: none; display: inline-flex; align-items: center; justify-content: center;
   background: rgba(255, 255, 255, 0.12); color: #fff; padding: 0;

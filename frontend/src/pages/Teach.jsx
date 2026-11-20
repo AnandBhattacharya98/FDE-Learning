@@ -158,7 +158,7 @@ export default function Teach() {
           <div className="tc-tiles">
             {[
               ["Learners", c.learners, `${c.stuck} stuck`, "cohort", c.stuck > 0],
-              ["To review", c.needs_review, `${c.submissions} projects in`, "submissions", c.needs_review > 0],
+              ["To review", c.needs_review, `${c.submissions} project${c.submissions === 1 ? "" : "s"} in`, "submissions", c.needs_review > 0],
               ["Quizzes live", c.quizzes_published, `${c.quizzes_draft} draft${c.quizzes_draft === 1 ? "" : "s"}`, "quizzes", false],
               ["Materials", c.materials_published, `${c.materials - c.materials_published} unpublished`, "materials", false],
             ].map(([label, n, sub, t, alert]) => (

@@ -33,10 +33,10 @@
 
 .co-who { display: flex; align-items: center; gap: 12px; min-width: 0; }
 .co-who-text { display: flex; flex-direction: column; min-width: 0; gap: 2px; }
-.co-who-name { display: flex; align-items: center; gap: 8px; font-weight: 600; min-width: 0; white-space: nowrap; }
+.co-who-name { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; font-weight: 600; min-width: 0; overflow-wrap: anywhere; }
 .co-who-name .co-chip { margin: 0; }
 .co-who-name .co-state { margin: 0; font-size: 0.6rem; padding: 1px 7px; }
-.co-note { font-size: 0.8rem; color: var(--gm-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.co-note { font-size: 0.8rem; color: var(--gm-muted); overflow-wrap: anywhere; min-width: 0; }
 .co-note.bad { color: var(--gm-bad); }
 .co-more { font-family: var(--mono); font-size: 0.72rem; }
 

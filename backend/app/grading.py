@@ -229,6 +229,8 @@ def queue_for_submission(db: Session, user_id: int, week_id: str, project_id: st
     repo = (_submission(db, user_id, week_id, project_id).get("repo_url") or "").strip()
     if latest and (latest.repo_url == repo or _overridden(db, latest)):
         return  # same link re-saved, or a teacher set the grade: keep that run and its review
+    if latest and datetime.now(timezone.utc) - _aware(latest.created_at) < LEARNER_COOLDOWN:
+        return  # each run costs a GitHub Actions job and a Claude review; "Grade again" opens after 5 minutes
     try:
         run, token = start_run(db, user_id, project_id, "learner")
     except HTTPException:

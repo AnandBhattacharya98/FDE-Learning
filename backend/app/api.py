@@ -2,6 +2,7 @@
 from datetime import timedelta
 
 import hmac
+import time
 import json
 
 from fastapi import APIRouter, BackgroundTasks, Depends, Header, HTTPException, status
@@ -54,17 +55,28 @@ def signup(body: SignUp, db: Session = Depends(get_db)):
     except IntegrityError:
         db.rollback()
         raise HTTPException(status.HTTP_409_CONFLICT, "An account with that email already exists. Try logging in.")
-    return {"token": create_token(user.id), "user": _user_out(user)}
+    return {"token": create_token(user.id, password_hash=user.password_hash), "user": _user_out(user)}
+
+
+# ponytail: in-memory, per process. Fine for one Render instance; move to the database if it scales out.
+_failed_logins: dict[str, list[float]] = {}
+LOGIN_FAILS, LOGIN_WINDOW = 10, 15 * 60
 
 
 @router.post("/auth/login")
 def login(body: LogIn, db: Session = Depends(get_db)):
-    user = db.scalar(select(User).where(User.email == body.email.lower()))
+    email, now = body.email.lower(), time.time()
+    recent = [t for t in _failed_logins.get(email, []) if now - t < LOGIN_WINDOW]
+    if len(recent) >= LOGIN_FAILS:
+        raise HTTPException(status.HTTP_429_TOO_MANY_REQUESTS, "Too many tries. Wait 15 minutes, or sign in with Google.")
+    user = db.scalar(select(User).where(User.email == email))
     if user is None or not verify_password(body.password, user.password_hash):
+        _failed_logins[email] = recent + [now]
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "That email and password don't match.")
+    _failed_logins.pop(email, None)
     if not get_settings().email_allowed(user.email):
         raise HTTPException(status.HTTP_403_FORBIDDEN, not_allowed_message())
-    return {"token": create_token(user.id), "user": _user_out(user)}
+    return {"token": create_token(user.id, password_hash=user.password_hash), "user": _user_out(user)}
 
 
 @router.get("/me")
