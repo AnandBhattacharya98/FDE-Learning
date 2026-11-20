@@ -1162,6 +1162,35 @@
           }
         ]
       }
+    },
+    {
+      "id": "faster-load",
+      "date": "2026-11-20",
+      "title": "Faster loading: parallel start-up, pages on demand, compressed replies",
+      "pr": null,
+      "assignments": [],
+      "where": [
+        "backend/app/main.py (lifespan, GZipMiddleware)",
+        "frontend/src/App.jsx (lazy pages)"
+      ],
+      "how": [
+        "The API's start-up steps (content files, coach index, database tables) run at the same time in threads; any failure still stops start-up.",
+        "Week, Dictionary, Teach and God mode pages download only when first opened, so the first visit is about a third smaller.",
+        "API replies over 1 KB are gzip-compressed."
+      ],
+      "demo": {
+        "title": "See a compressed reply",
+        "lines": [
+          {
+            "kind": "cmd",
+            "text": "curl -s -o /dev/null -w '%{size_download}\\n' -H 'Accept-Encoding: gzip' https://fde-learnings.onrender.com/openapi.json"
+          },
+          {
+            "kind": "out",
+            "text": "about 5400 (bytes; about 47000 uncompressed)"
+          }
+        ]
+      }
     }
   ]
 }
