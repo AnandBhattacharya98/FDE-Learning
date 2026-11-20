@@ -9,7 +9,7 @@ Checked on the server for every request, like God mode:
 
 1. The person signed in **with Google** (a password log-in is refused).
 2. Their email is in `TEACHER_EMAILS` on Render, **or** the admin added it in God mode's
-   **Teachers** panel, **or** they are the admin (`ADMIN_EMAILS`).
+   **Teachers** panel or another teacher invited them from the Teach page, **or** they are the admin (`ADMIN_EMAILS`).
 
 Everyone else gets a plain 404. Teachers still need an address that passes `ALLOWED_EMAIL_DOMAINS`.
 Teachers can't add other teachers; only the admin can.
@@ -45,6 +45,8 @@ New tables (`fde_teachers`, `fde_materials`, `fde_material_files`, `fde_teacher_
   can't replace it; you can still regrade).
 - **Cohort**: the same learner list and stats drawer as God mode. Teachers and admins aren't counted as learners.
 - **Announcements**: posts shown at the top of every learner's home page (pinned ones first).
+- **Teachers**: invite a colleague by email; they become a teacher the next time they sign in with
+  Google. The list shows who invited whom. Only the admin can remove a teacher (God mode).
 
 ## Where files are kept
 

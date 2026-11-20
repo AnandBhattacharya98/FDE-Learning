@@ -1228,6 +1228,31 @@
           }
         ]
       }
+    },
+    {
+      "id": "teacher-invites",
+      "date": "2026-11-20",
+      "title": "Teachers can invite other teachers",
+      "pr": null,
+      "assignments": [],
+      "where": [
+        "backend/app/teacher.py (/teacher/teachers)",
+        "frontend/src/components/TeachersPanel.jsx",
+        "frontend/src/pages/Teach.jsx"
+      ],
+      "how": [
+        "A Teachers tab on the Teach page adds an email to the same teacher list God mode uses, recording who invited them.",
+        "Only the admin can remove a teacher, from God mode."
+      ],
+      "demo": {
+        "title": "Invite a colleague",
+        "lines": [
+          {
+            "kind": "note",
+            "text": "Teach > Teachers > type their email > Invite teacher. They sign in with Google and get the Teach page."
+          }
+        ]
+      }
     }
   ]
 }

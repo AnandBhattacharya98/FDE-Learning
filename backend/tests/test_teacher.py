@@ -296,3 +296,15 @@ def test_materials_for_a_week_without_lessons(client, teacher, learner):
     assert [m["title"] for m in client.get(f"{API}/weeks/week-03/class", headers=h).json()["materials"]] == ["SIP primer"]
     assert client.post(f"{API}/teacher/materials", headers=teacher,
                        data={"week_id": "week-99", "title": "x", "url": "https://example.com"}).status_code == 404
+
+
+def test_teachers_can_invite_but_not_remove_teachers(client, teacher, learner):
+    h, _ = learner
+    uid, email = _signup(client, "Invited Colleague")
+    assert client.get(f"{API}/teacher/overview", headers=_google(uid)).status_code == 404
+    assert client.post(f"{API}/teacher/teachers", headers=h, json={"email": "x@example.com"}).status_code == 404
+    rows = client.post(f"{API}/teacher/teachers", headers=teacher, json={"email": email}).json()["teachers"]
+    row = next(r for r in rows if r["email"] == email)
+    assert row["added_by"] == "Ms Teacher"
+    assert client.get(f"{API}/teacher/overview", headers=_google(uid)).status_code == 200
+    assert client.delete(f"{API}/admin/teachers/{row['id']}", headers=teacher).status_code == 404

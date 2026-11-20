@@ -1002,24 +1002,46 @@ class TeacherIn(BaseModel):
     email: str = Field(min_length=3, max_length=254, pattern=r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
 
-@router.get("/admin/teachers")
-def admin_teachers(admin: User = Depends(require_admin), db: Session = Depends(get_db)):
-    names = {u.email: u.name for u in db.scalars(select(User)).all()}
+def _teacher_rows(db: Session) -> dict:
+    users = db.scalars(select(User)).all()
+    names, by_id = {u.email: u.name for u in users}, {u.id: u.name for u in users}
     rows = [{"id": None, "email": e, "name": names.get(e), "source": "env"} for e in sorted(get_settings().teacher_emails)]
-    rows += [{"id": t.id, "email": t.email, "name": names.get(t.email), "source": "god_mode", "added_at": _iso(t.created_at)}
+    rows += [{"id": t.id, "email": t.email, "name": names.get(t.email), "source": "god_mode", "added_at": _iso(t.created_at),
+              "added_by": by_id.get(t.added_by)}
              for t in db.scalars(select(TeacherRole).order_by(TeacherRole.id)).all()]
     return {"teachers": rows}
 
 
-@router.post("/admin/teachers", status_code=status.HTTP_201_CREATED)
-def add_teacher(body: TeacherIn, admin: User = Depends(require_admin), db: Session = Depends(get_db)):
-    email = body.email.strip().lower()
+def _add_teacher(db: Session, email: str, by: User) -> None:
+    email = email.strip().lower()
     if not get_settings().email_allowed(email):
         raise HTTPException(422, "That address can't sign in to this site (ALLOWED_EMAIL_DOMAINS).")
     if db.scalar(select(TeacherRole).where(TeacherRole.email == email)) is None:
-        db.add(TeacherRole(email=email, added_by=admin.id))
+        db.add(TeacherRole(email=email, added_by=by.id))
         db.commit()
-    return admin_teachers(admin, db)
+
+
+@router.get("/admin/teachers")
+def admin_teachers(admin: User = Depends(require_admin), db: Session = Depends(get_db)):
+    return _teacher_rows(db)
+
+
+@router.post("/admin/teachers", status_code=status.HTTP_201_CREATED)
+def add_teacher(body: TeacherIn, admin: User = Depends(require_admin), db: Session = Depends(get_db)):
+    _add_teacher(db, body.email, admin)
+    return _teacher_rows(db)
+
+
+# Teachers can invite other teachers; only the admin removes them (God mode).
+@router.get("/teacher/teachers")
+def teacher_list(teacher: User = Depends(require_teacher), db: Session = Depends(get_db)):
+    return _teacher_rows(db)
+
+
+@router.post("/teacher/teachers", status_code=status.HTTP_201_CREATED)
+def teacher_invite(body: TeacherIn, teacher: User = Depends(require_teacher), db: Session = Depends(get_db)):
+    _add_teacher(db, body.email, teacher)
+    return _teacher_rows(db)
 
 
 @router.delete("/admin/teachers/{teacher_id}")
@@ -1028,4 +1050,4 @@ def remove_teacher(teacher_id: int, admin: User = Depends(require_admin), db: Se
     if t:
         db.delete(t)
         db.commit()
-    return admin_teachers(admin, db)
+    return _teacher_rows(db)
