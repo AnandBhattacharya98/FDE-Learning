@@ -124,10 +124,10 @@ export default function GradeCard({ weekId, projectId, refreshKey }) {
           <h4 id={`grade-${projectId}`} style={{ margin: 0 }}>Automatic review</h4>
           {!run && <p className="small muted" style={{ margin: "4px 0 0" }}>Save your GitHub repo link above and your project is checked automatically: it's cloned, installed, built and tested in a sandbox, then reviewed against the rubric. Pass mark {data.rubric.pass_mark}/100.</p>}
           {run && <p className="small muted" style={{ margin: "4px 0 0" }} role="status">
-            {run.status === "done" ? (run.passed ? `Passed: ${run.score}/100.` : `${run.score}/100. The pass mark is ${run.pass_mark}.`) : ""} {run.message}
+            {shown != null ? (shown >= run.pass_mark ? `Passed: ${shown}/100.` : `${shown}/100. The pass mark is ${run.pass_mark}.`) : ""} {tr?.decision === "override" ? "Set by your teacher." : run.message}
           </p>}
         </div>
-        {run && !ACTIVE.includes(run.status) && (
+        {run && !ACTIVE.includes(run.status) && tr?.decision !== "override" && (
           <button type="button" className="btn small" disabled={busy} onClick={again}>{busy ? "Starting…" : "Grade again"}</button>
         )}
       </header>

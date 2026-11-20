@@ -2,6 +2,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from .api import get_progress
@@ -102,7 +103,11 @@ def _set_done(db: Session, user_id: int, week_id: str, item_id: str, done: bool)
     row = db.scalar(select(ItemProgress).where(
         ItemProgress.user_id == user_id, ItemProgress.week_id == week_id, ItemProgress.item_id == item_id))
     if done and row is None:
-        db.add(ItemProgress(user_id=user_id, week_id=week_id, item_id=item_id))
+        try:
+            with db.begin_nested():  # a double-click can race this insert; the other request already did it
+                db.add(ItemProgress(user_id=user_id, week_id=week_id, item_id=item_id))
+        except IntegrityError:
+            pass
     elif not done and row is not None:
         db.delete(row)
 
@@ -135,4 +140,6 @@ def submit_item_quiz(week_id: str, item_id: str, body: Answers,
     if item.type == "practice" or passed:
         _set_done(db, user.id, week_id, item_id, True)
     db.commit()
+    if item.type == "quiz" and not passed:
+        results = []  # a failed graded try shows the score only, so retakes can't harvest the key
     return {"score": score, "total": total, "passed": passed, "pass_percent": week.pass_percent, "results": results}

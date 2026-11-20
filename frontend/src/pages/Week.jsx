@@ -28,7 +28,7 @@ export default function Week() {
     refresh();
   }, [weekId, refresh]);
 
-  useEffect(() => { setNavOpen(false); window.scrollTo({ top: 0 }); }, [itemId]);
+  useEffect(() => { setNavOpen(false); window.scrollTo({ top: 0 }); refresh(); }, [itemId, refresh]);
 
   const items = useMemo(() => (week ? flatItems(week) : []), [week]);
   const done = useMemo(() => new Set(progress?.items_done || []), [progress]);
@@ -54,13 +54,18 @@ export default function Week() {
     try {
       await api(`/weeks/${weekId}/items/${item.id}/complete`, { method: "PUT", body: { done: !isDone } });
       await refresh();
+      return true;
+    } catch {
+      return false; // e.g. a double-click raced the first save; stay on this item
     } finally {
       setSaving(false);
     }
   }
 
   async function completeAndNext() {
-    if (MANUAL.has(item.type) && !isDone) await toggleDone();
+    if (MANUAL.has(item.type) && !isDone) {
+      if (!(await toggleDone())) return;
+    }
     navigate(next ? `/weeks/${weekId}/${next.id}` : "/");
   }
 
@@ -117,7 +122,7 @@ export default function Week() {
             )}
             <div className="nav-buttons">
               {prev && <Link className="btn" to={`/weeks/${weekId}/${prev.id}`}>Previous</Link>}
-              <button className="btn primary" onClick={completeAndNext}>
+              <button className="btn primary" onClick={completeAndNext} disabled={saving}>
                 {next ? (MANUAL.has(item.type) && !isDone ? "Complete and continue" : "Next") : "Back to course"}
               </button>
             </div>

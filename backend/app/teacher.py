@@ -24,8 +24,9 @@ import io
 import json
 import logging
 import re
+import secrets
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Literal
 
 import httpx
@@ -35,7 +36,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from .admin import is_admin, require_admin
+from .admin import is_admin, require_admin, staff_emails
 from .config import get_settings
 from .content import Week, load_weeks
 from .db import SessionLocal, get_db
@@ -110,15 +111,17 @@ def _iso(dt: datetime | None) -> str | None:
 
 # ---------- materials: storage helpers ----------
 
-def _sign(material_id: int, exp: int) -> str:
+def _sign(material_id: int, exp: int, staff: bool = False) -> str:
     key = get_settings().jwt_secret.encode()
-    return hmac.new(key, f"material:{material_id}:{exp}".encode(), hashlib.sha256).hexdigest()[:40]
+    msg = f"material:{material_id}:{exp}" + (":staff" if staff else "")
+    return hmac.new(key, msg.encode(), hashlib.sha256).hexdigest()[:40]
 
 
-def file_url(material_id: int) -> str:
-    """A link the browser can put in <video>/<iframe> (those can't send our bearer token)."""
+def file_url(material_id: int, staff: bool = False) -> str:
+    """A link the browser can put in <video>/<iframe> (those can't send our bearer token).
+    Learner links stop working as soon as the material is unpublished; staff links preview drafts."""
     exp = int(time.time()) + FILE_URL_TTL
-    return f"/materials/{material_id}/file?exp={exp}&sig={_sign(material_id, exp)}"
+    return f"/materials/{material_id}/file?exp={exp}&sig={_sign(material_id, exp, staff)}" + ("&staff=1" if staff else "")
 
 
 def embed_url(url: str) -> str | None:
@@ -180,7 +183,7 @@ def material_view(m: Material, teacher: bool = False) -> dict:
         "id": m.id, "week_id": m.week_id, "module_id": m.module_id, "kind": m.kind, "title": m.title,
         "description": m.description, "url": m.url or None, "embed_url": embed_url(m.url) if m.url else None,
         "file_name": m.file_name or None, "content_type": m.content_type or None, "size": m.size,
-        "file_url": file_url(m.id) if m.file_name else None, "published": m.published, "position": m.position,
+        "file_url": file_url(m.id, teacher) if m.file_name else None, "published": m.published, "position": m.position,
         "updated_at": _iso(m.updated_at),
     }
     if teacher:
@@ -202,7 +205,7 @@ def list_materials(week_id: str | None = None, teacher: User = Depends(require_t
 @router.post("/teacher/materials", status_code=status.HTTP_201_CREATED)
 def add_material(
     week_id: str = Form(...),
-    title: str = Form(..., min_length=1, max_length=200),
+    title: str = Form(..., min_length=1, max_length=200, pattern=r"\S"),
     kind: str = Form(""),
     module_id: str = Form(""),
     description: str = Form("", max_length=4000),
@@ -255,7 +258,7 @@ def add_material(
 
 
 class MaterialPatch(BaseModel):
-    title: str | None = Field(default=None, min_length=1, max_length=200)
+    title: str | None = Field(default=None, min_length=1, max_length=200, pattern=r"\S")
     description: str | None = Field(default=None, max_length=4000)
     module_id: str | None = None
     kind: Literal["video", "slides", "doc", "link"] | None = None
@@ -272,6 +275,9 @@ def edit_material(material_id: int, body: MaterialPatch, teacher: User = Depends
     if m is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Unknown material.")
     data = body.model_dump(exclude_unset=True)
+    nulls = sorted(k for k, v in data.items() if v is None and k not in ("module_id", "url"))
+    if nulls:
+        raise HTTPException(422, f"These can't be empty: {', '.join(nulls)}.")
     if "module_id" in data:
         m.module_id = _check_module(_week(m.week_id), data.pop("module_id"))
     if "url" in data:
@@ -301,14 +307,14 @@ def delete_material(material_id: int, teacher: User = Depends(require_teacher), 
 
 
 @router.get("/materials/{material_id}/file")
-def material_file(material_id: int, exp: int, sig: str, range_: str | None = Header(default=None, alias="range"),
+def material_file(material_id: int, exp: int, sig: str, staff: bool = False, range_: str | None = Header(default=None, alias="range"),
                   db: Session = Depends(get_db)):
     """Serves an uploaded file to a signed link (supports Range, so videos can seek)."""
-    if exp < time.time() or not hmac.compare_digest(sig, _sign(material_id, exp)):
+    if exp < time.time() or not hmac.compare_digest(sig.encode(), _sign(material_id, exp, staff).encode()):
         raise HTTPException(status.HTTP_403_FORBIDDEN, "This link has expired. Reload the page.")
     m = db.get(Material, material_id)
     f = db.get(MaterialFile, material_id)
-    if m is None or f is None:
+    if m is None or f is None or not (staff or m.published):
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Not Found")
     data, size = f.data, len(f.data)
     safe = re.sub(r'[^\w.\- ]', "_", m.file_name) or "file"
@@ -540,6 +546,7 @@ def quiz_view(q: TeacherQuiz, teacher: bool = False) -> dict:
 
 @router.get("/teacher/quizzes")
 def list_quizzes(teacher: User = Depends(require_teacher), db: Session = Depends(get_db)):
+    _expire_generating(db)
     quizzes = db.scalars(select(TeacherQuiz).order_by(TeacherQuiz.id.desc())).all()
     counts = dict(db.execute(select(TeacherQuizAttempt.quiz_id, func.count(func.distinct(TeacherQuizAttempt.user_id)))
                              .group_by(TeacherQuizAttempt.quiz_id)).all())
@@ -559,17 +566,34 @@ def create_quiz(body: QuizIn, teacher: User = Depends(require_teacher), db: Sess
 
 
 def _with_ids(questions: list[QuestionIn]) -> list[dict]:
+    """Keeps each question's id; a new question gets a fresh random one, never a deleted question's
+    id, so old attempts are never scored against it."""
     out, used = [], set()
-    for i, x in enumerate(questions):
-        qid = x.id if x.id and re.fullmatch(r"[\w-]{1,20}", x.id) and x.id not in used else f"q{i + 1}"
-        while qid in used:
-            qid += "x"
+    for x in questions:
+        qid = x.id if x.id and re.fullmatch(r"[\w-]{1,20}", x.id) and x.id not in used else ""
+        while not qid or qid in used:
+            qid = "q" + secrets.token_hex(4)
         used.add(qid)
         out.append({**x.model_dump(), "id": qid})
     return out
 
 
+GENERATION_TIMEOUT = timedelta(minutes=10)
+
+
+def _expire_generating(db: Session) -> None:
+    """A restart mid-generation would leave a quiz "generating" forever; give the teacher it back."""
+    cutoff = datetime.now(timezone.utc) - GENERATION_TIMEOUT
+    stuck = [q for q in db.scalars(select(TeacherQuiz).where(TeacherQuiz.status == "generating")).all()
+             if (q.created_at if q.created_at.tzinfo else q.created_at.replace(tzinfo=timezone.utc)) < cutoff]
+    for q in stuck:
+        q.status, q.message = "failed", "Generation didn't finish (the server may have restarted). Try again."
+    if stuck:
+        db.commit()
+
+
 def _quiz(db: Session, quiz_id: int) -> TeacherQuiz:
+    _expire_generating(db)
     q = db.get(TeacherQuiz, quiz_id)
     if q is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Unknown quiz.")
@@ -623,7 +647,8 @@ def delete_quiz(quiz_id: int, teacher: User = Depends(require_teacher), db: Sess
 def quiz_results(quiz_id: int, teacher: User = Depends(require_teacher), db: Session = Depends(get_db)):
     q = _quiz(db, quiz_id)
     rows = db.execute(select(TeacherQuizAttempt, User.name).join(User, User.id == TeacherQuizAttempt.user_id)
-                      .where(TeacherQuizAttempt.quiz_id == q.id).order_by(TeacherQuizAttempt.id)).all()
+                      .where(TeacherQuizAttempt.quiz_id == q.id, func.lower(User.email).not_in(staff_emails(db)))
+                      .order_by(TeacherQuizAttempt.id)).all()
     learners: dict[int, dict] = {}
     right = {x["id"]: 0 for x in q.questions or []}
     for a, name in rows:
@@ -924,7 +949,8 @@ def overview(teacher: User = Depends(require_teacher), claims: dict = Depends(to
     from .cohort import _rows
 
     weeks = load_weeks()
-    learners = _rows(db, db.scalars(select(User)).all())
+    staff = staff_emails(db)
+    learners = _rows(db, [u for u in db.scalars(select(User)).all() if u.email.lower() not in staff])
     subs = submissions(teacher, db)
     count = lambda model, *where: db.scalar(select(func.count()).select_from(model).where(*where))  # noqa: E731
     asked = db.execute(select(CoachQuestion, User.name).join(User, User.id == CoachQuestion.user_id)

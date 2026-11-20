@@ -83,7 +83,7 @@ export default function Projects({ week, only, progress, onChange }) {
             <p className="small muted">Saved to your account when you leave each box. Never paste keys or passwords here.</p>
             {p.submit.map((f) => (
               <SubmitField key={f.id} weekId={week.id} projectId={p.id} field={f} saved={mine.submission[f.id]}
-                           onSaved={f.id === "repo_url" ? () => setGraded((n) => n + 1) : undefined} />
+                           onSaved={() => { onChange(); if (f.id === "repo_url") setGraded((n) => n + 1); }} />
             ))}
             <GradeCard weekId={week.id} projectId={p.id} refreshKey={graded} />
           </section>

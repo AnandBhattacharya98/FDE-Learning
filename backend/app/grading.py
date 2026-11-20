@@ -225,6 +225,10 @@ def queue_for_submission(db: Session, user_id: int, week_id: str, project_id: st
         return
     if load_grading()[1][project_id].week_id != week_id:
         return
+    latest = _latest(db, user_id, project_id)
+    repo = (_submission(db, user_id, week_id, project_id).get("repo_url") or "").strip()
+    if latest and (latest.repo_url == repo or _overridden(db, latest)):
+        return  # same link re-saved, or a teacher set the grade: keep that run and its review
     try:
         run, token = start_run(db, user_id, project_id, "learner")
     except HTTPException:
@@ -378,6 +382,8 @@ def grade_again(week_id: str, project_id: str, background: BackgroundTasks,
     if p.week_id != week_id:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Unknown project.")
     latest = _latest(db, user.id, project_id)
+    if latest and _overridden(db, latest):
+        raise HTTPException(status.HTTP_409_CONFLICT, "Your teacher has set this grade. Ask them if you want it re-graded.")
     if latest and latest.status not in ACTIVE and datetime.now(timezone.utc) - _aware(latest.created_at) < LEARNER_COOLDOWN:
         raise HTTPException(status.HTTP_429_TOO_MANY_REQUESTS, "You can grade again 5 minutes after the last run.")
     run, token = start_run(db, user.id, project_id, "learner")
@@ -492,6 +498,13 @@ def admin_regrade(run_id: int, background: BackgroundTasks, admin: User = Depend
 
 
 # ---------- teacher reviews (teacher.py writes them) ----------
+
+def _overridden(db: Session, run: GradingRun) -> bool:
+    """A teacher's override is final for the learner: their re-saves and "Grade again" can't replace it."""
+    from .models_teacher import GradeReview
+
+    return db.scalar(select(GradeReview.decision).where(GradeReview.run_id == run.id)) == "override"
+
 
 def teacher_review(db: Session, run_id: int) -> dict | None:
     """A teacher's decision on a run: approved, override (with their score) or changes, plus feedback."""

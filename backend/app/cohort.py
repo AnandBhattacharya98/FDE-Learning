@@ -16,7 +16,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from .admin import require_admin
+from .admin import require_admin, staff_emails
 from .content import Week, load_weeks
 from .db import get_db
 from .models import QuizAttempt, StepProgress, Submission, User
@@ -171,7 +171,8 @@ def _avg(xs):
 
 @router.get("/learners")
 def learners(admin: User = Depends(require_admin), db: Session = Depends(get_db)):
-    users = db.scalars(select(User).order_by(User.created_at)).all()
+    staff = staff_emails(db)
+    users = [u for u in db.scalars(select(User).order_by(User.created_at)).all() if u.email.lower() not in staff]
     rows = _rows(db, users)
     for r in rows:
         r["is_you"] = r["id"] == admin.id

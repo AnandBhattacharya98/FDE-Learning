@@ -18,7 +18,10 @@ def hash_password(password: str) -> str:
 
 
 def verify_password(password: str, hashed: str) -> bool:
-    return bcrypt.checkpw(password.encode(), hashed.encode())
+    try:
+        return bcrypt.checkpw(password.encode(), hashed.encode())
+    except ValueError:  # bcrypt refuses passwords over 72 bytes; no stored password can be that long
+        return False
 
 
 def create_token(user_id: int, via: str = "password") -> str:

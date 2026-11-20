@@ -66,7 +66,7 @@ export default function ItemView({ week, item, progress, onChange }) {
     case "practice":
     case "quiz": return <Quiz key={item.id} week={week} item={item} onDone={onChange} />;
     case "project": return <Projects week={week} only={item.ref} progress={progress} onChange={onChange} />;
-    case "voice": return <VoiceQuiz week={week} progress={progress} />;
+    case "voice": return <VoiceQuiz week={week} progress={progress} onDone={onChange} />;
     default: return <p>{TYPE_LABEL[item.type] || item.type}</p>;
   }
 }
