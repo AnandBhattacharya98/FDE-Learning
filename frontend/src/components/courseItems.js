@@ -10,4 +10,6 @@ export const TYPE_LABEL = {
 
 export const MANUAL = new Set(["overview", "lesson", "reading"]);
 
-export const flatItems = (week) => week.modules.flatMap((m) => m.items.map((i) => ({ ...i, module: m })));
+// Each item's course number: week, then its place in the week ("1.4" = week 1, fourth item).
+export const flatItems = (week) => week.modules.flatMap((m) => m.items.map((i) => ({ ...i, module: m })))
+  .map((i, n) => ({ ...i, num: `${week.number}.${n + 1}` }));
