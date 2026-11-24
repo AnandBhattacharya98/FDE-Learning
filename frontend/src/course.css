@@ -145,3 +145,6 @@ a.topic-chip:hover { background: var(--accent); color: var(--accent-text); }
 }
 .lock-note { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
 .lock-note svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+/* Course number in front of each item title, e.g. "1.4". */
+.item-num { color: var(--muted); font-variant-numeric: tabular-nums; font-weight: 500; margin-right: 2px; }

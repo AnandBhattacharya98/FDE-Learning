@@ -123,7 +123,7 @@ export default function Week() {
               <span className={`type-pill type-${item.type}`}>{TYPE_LABEL[item.type]}</span>
               <span className="item-type-label">{item.module.title}</span>
             </div>
-            <h2 id="item-title" className="item-title">{item.title}</h2>
+            <h2 id="item-title" className="item-title"><span className="item-num">{item.num}</span> {item.title}</h2>
           </header>
 
           <ItemView week={week} item={item} progress={progress} onChange={refresh} />

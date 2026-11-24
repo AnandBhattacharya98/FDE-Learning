@@ -1,7 +1,8 @@
 import { Link } from "react-router-dom";
-import { TYPE_LABEL } from "./courseItems.js";
+import { TYPE_LABEL, flatItems } from "./courseItems.js";
 
 export default function CourseNav({ id, open, week, done, current }) {
+  const num = Object.fromEntries(flatItems(week).map((i) => [i.id, i.num]));
   return (
     <nav id={id} className={`course-nav${open ? " open" : ""}`} aria-label={`Week ${week.number} outline`}>
       {week.modules.map((m) => {
@@ -15,7 +16,7 @@ export default function CourseNav({ id, open, week, done, current }) {
                   <Link to={`/weeks/${week.id}/${i.id}`} aria-current={i.id === current ? "page" : undefined}>
                     <span className={`check${done.has(i.id) ? " done" : ""}`} aria-hidden="true" />
                     <span className="item-text">
-                      <span>{i.title}</span>
+                      <span><span className="item-num">{num[i.id]}</span> {i.title}</span>
                       <span className="item-type">{TYPE_LABEL[i.type]}{done.has(i.id) ? " · completed" : ""}</span>
                     </span>
                   </Link>
